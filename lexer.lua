@@ -5,17 +5,9 @@ local Symbols = {
     ["="] = "EQUALS",
     [";"] = "SEMICOLON"
 }
-local function tokenize(source)
+function Tokenize(source)
     local tokens = {}
-    --[[
-        local file, err = io.open("ForgeLang.anvil", "r")
-        if not file then
-            print("Could not open file: " .. err)
-            return
-        end
-        local content = file:read("*a")
-        We will Move this to Main.lua i commented it so we dont lose it
-    --]]
+
     local i = 1
     while i <= #source do
         local ch = source:sub(i, i)
@@ -48,8 +40,7 @@ local function tokenize(source)
     end
     return tokens
 end
-local tokens = tokenize("Number X = 2;")
 
-for i, token in ipairs(tokens) do
-    print(i, token)
-end
+return {
+    tokenize = Tokenize
+}
