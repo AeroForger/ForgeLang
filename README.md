@@ -1,6 +1,6 @@
 # ForgeLang-Pre-Alpha
 
-Current version - 0.0.0.1
+Current version - 0.0.0.2
 
 Currently written in Lua
 
