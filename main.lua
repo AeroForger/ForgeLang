@@ -1,4 +1,7 @@
 local lex = require("lexer")
+local inter = require("interpreter")
+local pars = require("parser")
+
 
 local file, err = io.open("ForgeLang.anvil", "r")
 
@@ -12,6 +15,9 @@ file:close()
 
 local tokens = lex.tokenize(content)
 
-for i, token in ipairs(tokens) do
-    print(i, token)
-end
+local result = pars.Parse(tokens)
+
+local AST = result.ast
+local Variables = result.variables
+
+inter.FunctionsFL(AST, Variables)
