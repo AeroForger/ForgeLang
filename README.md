@@ -6,11 +6,14 @@ Currently written in Lua
 
 ## Progress
 
-- [X] Lexer
-- [X] File loading
-- [ ] Parser
-- [ ] AST
-- [ ] Interpreter
+it can do
+
+```ForgeLang
+Number X = 1;
+Number Y = 2;
+Print(X + Y);
+```
+out put will be 3
 
 ## plans
 
