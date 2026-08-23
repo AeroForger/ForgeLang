@@ -1,9 +1,13 @@
 local KeyWords = {
-    ["Number"] = "NUMBER_TYPE" 
+    ["Number"] = "NUMBER_TYPE",
+    ["Print"] = "PRINT"
 }
 local Symbols = {
     ["="] = "EQUALS",
-    [";"] = "SEMICOLON"
+    [";"] = "SEMICOLON",
+    ["("] = "LPAREN",
+    [")"] = "RPAREN",
+    ["+"] = "PLUS"
 }
 function Tokenize(source)
     local tokens = {}
@@ -14,15 +18,20 @@ function Tokenize(source)
 
         if ch == " " or ch == "\n" or ch == "\t" then
             i = i + 1
-        elseif ch == "=" then
-            table.insert(tokens, "EQUALS")
-            i = i + 1
-        elseif ch == ";" then
-            table.insert(tokens, "SEMICOLON")
+        elseif Symbols[ch] then
+            local inserter = {type = Symbols[ch], value = ch}
+            table.insert(tokens, inserter)
             i = i + 1
         else
             local word = ""
-            while i <= #source and source:sub(i, i) ~= " " and source:sub(i, i) ~= "\n" and source:sub(i, i) ~= "\t" and source:sub(i, i) ~= "=" and source:sub(i, i) ~= ";" do
+            while i <= #source do
+                local current = source:sub(i, i)
+                if current == " "
+                    or current == "\n"
+                    or current == "\t"
+                    or Symbols[current] then
+                    break                       
+                end
                 word = word .. source:sub(i, i)
                 i = i + 1
             end
@@ -30,11 +39,14 @@ function Tokenize(source)
             if word == "" then
                 i = i + 1
             elseif KeyWords[word] then
-                table.insert(tokens, KeyWords[word])
+                local inserter = {type = KeyWords[word], value = word}
+                table.insert(tokens, inserter)
             elseif string.match(word, "^%d+$") then
-                table.insert(tokens, 'NUMBER("' .. word .. '")')
+                local inserter = {type = "NUMBER", value = word}
+                table.insert(tokens, inserter)
             else
-                table.insert(tokens, 'IDENTIFIER("' .. word .. '")')
+                local inserter = {type = "IDENTIFIER", value = word}
+                table.insert(tokens, inserter)
             end
         end
     end
