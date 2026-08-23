@@ -28,13 +28,17 @@ I'm a string type
 
 First working version has only the interpreter but im planning to add a Compiler feature too it
 
-How it works:
+### How it works:
 it requires a Furnace folder in the operating system with the interpreter files and bash commands
 
-Using it:
+### Using it:
+
+first you have to added it to your shell (bash/fish/zsh) and then run
 
 ```
+
 Furnace name.anvil
+
 ```
 
 ## plans
