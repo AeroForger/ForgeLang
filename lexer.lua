@@ -1,13 +1,16 @@
 local KeyWords = {
     ["Number"] = "NUMBER_TYPE",
-    ["Print"] = "PRINT"
+    ["Print"] = "PRINT",
+    ["Weld"] = "STRING_TYPE"
 }
 local Symbols = {
     ["="] = "EQUALS",
     [";"] = "SEMICOLON",
     ["("] = "LPAREN",
     [")"] = "RPAREN",
-    ["+"] = "PLUS"
+    ["+"] = "PLUS",
+    ['"'] = "QUOTE",
+    ["'"] = "QUOTE"
 }
 function Tokenize(source)
     local tokens = {}
@@ -18,6 +21,40 @@ function Tokenize(source)
 
         if ch == " " or ch == "\n" or ch == "\t" then
             i = i + 1
+        elseif ch == '"' or ch == "'" then
+            local quote = ch
+            local value = ""
+            local start = i
+            local closed = false
+            i = i + 1
+
+            while i <= #source do
+                local current = source:sub(i, i)
+
+                if current == "\\" then
+                    if i + 1 <= #source then
+                        value = value .. source:sub(i + 1, i + 1)
+                        i = i + 2
+                    else
+                        error("Unterminated string starting at position " .. tostring(start))
+                    end
+                elseif current == quote then
+                    closed = true
+                    table.insert(tokens, {
+                        type = "STRING",
+                        value = value
+                    })
+                    i = i + 1
+                    break
+                else
+                    value = value .. current
+                    i = i + 1
+                end
+            end
+
+            if not closed then
+                error("Unterminated string starting at position " .. tostring(start))
+            end
         elseif Symbols[ch] then
             local inserter = {type = Symbols[ch], value = ch}
             table.insert(tokens, inserter)
@@ -30,7 +67,7 @@ function Tokenize(source)
                     or current == "\n"
                     or current == "\t"
                     or Symbols[current] then
-                    break                       
+                    break
                 end
                 word = word .. source:sub(i, i)
                 i = i + 1
