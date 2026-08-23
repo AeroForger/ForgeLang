@@ -1,6 +1,6 @@
 # ForgeLang-Pre-Alpha
 
-Current version - 0.0.0.2
+Current version -> Pre-Alpha 2
 
 Currently written in Lua
 
@@ -17,25 +17,10 @@ out put will be 3
 
 ## plans
 
-Refactor Lexer so making the parser will be easier
+Pre-Alpha 3 Features:
 
-Original lexer:
-```lua
-  tokens = {
-  NUMBER_TYPE
-  IDENTIFIER("x")
-  EQUALS
-  NUMBER("2")
-  SEMICOLON
-  }
-```
-Refactored lexers idea:
-```lua
-tokens = {
-    { type = "NUMBER_TYPE" },
-    { type = "IDENTIFIER", value = "x" },
-    { type = "EQUALS" },
-    { type = "NUMBER", value = 2 },
-    { type = "SEMICOLON" }
-}
-```
+- More number operations: -, *, /
+- Variable reassignment:
+- Better runtime errors
+- Multiple expressions
+- More that i havent decided yet
