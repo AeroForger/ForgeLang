@@ -1,6 +1,6 @@
 # ForgeLang-Pre-Alpha
 
-Current version -> Pre-Alpha 2.3
+Current version -> Alpha
 
 Currently written in Lua
 
@@ -8,20 +8,8 @@ Currently written in Lua
 
 it can do:
 
-```ForgeLang
-Number X = 1;
-Number Y = 2;
-Weld String = "I'm a string type";
-Print("Hello");
-Print(String);
-Print(X + Y);
-```
-out put will be:
+Check Alpha branch
 
-```ForgeLang
-Hello
-I'm a string type
-3
 ```
 
 ## Furnace - Compiler/interpreter
