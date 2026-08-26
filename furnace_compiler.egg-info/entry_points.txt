@@ -1,0 +1,2 @@
+[console_scripts]
+furnace = furnace.cli:main

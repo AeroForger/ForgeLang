@@ -1,0 +1,19 @@
+Open Data Player
+{
+    Weld name;
+}
+
+Player John
+{
+    John.name = "John";
+}
+
+Open Nunction Main()
+{
+    Print("Line 1\nLine 2");
+    Number Int Z = 5;
+    Print(\V"Tabbed:\t{Z}");
+    Print("100% ForgeLang");
+    Print(\V"Hello {John.name}!");
+    Print("He said \"hi\"");
+}
