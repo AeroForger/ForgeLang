@@ -1,7 +1,0 @@
-Metadata-Version: 2.4
-Name: furnace-compiler
-Version: 0.2.0
-Summary: ForgeLang compiler: .anvil source to native executables via LLVM
-Requires-Python: >=3.10
-Requires-Dist: antlr4-python3-runtime
-Requires-Dist: llvmlite
