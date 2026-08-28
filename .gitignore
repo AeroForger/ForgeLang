@@ -1,22 +1,11 @@
-# Python
-__pycache__/
-*.pyc
-*.egg-info/
-build/
-dist/
+# Rust build output
+/target/
 
-# Build artifacts from furnace itself
-*.ll
-*.out
+# Generated object files and executables
+*.o
+/test
 
-# Dependencies (downloadable, never commit)
-antlr.jar
-*.jar
-
-# Dev scratch files
-tests/scratch/
-
-# Editor / OS noise
+# Local editor and OS files
 .vscode/
-*.swp
+.idea/
 .DS_Store
