@@ -141,3 +141,10 @@ class ReturnNode(ASTNode):
 
     def __repr__(self):
         return f"Return({self.value})"
+
+class InputNode(ASTNode):
+    def __init__(self, input_type):
+        self.input_type = input_type  # 'Int' | 'Float' | 'Weld'
+
+    def __repr__(self):
+        return f"Input({self.input_type})"

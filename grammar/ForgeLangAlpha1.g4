@@ -198,7 +198,7 @@ block
 expression
     : literal                                      # literalExpr
     | qualifiedName LPAREN argumentList? RPAREN    # functionCallExpr
-    | Input LPAREN argumentList? RPAREN            # inputCallExpr
+    | Input LPAREN inputType? RPAREN               # inputCallExpr
     | qualifiedName                                # memberAccessExpr
     | LPAREN expression RPAREN                     # groupingExpr
     | <assoc=right> expression POW expression      # powExpr
@@ -213,6 +213,12 @@ expression
 
 argumentList
     : expression (COMMA expression)*
+    ;
+    
+inputType
+    : Int
+    | Float
+    | Generic
     ;
 
 literal

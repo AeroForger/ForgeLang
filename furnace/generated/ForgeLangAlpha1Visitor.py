@@ -244,6 +244,11 @@ class ForgeLangAlpha1Visitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ForgeLangAlpha1Parser#inputType.
+    def visitInputType(self, ctx:ForgeLangAlpha1Parser.InputTypeContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ForgeLangAlpha1Parser#intLiteral.
     def visitIntLiteral(self, ctx:ForgeLangAlpha1Parser.IntLiteralContext):
         return self.visitChildren(ctx)

@@ -10,134 +10,135 @@ else:
 
 def serializedATN():
     return [
-        4,1,59,355,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
+        4,1,59,359,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
         6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,
         2,14,7,14,2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,2,20,
         7,20,2,21,7,21,2,22,7,22,2,23,7,23,2,24,7,24,2,25,7,25,2,26,7,26,
-        2,27,7,27,2,28,7,28,2,29,7,29,2,30,7,30,2,31,7,31,2,32,7,32,1,0,
-        5,0,68,8,0,10,0,12,0,71,9,0,1,0,1,0,1,1,1,1,1,1,1,1,3,1,79,8,1,1,
-        2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,3,2,91,8,2,1,3,1,3,1,3,5,3,
-        96,8,3,10,3,12,3,99,9,3,1,4,1,4,1,5,1,5,1,5,1,5,1,5,3,5,108,8,5,
-        1,6,1,6,1,6,1,7,1,7,1,8,1,8,1,8,1,8,1,8,3,8,120,8,8,1,9,1,9,1,9,
-        1,10,1,10,3,10,127,8,10,1,11,3,11,130,8,11,1,11,1,11,1,11,3,11,135,
-        8,11,1,11,1,11,1,12,3,12,140,8,12,1,12,1,12,1,12,1,12,1,12,1,13,
-        1,13,1,13,1,14,3,14,151,8,14,1,14,1,14,1,14,1,14,5,14,157,8,14,10,
-        14,12,14,160,9,14,1,14,1,14,1,15,1,15,3,15,166,8,15,1,16,1,16,1,
-        16,1,16,1,17,3,17,173,8,17,1,17,1,17,1,17,1,17,3,17,179,8,17,1,17,
-        1,17,1,17,1,18,1,18,1,18,3,18,187,8,18,1,19,1,19,1,19,5,19,192,8,
-        19,10,19,12,19,195,9,19,1,20,1,20,1,20,1,21,1,21,1,21,1,21,1,21,
-        1,21,1,21,1,21,1,21,3,21,209,8,21,1,22,1,22,1,22,1,22,1,22,1,23,
-        1,23,3,23,218,8,23,1,23,1,23,1,24,1,24,1,24,1,24,1,24,1,24,1,25,
-        1,25,1,25,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,
-        1,26,5,26,243,8,26,10,26,12,26,246,9,26,1,26,1,26,3,26,250,8,26,
-        1,27,1,27,1,27,1,27,1,27,1,27,1,27,1,27,1,27,5,27,261,8,27,10,27,
-        12,27,264,9,27,1,27,1,27,3,27,268,8,27,1,27,1,27,1,28,1,28,1,28,
-        1,28,3,28,276,8,28,1,28,1,28,3,28,280,8,28,1,29,1,29,5,29,284,8,
-        29,10,29,12,29,287,9,29,1,29,1,29,1,30,1,30,1,30,1,30,1,30,3,30,
-        296,8,30,1,30,1,30,1,30,1,30,1,30,3,30,303,8,30,1,30,1,30,1,30,1,
-        30,1,30,1,30,1,30,1,30,3,30,313,8,30,1,30,1,30,1,30,1,30,1,30,1,
-        30,1,30,1,30,1,30,1,30,1,30,1,30,1,30,1,30,1,30,1,30,1,30,1,30,1,
-        30,1,30,1,30,5,30,336,8,30,10,30,12,30,339,9,30,1,31,1,31,1,31,5,
-        31,344,8,31,10,31,12,31,347,9,31,1,32,1,32,1,32,1,32,3,32,353,8,
-        32,1,32,0,1,60,33,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,
-        34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,64,0,5,1,0,1,3,1,0,
-        9,11,1,0,38,39,1,0,36,37,2,0,32,35,40,41,378,0,69,1,0,0,0,2,78,1,
-        0,0,0,4,90,1,0,0,0,6,92,1,0,0,0,8,100,1,0,0,0,10,107,1,0,0,0,12,
-        109,1,0,0,0,14,112,1,0,0,0,16,119,1,0,0,0,18,121,1,0,0,0,20,126,
-        1,0,0,0,22,129,1,0,0,0,24,139,1,0,0,0,26,146,1,0,0,0,28,150,1,0,
-        0,0,30,165,1,0,0,0,32,167,1,0,0,0,34,172,1,0,0,0,36,186,1,0,0,0,
-        38,188,1,0,0,0,40,196,1,0,0,0,42,208,1,0,0,0,44,210,1,0,0,0,46,215,
-        1,0,0,0,48,221,1,0,0,0,50,227,1,0,0,0,52,230,1,0,0,0,54,251,1,0,
-        0,0,56,271,1,0,0,0,58,281,1,0,0,0,60,312,1,0,0,0,62,340,1,0,0,0,
-        64,352,1,0,0,0,66,68,3,2,1,0,67,66,1,0,0,0,68,71,1,0,0,0,69,67,1,
-        0,0,0,69,70,1,0,0,0,70,72,1,0,0,0,71,69,1,0,0,0,72,73,5,0,0,1,73,
-        1,1,0,0,0,74,79,3,4,2,0,75,79,3,28,14,0,76,79,3,34,17,0,77,79,3,
-        42,21,0,78,74,1,0,0,0,78,75,1,0,0,0,78,76,1,0,0,0,78,77,1,0,0,0,
-        79,3,1,0,0,0,80,81,5,26,0,0,81,82,3,6,3,0,82,83,5,43,0,0,83,91,1,
-        0,0,0,84,85,5,27,0,0,85,86,3,6,3,0,86,87,5,44,0,0,87,88,5,59,0,0,
-        88,89,5,43,0,0,89,91,1,0,0,0,90,80,1,0,0,0,90,84,1,0,0,0,91,5,1,
-        0,0,0,92,97,5,59,0,0,93,94,5,51,0,0,94,96,5,59,0,0,95,93,1,0,0,0,
-        96,99,1,0,0,0,97,95,1,0,0,0,97,98,1,0,0,0,98,7,1,0,0,0,99,97,1,0,
-        0,0,100,101,7,0,0,0,101,9,1,0,0,0,102,108,3,12,6,0,103,108,5,5,0,
-        0,104,108,3,16,8,0,105,108,3,18,9,0,106,108,5,59,0,0,107,102,1,0,
-        0,0,107,103,1,0,0,0,107,104,1,0,0,0,107,105,1,0,0,0,107,106,1,0,
-        0,0,108,11,1,0,0,0,109,110,5,4,0,0,110,111,3,14,7,0,111,13,1,0,0,
-        0,112,113,7,1,0,0,113,15,1,0,0,0,114,120,5,6,0,0,115,116,5,6,0,0,
-        116,117,5,49,0,0,117,118,5,54,0,0,118,120,5,50,0,0,119,114,1,0,0,
-        0,119,115,1,0,0,0,120,17,1,0,0,0,121,122,5,7,0,0,122,123,5,59,0,
-        0,123,19,1,0,0,0,124,127,3,22,11,0,125,127,3,24,12,0,126,124,1,0,
-        0,0,126,125,1,0,0,0,127,21,1,0,0,0,128,130,3,8,4,0,129,128,1,0,0,
-        0,129,130,1,0,0,0,130,131,1,0,0,0,131,132,3,10,5,0,132,134,5,59,
-        0,0,133,135,3,26,13,0,134,133,1,0,0,0,134,135,1,0,0,0,135,136,1,
-        0,0,0,136,137,5,43,0,0,137,23,1,0,0,0,138,140,3,8,4,0,139,138,1,
-        0,0,0,139,140,1,0,0,0,140,141,1,0,0,0,141,142,3,18,9,0,142,143,5,
-        28,0,0,143,144,5,59,0,0,144,145,5,43,0,0,145,25,1,0,0,0,146,147,
-        5,42,0,0,147,148,3,60,30,0,148,27,1,0,0,0,149,151,3,8,4,0,150,149,
-        1,0,0,0,150,151,1,0,0,0,151,152,1,0,0,0,152,153,5,8,0,0,153,154,
-        5,59,0,0,154,158,5,47,0,0,155,157,3,30,15,0,156,155,1,0,0,0,157,
-        160,1,0,0,0,158,156,1,0,0,0,158,159,1,0,0,0,159,161,1,0,0,0,160,
-        158,1,0,0,0,161,162,5,48,0,0,162,29,1,0,0,0,163,166,3,20,10,0,164,
-        166,3,34,17,0,165,163,1,0,0,0,165,164,1,0,0,0,166,31,1,0,0,0,167,
-        168,5,59,0,0,168,169,5,59,0,0,169,170,3,58,29,0,170,33,1,0,0,0,171,
-        173,3,8,4,0,172,171,1,0,0,0,172,173,1,0,0,0,173,174,1,0,0,0,174,
-        175,3,36,18,0,175,176,5,59,0,0,176,178,5,45,0,0,177,179,3,38,19,
-        0,178,177,1,0,0,0,178,179,1,0,0,0,179,180,1,0,0,0,180,181,5,46,0,
-        0,181,182,3,58,29,0,182,35,1,0,0,0,183,187,3,10,5,0,184,187,5,12,
-        0,0,185,187,5,13,0,0,186,183,1,0,0,0,186,184,1,0,0,0,186,185,1,0,
-        0,0,187,37,1,0,0,0,188,193,3,40,20,0,189,190,5,52,0,0,190,192,3,
-        40,20,0,191,189,1,0,0,0,192,195,1,0,0,0,193,191,1,0,0,0,193,194,
-        1,0,0,0,194,39,1,0,0,0,195,193,1,0,0,0,196,197,3,10,5,0,197,198,
-        5,59,0,0,198,41,1,0,0,0,199,209,3,20,10,0,200,209,3,32,16,0,201,
-        209,3,44,22,0,202,209,3,46,23,0,203,209,3,52,26,0,204,209,3,54,27,
-        0,205,209,3,56,28,0,206,209,3,48,24,0,207,209,3,50,25,0,208,199,
-        1,0,0,0,208,200,1,0,0,0,208,201,1,0,0,0,208,202,1,0,0,0,208,203,
-        1,0,0,0,208,204,1,0,0,0,208,205,1,0,0,0,208,206,1,0,0,0,208,207,
-        1,0,0,0,209,43,1,0,0,0,210,211,3,6,3,0,211,212,5,42,0,0,212,213,
-        3,60,30,0,213,214,5,43,0,0,214,45,1,0,0,0,215,217,5,14,0,0,216,218,
-        3,60,30,0,217,216,1,0,0,0,217,218,1,0,0,0,218,219,1,0,0,0,219,220,
-        5,43,0,0,220,47,1,0,0,0,221,222,5,29,0,0,222,223,5,45,0,0,223,224,
-        3,60,30,0,224,225,5,46,0,0,225,226,5,43,0,0,226,49,1,0,0,0,227,228,
-        3,60,30,0,228,229,5,43,0,0,229,51,1,0,0,0,230,231,5,15,0,0,231,232,
-        5,45,0,0,232,233,3,60,30,0,233,234,5,46,0,0,234,244,3,58,29,0,235,
-        236,5,16,0,0,236,237,5,15,0,0,237,238,5,45,0,0,238,239,3,60,30,0,
-        239,240,5,46,0,0,240,241,3,58,29,0,241,243,1,0,0,0,242,235,1,0,0,
-        0,243,246,1,0,0,0,244,242,1,0,0,0,244,245,1,0,0,0,245,249,1,0,0,
-        0,246,244,1,0,0,0,247,248,5,16,0,0,248,250,3,58,29,0,249,247,1,0,
-        0,0,249,250,1,0,0,0,250,53,1,0,0,0,251,252,5,17,0,0,252,253,5,45,
-        0,0,253,254,3,60,30,0,254,255,5,46,0,0,255,262,5,47,0,0,256,257,
-        5,18,0,0,257,258,3,60,30,0,258,259,3,58,29,0,259,261,1,0,0,0,260,
-        256,1,0,0,0,261,264,1,0,0,0,262,260,1,0,0,0,262,263,1,0,0,0,263,
-        267,1,0,0,0,264,262,1,0,0,0,265,266,5,19,0,0,266,268,3,58,29,0,267,
-        265,1,0,0,0,267,268,1,0,0,0,268,269,1,0,0,0,269,270,5,48,0,0,270,
-        55,1,0,0,0,271,272,5,20,0,0,272,275,3,58,29,0,273,274,5,21,0,0,274,
-        276,3,58,29,0,275,273,1,0,0,0,275,276,1,0,0,0,276,279,1,0,0,0,277,
-        278,5,22,0,0,278,280,3,58,29,0,279,277,1,0,0,0,279,280,1,0,0,0,280,
-        57,1,0,0,0,281,285,5,47,0,0,282,284,3,42,21,0,283,282,1,0,0,0,284,
-        287,1,0,0,0,285,283,1,0,0,0,285,286,1,0,0,0,286,288,1,0,0,0,287,
-        285,1,0,0,0,288,289,5,48,0,0,289,59,1,0,0,0,290,291,6,30,-1,0,291,
-        313,3,64,32,0,292,293,3,6,3,0,293,295,5,45,0,0,294,296,3,62,31,0,
-        295,294,1,0,0,0,295,296,1,0,0,0,296,297,1,0,0,0,297,298,5,46,0,0,
-        298,313,1,0,0,0,299,300,5,30,0,0,300,302,5,45,0,0,301,303,3,62,31,
-        0,302,301,1,0,0,0,302,303,1,0,0,0,303,304,1,0,0,0,304,313,5,46,0,
-        0,305,313,3,6,3,0,306,307,5,45,0,0,307,308,3,60,30,0,308,309,5,46,
-        0,0,309,313,1,0,0,0,310,311,7,2,0,0,311,313,3,60,30,7,312,290,1,
-        0,0,0,312,292,1,0,0,0,312,299,1,0,0,0,312,305,1,0,0,0,312,306,1,
-        0,0,0,312,310,1,0,0,0,313,337,1,0,0,0,314,315,10,8,0,0,315,316,5,
-        31,0,0,316,336,3,60,30,8,317,318,10,6,0,0,318,319,7,3,0,0,319,336,
-        3,60,30,7,320,321,10,5,0,0,321,322,7,2,0,0,322,336,3,60,30,6,323,
-        324,10,4,0,0,324,325,7,4,0,0,325,336,3,60,30,5,326,327,10,3,0,0,
-        327,328,5,23,0,0,328,336,3,60,30,4,329,330,10,2,0,0,330,331,5,24,
-        0,0,331,336,3,60,30,3,332,333,10,1,0,0,333,334,5,25,0,0,334,336,
-        3,60,30,2,335,314,1,0,0,0,335,317,1,0,0,0,335,320,1,0,0,0,335,323,
-        1,0,0,0,335,326,1,0,0,0,335,329,1,0,0,0,335,332,1,0,0,0,336,339,
-        1,0,0,0,337,335,1,0,0,0,337,338,1,0,0,0,338,61,1,0,0,0,339,337,1,
-        0,0,0,340,345,3,60,30,0,341,342,5,52,0,0,342,344,3,60,30,0,343,341,
-        1,0,0,0,344,347,1,0,0,0,345,343,1,0,0,0,345,346,1,0,0,0,346,63,1,
-        0,0,0,347,345,1,0,0,0,348,353,5,54,0,0,349,353,5,53,0,0,350,353,
-        5,55,0,0,351,353,5,56,0,0,352,348,1,0,0,0,352,349,1,0,0,0,352,350,
-        1,0,0,0,352,351,1,0,0,0,353,65,1,0,0,0,33,69,78,90,97,107,119,126,
-        129,134,139,150,158,165,172,178,186,193,208,217,244,249,262,267,
-        275,279,285,295,302,312,335,337,345,352
+        2,27,7,27,2,28,7,28,2,29,7,29,2,30,7,30,2,31,7,31,2,32,7,32,2,33,
+        7,33,1,0,5,0,70,8,0,10,0,12,0,73,9,0,1,0,1,0,1,1,1,1,1,1,1,1,3,1,
+        81,8,1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,3,2,93,8,2,1,3,1,
+        3,1,3,5,3,98,8,3,10,3,12,3,101,9,3,1,4,1,4,1,5,1,5,1,5,1,5,1,5,3,
+        5,110,8,5,1,6,1,6,1,6,1,7,1,7,1,8,1,8,1,8,1,8,1,8,3,8,122,8,8,1,
+        9,1,9,1,9,1,10,1,10,3,10,129,8,10,1,11,3,11,132,8,11,1,11,1,11,1,
+        11,3,11,137,8,11,1,11,1,11,1,12,3,12,142,8,12,1,12,1,12,1,12,1,12,
+        1,12,1,13,1,13,1,13,1,14,3,14,153,8,14,1,14,1,14,1,14,1,14,5,14,
+        159,8,14,10,14,12,14,162,9,14,1,14,1,14,1,15,1,15,3,15,168,8,15,
+        1,16,1,16,1,16,1,16,1,17,3,17,175,8,17,1,17,1,17,1,17,1,17,3,17,
+        181,8,17,1,17,1,17,1,17,1,18,1,18,1,18,3,18,189,8,18,1,19,1,19,1,
+        19,5,19,194,8,19,10,19,12,19,197,9,19,1,20,1,20,1,20,1,21,1,21,1,
+        21,1,21,1,21,1,21,1,21,1,21,1,21,3,21,211,8,21,1,22,1,22,1,22,1,
+        22,1,22,1,23,1,23,3,23,220,8,23,1,23,1,23,1,24,1,24,1,24,1,24,1,
+        24,1,24,1,25,1,25,1,25,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,
+        26,1,26,1,26,1,26,5,26,245,8,26,10,26,12,26,248,9,26,1,26,1,26,3,
+        26,252,8,26,1,27,1,27,1,27,1,27,1,27,1,27,1,27,1,27,1,27,5,27,263,
+        8,27,10,27,12,27,266,9,27,1,27,1,27,3,27,270,8,27,1,27,1,27,1,28,
+        1,28,1,28,1,28,3,28,278,8,28,1,28,1,28,3,28,282,8,28,1,29,1,29,5,
+        29,286,8,29,10,29,12,29,289,9,29,1,29,1,29,1,30,1,30,1,30,1,30,1,
+        30,3,30,298,8,30,1,30,1,30,1,30,1,30,1,30,3,30,305,8,30,1,30,1,30,
+        1,30,1,30,1,30,1,30,1,30,1,30,3,30,315,8,30,1,30,1,30,1,30,1,30,
+        1,30,1,30,1,30,1,30,1,30,1,30,1,30,1,30,1,30,1,30,1,30,1,30,1,30,
+        1,30,1,30,1,30,1,30,5,30,338,8,30,10,30,12,30,341,9,30,1,31,1,31,
+        1,31,5,31,346,8,31,10,31,12,31,349,9,31,1,32,1,32,1,33,1,33,1,33,
+        1,33,3,33,357,8,33,1,33,0,1,60,34,0,2,4,6,8,10,12,14,16,18,20,22,
+        24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,64,66,
+        0,5,1,0,1,3,1,0,9,11,1,0,38,39,1,0,36,37,2,0,32,35,40,41,381,0,71,
+        1,0,0,0,2,80,1,0,0,0,4,92,1,0,0,0,6,94,1,0,0,0,8,102,1,0,0,0,10,
+        109,1,0,0,0,12,111,1,0,0,0,14,114,1,0,0,0,16,121,1,0,0,0,18,123,
+        1,0,0,0,20,128,1,0,0,0,22,131,1,0,0,0,24,141,1,0,0,0,26,148,1,0,
+        0,0,28,152,1,0,0,0,30,167,1,0,0,0,32,169,1,0,0,0,34,174,1,0,0,0,
+        36,188,1,0,0,0,38,190,1,0,0,0,40,198,1,0,0,0,42,210,1,0,0,0,44,212,
+        1,0,0,0,46,217,1,0,0,0,48,223,1,0,0,0,50,229,1,0,0,0,52,232,1,0,
+        0,0,54,253,1,0,0,0,56,273,1,0,0,0,58,283,1,0,0,0,60,314,1,0,0,0,
+        62,342,1,0,0,0,64,350,1,0,0,0,66,356,1,0,0,0,68,70,3,2,1,0,69,68,
+        1,0,0,0,70,73,1,0,0,0,71,69,1,0,0,0,71,72,1,0,0,0,72,74,1,0,0,0,
+        73,71,1,0,0,0,74,75,5,0,0,1,75,1,1,0,0,0,76,81,3,4,2,0,77,81,3,28,
+        14,0,78,81,3,34,17,0,79,81,3,42,21,0,80,76,1,0,0,0,80,77,1,0,0,0,
+        80,78,1,0,0,0,80,79,1,0,0,0,81,3,1,0,0,0,82,83,5,26,0,0,83,84,3,
+        6,3,0,84,85,5,43,0,0,85,93,1,0,0,0,86,87,5,27,0,0,87,88,3,6,3,0,
+        88,89,5,44,0,0,89,90,5,59,0,0,90,91,5,43,0,0,91,93,1,0,0,0,92,82,
+        1,0,0,0,92,86,1,0,0,0,93,5,1,0,0,0,94,99,5,59,0,0,95,96,5,51,0,0,
+        96,98,5,59,0,0,97,95,1,0,0,0,98,101,1,0,0,0,99,97,1,0,0,0,99,100,
+        1,0,0,0,100,7,1,0,0,0,101,99,1,0,0,0,102,103,7,0,0,0,103,9,1,0,0,
+        0,104,110,3,12,6,0,105,110,5,5,0,0,106,110,3,16,8,0,107,110,3,18,
+        9,0,108,110,5,59,0,0,109,104,1,0,0,0,109,105,1,0,0,0,109,106,1,0,
+        0,0,109,107,1,0,0,0,109,108,1,0,0,0,110,11,1,0,0,0,111,112,5,4,0,
+        0,112,113,3,14,7,0,113,13,1,0,0,0,114,115,7,1,0,0,115,15,1,0,0,0,
+        116,122,5,6,0,0,117,118,5,6,0,0,118,119,5,49,0,0,119,120,5,54,0,
+        0,120,122,5,50,0,0,121,116,1,0,0,0,121,117,1,0,0,0,122,17,1,0,0,
+        0,123,124,5,7,0,0,124,125,5,59,0,0,125,19,1,0,0,0,126,129,3,22,11,
+        0,127,129,3,24,12,0,128,126,1,0,0,0,128,127,1,0,0,0,129,21,1,0,0,
+        0,130,132,3,8,4,0,131,130,1,0,0,0,131,132,1,0,0,0,132,133,1,0,0,
+        0,133,134,3,10,5,0,134,136,5,59,0,0,135,137,3,26,13,0,136,135,1,
+        0,0,0,136,137,1,0,0,0,137,138,1,0,0,0,138,139,5,43,0,0,139,23,1,
+        0,0,0,140,142,3,8,4,0,141,140,1,0,0,0,141,142,1,0,0,0,142,143,1,
+        0,0,0,143,144,3,18,9,0,144,145,5,28,0,0,145,146,5,59,0,0,146,147,
+        5,43,0,0,147,25,1,0,0,0,148,149,5,42,0,0,149,150,3,60,30,0,150,27,
+        1,0,0,0,151,153,3,8,4,0,152,151,1,0,0,0,152,153,1,0,0,0,153,154,
+        1,0,0,0,154,155,5,8,0,0,155,156,5,59,0,0,156,160,5,47,0,0,157,159,
+        3,30,15,0,158,157,1,0,0,0,159,162,1,0,0,0,160,158,1,0,0,0,160,161,
+        1,0,0,0,161,163,1,0,0,0,162,160,1,0,0,0,163,164,5,48,0,0,164,29,
+        1,0,0,0,165,168,3,20,10,0,166,168,3,34,17,0,167,165,1,0,0,0,167,
+        166,1,0,0,0,168,31,1,0,0,0,169,170,5,59,0,0,170,171,5,59,0,0,171,
+        172,3,58,29,0,172,33,1,0,0,0,173,175,3,8,4,0,174,173,1,0,0,0,174,
+        175,1,0,0,0,175,176,1,0,0,0,176,177,3,36,18,0,177,178,5,59,0,0,178,
+        180,5,45,0,0,179,181,3,38,19,0,180,179,1,0,0,0,180,181,1,0,0,0,181,
+        182,1,0,0,0,182,183,5,46,0,0,183,184,3,58,29,0,184,35,1,0,0,0,185,
+        189,3,10,5,0,186,189,5,12,0,0,187,189,5,13,0,0,188,185,1,0,0,0,188,
+        186,1,0,0,0,188,187,1,0,0,0,189,37,1,0,0,0,190,195,3,40,20,0,191,
+        192,5,52,0,0,192,194,3,40,20,0,193,191,1,0,0,0,194,197,1,0,0,0,195,
+        193,1,0,0,0,195,196,1,0,0,0,196,39,1,0,0,0,197,195,1,0,0,0,198,199,
+        3,10,5,0,199,200,5,59,0,0,200,41,1,0,0,0,201,211,3,20,10,0,202,211,
+        3,32,16,0,203,211,3,44,22,0,204,211,3,46,23,0,205,211,3,52,26,0,
+        206,211,3,54,27,0,207,211,3,56,28,0,208,211,3,48,24,0,209,211,3,
+        50,25,0,210,201,1,0,0,0,210,202,1,0,0,0,210,203,1,0,0,0,210,204,
+        1,0,0,0,210,205,1,0,0,0,210,206,1,0,0,0,210,207,1,0,0,0,210,208,
+        1,0,0,0,210,209,1,0,0,0,211,43,1,0,0,0,212,213,3,6,3,0,213,214,5,
+        42,0,0,214,215,3,60,30,0,215,216,5,43,0,0,216,45,1,0,0,0,217,219,
+        5,14,0,0,218,220,3,60,30,0,219,218,1,0,0,0,219,220,1,0,0,0,220,221,
+        1,0,0,0,221,222,5,43,0,0,222,47,1,0,0,0,223,224,5,29,0,0,224,225,
+        5,45,0,0,225,226,3,60,30,0,226,227,5,46,0,0,227,228,5,43,0,0,228,
+        49,1,0,0,0,229,230,3,60,30,0,230,231,5,43,0,0,231,51,1,0,0,0,232,
+        233,5,15,0,0,233,234,5,45,0,0,234,235,3,60,30,0,235,236,5,46,0,0,
+        236,246,3,58,29,0,237,238,5,16,0,0,238,239,5,15,0,0,239,240,5,45,
+        0,0,240,241,3,60,30,0,241,242,5,46,0,0,242,243,3,58,29,0,243,245,
+        1,0,0,0,244,237,1,0,0,0,245,248,1,0,0,0,246,244,1,0,0,0,246,247,
+        1,0,0,0,247,251,1,0,0,0,248,246,1,0,0,0,249,250,5,16,0,0,250,252,
+        3,58,29,0,251,249,1,0,0,0,251,252,1,0,0,0,252,53,1,0,0,0,253,254,
+        5,17,0,0,254,255,5,45,0,0,255,256,3,60,30,0,256,257,5,46,0,0,257,
+        264,5,47,0,0,258,259,5,18,0,0,259,260,3,60,30,0,260,261,3,58,29,
+        0,261,263,1,0,0,0,262,258,1,0,0,0,263,266,1,0,0,0,264,262,1,0,0,
+        0,264,265,1,0,0,0,265,269,1,0,0,0,266,264,1,0,0,0,267,268,5,19,0,
+        0,268,270,3,58,29,0,269,267,1,0,0,0,269,270,1,0,0,0,270,271,1,0,
+        0,0,271,272,5,48,0,0,272,55,1,0,0,0,273,274,5,20,0,0,274,277,3,58,
+        29,0,275,276,5,21,0,0,276,278,3,58,29,0,277,275,1,0,0,0,277,278,
+        1,0,0,0,278,281,1,0,0,0,279,280,5,22,0,0,280,282,3,58,29,0,281,279,
+        1,0,0,0,281,282,1,0,0,0,282,57,1,0,0,0,283,287,5,47,0,0,284,286,
+        3,42,21,0,285,284,1,0,0,0,286,289,1,0,0,0,287,285,1,0,0,0,287,288,
+        1,0,0,0,288,290,1,0,0,0,289,287,1,0,0,0,290,291,5,48,0,0,291,59,
+        1,0,0,0,292,293,6,30,-1,0,293,315,3,66,33,0,294,295,3,6,3,0,295,
+        297,5,45,0,0,296,298,3,62,31,0,297,296,1,0,0,0,297,298,1,0,0,0,298,
+        299,1,0,0,0,299,300,5,46,0,0,300,315,1,0,0,0,301,302,5,30,0,0,302,
+        304,5,45,0,0,303,305,3,64,32,0,304,303,1,0,0,0,304,305,1,0,0,0,305,
+        306,1,0,0,0,306,315,5,46,0,0,307,315,3,6,3,0,308,309,5,45,0,0,309,
+        310,3,60,30,0,310,311,5,46,0,0,311,315,1,0,0,0,312,313,7,2,0,0,313,
+        315,3,60,30,7,314,292,1,0,0,0,314,294,1,0,0,0,314,301,1,0,0,0,314,
+        307,1,0,0,0,314,308,1,0,0,0,314,312,1,0,0,0,315,339,1,0,0,0,316,
+        317,10,8,0,0,317,318,5,31,0,0,318,338,3,60,30,8,319,320,10,6,0,0,
+        320,321,7,3,0,0,321,338,3,60,30,7,322,323,10,5,0,0,323,324,7,2,0,
+        0,324,338,3,60,30,6,325,326,10,4,0,0,326,327,7,4,0,0,327,338,3,60,
+        30,5,328,329,10,3,0,0,329,330,5,23,0,0,330,338,3,60,30,4,331,332,
+        10,2,0,0,332,333,5,24,0,0,333,338,3,60,30,3,334,335,10,1,0,0,335,
+        336,5,25,0,0,336,338,3,60,30,2,337,316,1,0,0,0,337,319,1,0,0,0,337,
+        322,1,0,0,0,337,325,1,0,0,0,337,328,1,0,0,0,337,331,1,0,0,0,337,
+        334,1,0,0,0,338,341,1,0,0,0,339,337,1,0,0,0,339,340,1,0,0,0,340,
+        61,1,0,0,0,341,339,1,0,0,0,342,347,3,60,30,0,343,344,5,52,0,0,344,
+        346,3,60,30,0,345,343,1,0,0,0,346,349,1,0,0,0,347,345,1,0,0,0,347,
+        348,1,0,0,0,348,63,1,0,0,0,349,347,1,0,0,0,350,351,7,1,0,0,351,65,
+        1,0,0,0,352,357,5,54,0,0,353,357,5,53,0,0,354,357,5,55,0,0,355,357,
+        5,56,0,0,356,352,1,0,0,0,356,353,1,0,0,0,356,354,1,0,0,0,356,355,
+        1,0,0,0,357,67,1,0,0,0,33,71,80,92,99,109,121,128,131,136,141,152,
+        160,167,174,180,188,195,210,219,246,251,264,269,277,281,287,297,
+        304,314,337,339,347,356
     ]
 
 class ForgeLangAlpha1Parser ( Parser ):
@@ -203,7 +204,8 @@ class ForgeLangAlpha1Parser ( Parser ):
     RULE_block = 29
     RULE_expression = 30
     RULE_argumentList = 31
-    RULE_literal = 32
+    RULE_inputType = 32
+    RULE_literal = 33
 
     ruleNames =  [ "program", "topLevelItem", "importStatement", "qualifiedName", 
                    "modifier", "typeDeclaration", "numberType", "numberKind", 
@@ -213,7 +215,7 @@ class ForgeLangAlpha1Parser ( Parser ):
                    "returnType", "parameterList", "parameter", "statement", 
                    "assignment", "returnStatement", "printStatement", "expressionStatement", 
                    "ifStatement", "switchStatement", "doFailFinal", "block", 
-                   "expression", "argumentList", "literal" ]
+                   "expression", "argumentList", "inputType", "literal" ]
 
     EOF = Token.EOF
     Open=1
@@ -329,17 +331,17 @@ class ForgeLangAlpha1Parser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 69
+            self.state = 71
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while (((_la) & ~0x3f) == 0 and ((1 << _la) & 711604751943528958) != 0):
-                self.state = 66
+                self.state = 68
                 self.topLevelItem()
-                self.state = 71
+                self.state = 73
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 72
+            self.state = 74
             self.match(ForgeLangAlpha1Parser.EOF)
         except RecognitionException as re:
             localctx.exception = re
@@ -398,30 +400,30 @@ class ForgeLangAlpha1Parser ( Parser ):
         localctx = ForgeLangAlpha1Parser.TopLevelItemContext(self, self._ctx, self.state)
         self.enterRule(localctx, 2, self.RULE_topLevelItem)
         try:
-            self.state = 78
+            self.state = 80
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,1,self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 74
+                self.state = 76
                 self.importStatement()
                 pass
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 75
+                self.state = 77
                 self.dataDeclaration()
                 pass
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 76
+                self.state = 78
                 self.functionDeclaration()
                 pass
 
             elif la_ == 4:
                 self.enterOuterAlt(localctx, 4)
-                self.state = 77
+                self.state = 79
                 self.statement()
                 pass
 
@@ -520,31 +522,31 @@ class ForgeLangAlpha1Parser ( Parser ):
         localctx = ForgeLangAlpha1Parser.ImportStatementContext(self, self._ctx, self.state)
         self.enterRule(localctx, 4, self.RULE_importStatement)
         try:
-            self.state = 90
+            self.state = 92
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [26]:
                 localctx = ForgeLangAlpha1Parser.UseImportContext(self, localctx)
                 self.enterOuterAlt(localctx, 1)
-                self.state = 80
-                self.match(ForgeLangAlpha1Parser.Use)
-                self.state = 81
-                self.qualifiedName()
                 self.state = 82
+                self.match(ForgeLangAlpha1Parser.Use)
+                self.state = 83
+                self.qualifiedName()
+                self.state = 84
                 self.match(ForgeLangAlpha1Parser.SEMI)
                 pass
             elif token in [27]:
                 localctx = ForgeLangAlpha1Parser.UsingImportContext(self, localctx)
                 self.enterOuterAlt(localctx, 2)
-                self.state = 84
-                self.match(ForgeLangAlpha1Parser.Using)
-                self.state = 85
-                self.qualifiedName()
                 self.state = 86
-                self.match(ForgeLangAlpha1Parser.COLON)
+                self.match(ForgeLangAlpha1Parser.Using)
                 self.state = 87
-                self.match(ForgeLangAlpha1Parser.ID)
+                self.qualifiedName()
                 self.state = 88
+                self.match(ForgeLangAlpha1Parser.COLON)
+                self.state = 89
+                self.match(ForgeLangAlpha1Parser.ID)
+                self.state = 90
                 self.match(ForgeLangAlpha1Parser.SEMI)
                 pass
             else:
@@ -604,18 +606,18 @@ class ForgeLangAlpha1Parser ( Parser ):
         self.enterRule(localctx, 6, self.RULE_qualifiedName)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 92
+            self.state = 94
             self.match(ForgeLangAlpha1Parser.ID)
-            self.state = 97
+            self.state = 99
             self._errHandler.sync(self)
             _alt = self._interp.adaptivePredict(self._input,3,self._ctx)
             while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
                 if _alt==1:
-                    self.state = 93
+                    self.state = 95
                     self.match(ForgeLangAlpha1Parser.DOT)
-                    self.state = 94
+                    self.state = 96
                     self.match(ForgeLangAlpha1Parser.ID) 
-                self.state = 99
+                self.state = 101
                 self._errHandler.sync(self)
                 _alt = self._interp.adaptivePredict(self._input,3,self._ctx)
 
@@ -671,7 +673,7 @@ class ForgeLangAlpha1Parser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 100
+            self.state = 102
             _la = self._input.LA(1)
             if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 14) != 0)):
                 self._errHandler.recoverInline(self)
@@ -737,32 +739,32 @@ class ForgeLangAlpha1Parser ( Parser ):
         localctx = ForgeLangAlpha1Parser.TypeDeclarationContext(self, self._ctx, self.state)
         self.enterRule(localctx, 10, self.RULE_typeDeclaration)
         try:
-            self.state = 107
+            self.state = 109
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [4]:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 102
+                self.state = 104
                 self.numberType()
                 pass
             elif token in [5]:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 103
+                self.state = 105
                 self.match(ForgeLangAlpha1Parser.Weld)
                 pass
             elif token in [6]:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 104
+                self.state = 106
                 self.oreType()
                 pass
             elif token in [7]:
                 self.enterOuterAlt(localctx, 4)
-                self.state = 105
+                self.state = 107
                 self.materialsType()
                 pass
             elif token in [59]:
                 self.enterOuterAlt(localctx, 5)
-                self.state = 106
+                self.state = 108
                 self.match(ForgeLangAlpha1Parser.ID)
                 pass
             else:
@@ -817,9 +819,9 @@ class ForgeLangAlpha1Parser ( Parser ):
         self.enterRule(localctx, 12, self.RULE_numberType)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 109
+            self.state = 111
             self.match(ForgeLangAlpha1Parser.Number)
-            self.state = 110
+            self.state = 112
             self.numberKind()
         except RecognitionException as re:
             localctx.exception = re
@@ -873,7 +875,7 @@ class ForgeLangAlpha1Parser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 112
+            self.state = 114
             _la = self._input.LA(1)
             if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 3584) != 0)):
                 self._errHandler.recoverInline(self)
@@ -933,24 +935,24 @@ class ForgeLangAlpha1Parser ( Parser ):
         localctx = ForgeLangAlpha1Parser.OreTypeContext(self, self._ctx, self.state)
         self.enterRule(localctx, 16, self.RULE_oreType)
         try:
-            self.state = 119
+            self.state = 121
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,5,self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 114
+                self.state = 116
                 self.match(ForgeLangAlpha1Parser.Ore)
                 pass
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 115
-                self.match(ForgeLangAlpha1Parser.Ore)
-                self.state = 116
-                self.match(ForgeLangAlpha1Parser.LBRACK)
                 self.state = 117
-                self.match(ForgeLangAlpha1Parser.INT)
+                self.match(ForgeLangAlpha1Parser.Ore)
                 self.state = 118
+                self.match(ForgeLangAlpha1Parser.LBRACK)
+                self.state = 119
+                self.match(ForgeLangAlpha1Parser.INT)
+                self.state = 120
                 self.match(ForgeLangAlpha1Parser.RBRACK)
                 pass
 
@@ -1003,9 +1005,9 @@ class ForgeLangAlpha1Parser ( Parser ):
         self.enterRule(localctx, 18, self.RULE_materialsType)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 121
+            self.state = 123
             self.match(ForgeLangAlpha1Parser.Materials)
-            self.state = 122
+            self.state = 124
             self.match(ForgeLangAlpha1Parser.ID)
         except RecognitionException as re:
             localctx.exception = re
@@ -1056,18 +1058,18 @@ class ForgeLangAlpha1Parser ( Parser ):
         localctx = ForgeLangAlpha1Parser.VariableDeclarationContext(self, self._ctx, self.state)
         self.enterRule(localctx, 20, self.RULE_variableDeclaration)
         try:
-            self.state = 126
+            self.state = 128
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,6,self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 124
+                self.state = 126
                 self.standardVarDecl()
                 pass
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 125
+                self.state = 127
                 self.materialsConstructorDecl()
                 pass
 
@@ -1133,27 +1135,27 @@ class ForgeLangAlpha1Parser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 129
+            self.state = 131
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if (((_la) & ~0x3f) == 0 and ((1 << _la) & 14) != 0):
-                self.state = 128
+                self.state = 130
                 self.modifier()
 
 
-            self.state = 131
+            self.state = 133
             self.typeDeclaration()
-            self.state = 132
-            self.match(ForgeLangAlpha1Parser.ID)
             self.state = 134
+            self.match(ForgeLangAlpha1Parser.ID)
+            self.state = 136
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==42:
-                self.state = 133
+                self.state = 135
                 self.initialization()
 
 
-            self.state = 136
+            self.state = 138
             self.match(ForgeLangAlpha1Parser.SEMI)
         except RecognitionException as re:
             localctx.exception = re
@@ -1215,21 +1217,21 @@ class ForgeLangAlpha1Parser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 139
+            self.state = 141
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if (((_la) & ~0x3f) == 0 and ((1 << _la) & 14) != 0):
-                self.state = 138
+                self.state = 140
                 self.modifier()
 
 
-            self.state = 141
-            self.materialsType()
-            self.state = 142
-            self.match(ForgeLangAlpha1Parser.New)
             self.state = 143
-            self.match(ForgeLangAlpha1Parser.ID)
+            self.materialsType()
             self.state = 144
+            self.match(ForgeLangAlpha1Parser.New)
+            self.state = 145
+            self.match(ForgeLangAlpha1Parser.ID)
+            self.state = 146
             self.match(ForgeLangAlpha1Parser.SEMI)
         except RecognitionException as re:
             localctx.exception = re
@@ -1280,9 +1282,9 @@ class ForgeLangAlpha1Parser ( Parser ):
         self.enterRule(localctx, 26, self.RULE_initialization)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 146
+            self.state = 148
             self.match(ForgeLangAlpha1Parser.ASSIGN)
-            self.state = 147
+            self.state = 149
             self.expression(0)
         except RecognitionException as re:
             localctx.exception = re
@@ -1350,31 +1352,31 @@ class ForgeLangAlpha1Parser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 150
+            self.state = 152
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if (((_la) & ~0x3f) == 0 and ((1 << _la) & 14) != 0):
-                self.state = 149
+                self.state = 151
                 self.modifier()
 
 
-            self.state = 152
-            self.match(ForgeLangAlpha1Parser.Data)
-            self.state = 153
-            self.match(ForgeLangAlpha1Parser.ID)
             self.state = 154
+            self.match(ForgeLangAlpha1Parser.Data)
+            self.state = 155
+            self.match(ForgeLangAlpha1Parser.ID)
+            self.state = 156
             self.match(ForgeLangAlpha1Parser.LBRACE)
-            self.state = 158
+            self.state = 160
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while (((_la) & ~0x3f) == 0 and ((1 << _la) & 576460752303436030) != 0):
-                self.state = 155
+                self.state = 157
                 self.dataMember()
-                self.state = 160
+                self.state = 162
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 161
+            self.state = 163
             self.match(ForgeLangAlpha1Parser.RBRACE)
         except RecognitionException as re:
             localctx.exception = re
@@ -1425,18 +1427,18 @@ class ForgeLangAlpha1Parser ( Parser ):
         localctx = ForgeLangAlpha1Parser.DataMemberContext(self, self._ctx, self.state)
         self.enterRule(localctx, 30, self.RULE_dataMember)
         try:
-            self.state = 165
+            self.state = 167
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,12,self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 163
+                self.state = 165
                 self.variableDeclaration()
                 pass
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 164
+                self.state = 166
                 self.functionDeclaration()
                 pass
 
@@ -1493,11 +1495,11 @@ class ForgeLangAlpha1Parser ( Parser ):
         self.enterRule(localctx, 32, self.RULE_objectDeclaration)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 167
-            self.match(ForgeLangAlpha1Parser.ID)
-            self.state = 168
-            self.match(ForgeLangAlpha1Parser.ID)
             self.state = 169
+            self.match(ForgeLangAlpha1Parser.ID)
+            self.state = 170
+            self.match(ForgeLangAlpha1Parser.ID)
+            self.state = 171
             self.block()
         except RecognitionException as re:
             localctx.exception = re
@@ -1567,31 +1569,31 @@ class ForgeLangAlpha1Parser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 172
+            self.state = 174
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if (((_la) & ~0x3f) == 0 and ((1 << _la) & 14) != 0):
-                self.state = 171
+                self.state = 173
                 self.modifier()
 
 
-            self.state = 174
-            self.returnType()
-            self.state = 175
-            self.match(ForgeLangAlpha1Parser.ID)
             self.state = 176
-            self.match(ForgeLangAlpha1Parser.LPAREN)
+            self.returnType()
+            self.state = 177
+            self.match(ForgeLangAlpha1Parser.ID)
             self.state = 178
+            self.match(ForgeLangAlpha1Parser.LPAREN)
+            self.state = 180
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if (((_la) & ~0x3f) == 0 and ((1 << _la) & 576460752303423728) != 0):
-                self.state = 177
+                self.state = 179
                 self.parameterList()
 
 
-            self.state = 180
+            self.state = 182
             self.match(ForgeLangAlpha1Parser.RPAREN)
-            self.state = 181
+            self.state = 183
             self.block()
         except RecognitionException as re:
             localctx.exception = re
@@ -1698,25 +1700,25 @@ class ForgeLangAlpha1Parser ( Parser ):
         localctx = ForgeLangAlpha1Parser.ReturnTypeContext(self, self._ctx, self.state)
         self.enterRule(localctx, 36, self.RULE_returnType)
         try:
-            self.state = 186
+            self.state = 188
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [4, 5, 6, 7, 59]:
                 localctx = ForgeLangAlpha1Parser.TypeReturnTypeContext(self, localctx)
                 self.enterOuterAlt(localctx, 1)
-                self.state = 183
+                self.state = 185
                 self.typeDeclaration()
                 pass
             elif token in [12]:
                 localctx = ForgeLangAlpha1Parser.DynamicReturnTypeContext(self, localctx)
                 self.enterOuterAlt(localctx, 2)
-                self.state = 184
+                self.state = 186
                 self.match(ForgeLangAlpha1Parser.Function)
                 pass
             elif token in [13]:
                 localctx = ForgeLangAlpha1Parser.NoReturnTypeContext(self, localctx)
                 self.enterOuterAlt(localctx, 3)
-                self.state = 185
+                self.state = 187
                 self.match(ForgeLangAlpha1Parser.Nunction)
                 pass
             else:
@@ -1778,17 +1780,17 @@ class ForgeLangAlpha1Parser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 188
+            self.state = 190
             self.parameter()
-            self.state = 193
+            self.state = 195
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la==52:
-                self.state = 189
+                self.state = 191
                 self.match(ForgeLangAlpha1Parser.COMMA)
-                self.state = 190
+                self.state = 192
                 self.parameter()
-                self.state = 195
+                self.state = 197
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -1841,9 +1843,9 @@ class ForgeLangAlpha1Parser ( Parser ):
         self.enterRule(localctx, 40, self.RULE_parameter)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 196
+            self.state = 198
             self.typeDeclaration()
-            self.state = 197
+            self.state = 199
             self.match(ForgeLangAlpha1Parser.ID)
         except RecognitionException as re:
             localctx.exception = re
@@ -1922,60 +1924,60 @@ class ForgeLangAlpha1Parser ( Parser ):
         localctx = ForgeLangAlpha1Parser.StatementContext(self, self._ctx, self.state)
         self.enterRule(localctx, 42, self.RULE_statement)
         try:
-            self.state = 208
+            self.state = 210
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,17,self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 199
+                self.state = 201
                 self.variableDeclaration()
                 pass
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 200
+                self.state = 202
                 self.objectDeclaration()
                 pass
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 201
+                self.state = 203
                 self.assignment()
                 pass
 
             elif la_ == 4:
                 self.enterOuterAlt(localctx, 4)
-                self.state = 202
+                self.state = 204
                 self.returnStatement()
                 pass
 
             elif la_ == 5:
                 self.enterOuterAlt(localctx, 5)
-                self.state = 203
+                self.state = 205
                 self.ifStatement()
                 pass
 
             elif la_ == 6:
                 self.enterOuterAlt(localctx, 6)
-                self.state = 204
+                self.state = 206
                 self.switchStatement()
                 pass
 
             elif la_ == 7:
                 self.enterOuterAlt(localctx, 7)
-                self.state = 205
+                self.state = 207
                 self.doFailFinal()
                 pass
 
             elif la_ == 8:
                 self.enterOuterAlt(localctx, 8)
-                self.state = 206
+                self.state = 208
                 self.printStatement()
                 pass
 
             elif la_ == 9:
                 self.enterOuterAlt(localctx, 9)
-                self.state = 207
+                self.state = 209
                 self.expressionStatement()
                 pass
 
@@ -2036,13 +2038,13 @@ class ForgeLangAlpha1Parser ( Parser ):
         self.enterRule(localctx, 44, self.RULE_assignment)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 210
-            self.qualifiedName()
-            self.state = 211
-            self.match(ForgeLangAlpha1Parser.ASSIGN)
             self.state = 212
-            self.expression(0)
+            self.qualifiedName()
             self.state = 213
+            self.match(ForgeLangAlpha1Parser.ASSIGN)
+            self.state = 214
+            self.expression(0)
+            self.state = 215
             self.match(ForgeLangAlpha1Parser.SEMI)
         except RecognitionException as re:
             localctx.exception = re
@@ -2097,17 +2099,17 @@ class ForgeLangAlpha1Parser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 215
-            self.match(ForgeLangAlpha1Parser.Return)
             self.state = 217
+            self.match(ForgeLangAlpha1Parser.Return)
+            self.state = 219
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if (((_la) & ~0x3f) == 0 and ((1 << _la) & 711604751204089856) != 0):
-                self.state = 216
+                self.state = 218
                 self.expression(0)
 
 
-            self.state = 219
+            self.state = 221
             self.match(ForgeLangAlpha1Parser.SEMI)
         except RecognitionException as re:
             localctx.exception = re
@@ -2167,15 +2169,15 @@ class ForgeLangAlpha1Parser ( Parser ):
         self.enterRule(localctx, 48, self.RULE_printStatement)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 221
-            self.match(ForgeLangAlpha1Parser.Print)
-            self.state = 222
-            self.match(ForgeLangAlpha1Parser.LPAREN)
             self.state = 223
-            self.expression(0)
+            self.match(ForgeLangAlpha1Parser.Print)
             self.state = 224
-            self.match(ForgeLangAlpha1Parser.RPAREN)
+            self.match(ForgeLangAlpha1Parser.LPAREN)
             self.state = 225
+            self.expression(0)
+            self.state = 226
+            self.match(ForgeLangAlpha1Parser.RPAREN)
+            self.state = 227
             self.match(ForgeLangAlpha1Parser.SEMI)
         except RecognitionException as re:
             localctx.exception = re
@@ -2226,9 +2228,9 @@ class ForgeLangAlpha1Parser ( Parser ):
         self.enterRule(localctx, 50, self.RULE_expressionStatement)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 227
+            self.state = 229
             self.expression(0)
-            self.state = 228
+            self.state = 230
             self.match(ForgeLangAlpha1Parser.SEMI)
         except RecognitionException as re:
             localctx.exception = re
@@ -2311,44 +2313,44 @@ class ForgeLangAlpha1Parser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 230
-            self.match(ForgeLangAlpha1Parser.If)
-            self.state = 231
-            self.match(ForgeLangAlpha1Parser.LPAREN)
             self.state = 232
-            self.expression(0)
+            self.match(ForgeLangAlpha1Parser.If)
             self.state = 233
-            self.match(ForgeLangAlpha1Parser.RPAREN)
+            self.match(ForgeLangAlpha1Parser.LPAREN)
             self.state = 234
+            self.expression(0)
+            self.state = 235
+            self.match(ForgeLangAlpha1Parser.RPAREN)
+            self.state = 236
             self.block()
-            self.state = 244
+            self.state = 246
             self._errHandler.sync(self)
             _alt = self._interp.adaptivePredict(self._input,19,self._ctx)
             while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
                 if _alt==1:
-                    self.state = 235
-                    self.match(ForgeLangAlpha1Parser.Else)
-                    self.state = 236
-                    self.match(ForgeLangAlpha1Parser.If)
                     self.state = 237
-                    self.match(ForgeLangAlpha1Parser.LPAREN)
+                    self.match(ForgeLangAlpha1Parser.Else)
                     self.state = 238
-                    self.expression(0)
+                    self.match(ForgeLangAlpha1Parser.If)
                     self.state = 239
-                    self.match(ForgeLangAlpha1Parser.RPAREN)
+                    self.match(ForgeLangAlpha1Parser.LPAREN)
                     self.state = 240
+                    self.expression(0)
+                    self.state = 241
+                    self.match(ForgeLangAlpha1Parser.RPAREN)
+                    self.state = 242
                     self.block() 
-                self.state = 246
+                self.state = 248
                 self._errHandler.sync(self)
                 _alt = self._interp.adaptivePredict(self._input,19,self._ctx)
 
-            self.state = 249
+            self.state = 251
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==16:
-                self.state = 247
+                self.state = 249
                 self.match(ForgeLangAlpha1Parser.Else)
-                self.state = 248
+                self.state = 250
                 self.block()
 
 
@@ -2433,41 +2435,41 @@ class ForgeLangAlpha1Parser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 251
-            self.match(ForgeLangAlpha1Parser.Switch)
-            self.state = 252
-            self.match(ForgeLangAlpha1Parser.LPAREN)
             self.state = 253
-            self.expression(0)
+            self.match(ForgeLangAlpha1Parser.Switch)
             self.state = 254
-            self.match(ForgeLangAlpha1Parser.RPAREN)
+            self.match(ForgeLangAlpha1Parser.LPAREN)
             self.state = 255
+            self.expression(0)
+            self.state = 256
+            self.match(ForgeLangAlpha1Parser.RPAREN)
+            self.state = 257
             self.match(ForgeLangAlpha1Parser.LBRACE)
-            self.state = 262
+            self.state = 264
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la==18:
-                self.state = 256
-                self.match(ForgeLangAlpha1Parser.Deal)
-                self.state = 257
-                self.expression(0)
                 self.state = 258
+                self.match(ForgeLangAlpha1Parser.Deal)
+                self.state = 259
+                self.expression(0)
+                self.state = 260
                 self.block()
-                self.state = 264
+                self.state = 266
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 267
+            self.state = 269
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==19:
-                self.state = 265
+                self.state = 267
                 self.match(ForgeLangAlpha1Parser.Base)
-                self.state = 266
+                self.state = 268
                 self.block()
 
 
-            self.state = 269
+            self.state = 271
             self.match(ForgeLangAlpha1Parser.RBRACE)
         except RecognitionException as re:
             localctx.exception = re
@@ -2528,27 +2530,27 @@ class ForgeLangAlpha1Parser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 271
+            self.state = 273
             self.match(ForgeLangAlpha1Parser.Do)
-            self.state = 272
+            self.state = 274
             self.block()
-            self.state = 275
+            self.state = 277
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==21:
-                self.state = 273
+                self.state = 275
                 self.match(ForgeLangAlpha1Parser.Fail)
-                self.state = 274
+                self.state = 276
                 self.block()
 
 
-            self.state = 279
+            self.state = 281
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==22:
-                self.state = 277
+                self.state = 279
                 self.match(ForgeLangAlpha1Parser.Final)
-                self.state = 278
+                self.state = 280
                 self.block()
 
 
@@ -2608,19 +2610,19 @@ class ForgeLangAlpha1Parser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 281
+            self.state = 283
             self.match(ForgeLangAlpha1Parser.LBRACE)
-            self.state = 285
+            self.state = 287
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while (((_la) & ~0x3f) == 0 and ((1 << _la) & 711604751742189822) != 0):
-                self.state = 282
+                self.state = 284
                 self.statement()
-                self.state = 287
+                self.state = 289
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 288
+            self.state = 290
             self.match(ForgeLangAlpha1Parser.RBRACE)
         except RecognitionException as re:
             localctx.exception = re
@@ -2659,8 +2661,8 @@ class ForgeLangAlpha1Parser ( Parser ):
             return self.getToken(ForgeLangAlpha1Parser.LPAREN, 0)
         def RPAREN(self):
             return self.getToken(ForgeLangAlpha1Parser.RPAREN, 0)
-        def argumentList(self):
-            return self.getTypedRuleContext(ForgeLangAlpha1Parser.ArgumentListContext,0)
+        def inputType(self):
+            return self.getTypedRuleContext(ForgeLangAlpha1Parser.InputTypeContext,0)
 
 
         def enterRule(self, listener:ParseTreeListener):
@@ -3053,7 +3055,7 @@ class ForgeLangAlpha1Parser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 312
+            self.state = 314
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,28,self._ctx)
             if la_ == 1:
@@ -3061,7 +3063,7 @@ class ForgeLangAlpha1Parser ( Parser ):
                 self._ctx = localctx
                 _prevctx = localctx
 
-                self.state = 291
+                self.state = 293
                 self.literal()
                 pass
 
@@ -3069,19 +3071,19 @@ class ForgeLangAlpha1Parser ( Parser ):
                 localctx = ForgeLangAlpha1Parser.FunctionCallExprContext(self, localctx)
                 self._ctx = localctx
                 _prevctx = localctx
-                self.state = 292
+                self.state = 294
                 self.qualifiedName()
-                self.state = 293
-                self.match(ForgeLangAlpha1Parser.LPAREN)
                 self.state = 295
+                self.match(ForgeLangAlpha1Parser.LPAREN)
+                self.state = 297
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 if (((_la) & ~0x3f) == 0 and ((1 << _la) & 711604751204089856) != 0):
-                    self.state = 294
+                    self.state = 296
                     self.argumentList()
 
 
-                self.state = 297
+                self.state = 299
                 self.match(ForgeLangAlpha1Parser.RPAREN)
                 pass
 
@@ -3089,19 +3091,19 @@ class ForgeLangAlpha1Parser ( Parser ):
                 localctx = ForgeLangAlpha1Parser.InputCallExprContext(self, localctx)
                 self._ctx = localctx
                 _prevctx = localctx
-                self.state = 299
+                self.state = 301
                 self.match(ForgeLangAlpha1Parser.Input)
-                self.state = 300
-                self.match(ForgeLangAlpha1Parser.LPAREN)
                 self.state = 302
+                self.match(ForgeLangAlpha1Parser.LPAREN)
+                self.state = 304
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if (((_la) & ~0x3f) == 0 and ((1 << _la) & 711604751204089856) != 0):
-                    self.state = 301
-                    self.argumentList()
+                if (((_la) & ~0x3f) == 0 and ((1 << _la) & 3584) != 0):
+                    self.state = 303
+                    self.inputType()
 
 
-                self.state = 304
+                self.state = 306
                 self.match(ForgeLangAlpha1Parser.RPAREN)
                 pass
 
@@ -3109,7 +3111,7 @@ class ForgeLangAlpha1Parser ( Parser ):
                 localctx = ForgeLangAlpha1Parser.MemberAccessExprContext(self, localctx)
                 self._ctx = localctx
                 _prevctx = localctx
-                self.state = 305
+                self.state = 307
                 self.qualifiedName()
                 pass
 
@@ -3117,11 +3119,11 @@ class ForgeLangAlpha1Parser ( Parser ):
                 localctx = ForgeLangAlpha1Parser.GroupingExprContext(self, localctx)
                 self._ctx = localctx
                 _prevctx = localctx
-                self.state = 306
-                self.match(ForgeLangAlpha1Parser.LPAREN)
-                self.state = 307
-                self.expression(0)
                 self.state = 308
+                self.match(ForgeLangAlpha1Parser.LPAREN)
+                self.state = 309
+                self.expression(0)
+                self.state = 310
                 self.match(ForgeLangAlpha1Parser.RPAREN)
                 pass
 
@@ -3129,20 +3131,20 @@ class ForgeLangAlpha1Parser ( Parser ):
                 localctx = ForgeLangAlpha1Parser.UnaryExprContext(self, localctx)
                 self._ctx = localctx
                 _prevctx = localctx
-                self.state = 310
+                self.state = 312
                 _la = self._input.LA(1)
                 if not(_la==38 or _la==39):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
                     self.consume()
-                self.state = 311
+                self.state = 313
                 self.expression(7)
                 pass
 
 
             self._ctx.stop = self._input.LT(-1)
-            self.state = 337
+            self.state = 339
             self._errHandler.sync(self)
             _alt = self._interp.adaptivePredict(self._input,30,self._ctx)
             while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
@@ -3150,117 +3152,117 @@ class ForgeLangAlpha1Parser ( Parser ):
                     if self._parseListeners is not None:
                         self.triggerExitRuleEvent()
                     _prevctx = localctx
-                    self.state = 335
+                    self.state = 337
                     self._errHandler.sync(self)
                     la_ = self._interp.adaptivePredict(self._input,29,self._ctx)
                     if la_ == 1:
                         localctx = ForgeLangAlpha1Parser.PowExprContext(self, ForgeLangAlpha1Parser.ExpressionContext(self, _parentctx, _parentState))
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
-                        self.state = 314
+                        self.state = 316
                         if not self.precpred(self._ctx, 8):
                             from antlr4.error.Errors import FailedPredicateException
                             raise FailedPredicateException(self, "self.precpred(self._ctx, 8)")
-                        self.state = 315
+                        self.state = 317
                         self.match(ForgeLangAlpha1Parser.POW)
-                        self.state = 316
+                        self.state = 318
                         self.expression(8)
                         pass
 
                     elif la_ == 2:
                         localctx = ForgeLangAlpha1Parser.MulExprContext(self, ForgeLangAlpha1Parser.ExpressionContext(self, _parentctx, _parentState))
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
-                        self.state = 317
+                        self.state = 319
                         if not self.precpred(self._ctx, 6):
                             from antlr4.error.Errors import FailedPredicateException
                             raise FailedPredicateException(self, "self.precpred(self._ctx, 6)")
-                        self.state = 318
+                        self.state = 320
                         _la = self._input.LA(1)
                         if not(_la==36 or _la==37):
                             self._errHandler.recoverInline(self)
                         else:
                             self._errHandler.reportMatch(self)
                             self.consume()
-                        self.state = 319
+                        self.state = 321
                         self.expression(7)
                         pass
 
                     elif la_ == 3:
                         localctx = ForgeLangAlpha1Parser.AddExprContext(self, ForgeLangAlpha1Parser.ExpressionContext(self, _parentctx, _parentState))
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
-                        self.state = 320
+                        self.state = 322
                         if not self.precpred(self._ctx, 5):
                             from antlr4.error.Errors import FailedPredicateException
                             raise FailedPredicateException(self, "self.precpred(self._ctx, 5)")
-                        self.state = 321
+                        self.state = 323
                         _la = self._input.LA(1)
                         if not(_la==38 or _la==39):
                             self._errHandler.recoverInline(self)
                         else:
                             self._errHandler.reportMatch(self)
                             self.consume()
-                        self.state = 322
+                        self.state = 324
                         self.expression(6)
                         pass
 
                     elif la_ == 4:
                         localctx = ForgeLangAlpha1Parser.CmpExprContext(self, ForgeLangAlpha1Parser.ExpressionContext(self, _parentctx, _parentState))
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
-                        self.state = 323
+                        self.state = 325
                         if not self.precpred(self._ctx, 4):
                             from antlr4.error.Errors import FailedPredicateException
                             raise FailedPredicateException(self, "self.precpred(self._ctx, 4)")
-                        self.state = 324
+                        self.state = 326
                         _la = self._input.LA(1)
                         if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 3362959392768) != 0)):
                             self._errHandler.recoverInline(self)
                         else:
                             self._errHandler.reportMatch(self)
                             self.consume()
-                        self.state = 325
+                        self.state = 327
                         self.expression(5)
                         pass
 
                     elif la_ == 5:
                         localctx = ForgeLangAlpha1Parser.AndExprContext(self, ForgeLangAlpha1Parser.ExpressionContext(self, _parentctx, _parentState))
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
-                        self.state = 326
+                        self.state = 328
                         if not self.precpred(self._ctx, 3):
                             from antlr4.error.Errors import FailedPredicateException
                             raise FailedPredicateException(self, "self.precpred(self._ctx, 3)")
-                        self.state = 327
+                        self.state = 329
                         self.match(ForgeLangAlpha1Parser.And)
-                        self.state = 328
+                        self.state = 330
                         self.expression(4)
                         pass
 
                     elif la_ == 6:
                         localctx = ForgeLangAlpha1Parser.OrExprContext(self, ForgeLangAlpha1Parser.ExpressionContext(self, _parentctx, _parentState))
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
-                        self.state = 329
+                        self.state = 331
                         if not self.precpred(self._ctx, 2):
                             from antlr4.error.Errors import FailedPredicateException
                             raise FailedPredicateException(self, "self.precpred(self._ctx, 2)")
-                        self.state = 330
+                        self.state = 332
                         self.match(ForgeLangAlpha1Parser.Or)
-                        self.state = 331
+                        self.state = 333
                         self.expression(3)
                         pass
 
                     elif la_ == 7:
                         localctx = ForgeLangAlpha1Parser.XorExprContext(self, ForgeLangAlpha1Parser.ExpressionContext(self, _parentctx, _parentState))
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
-                        self.state = 332
+                        self.state = 334
                         if not self.precpred(self._ctx, 1):
                             from antlr4.error.Errors import FailedPredicateException
                             raise FailedPredicateException(self, "self.precpred(self._ctx, 1)")
-                        self.state = 333
+                        self.state = 335
                         self.match(ForgeLangAlpha1Parser.Xor)
-                        self.state = 334
+                        self.state = 336
                         self.expression(2)
                         pass
 
              
-                self.state = 339
+                self.state = 341
                 self._errHandler.sync(self)
                 _alt = self._interp.adaptivePredict(self._input,30,self._ctx)
 
@@ -3320,20 +3322,79 @@ class ForgeLangAlpha1Parser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 340
+            self.state = 342
             self.expression(0)
-            self.state = 345
+            self.state = 347
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la==52:
-                self.state = 341
+                self.state = 343
                 self.match(ForgeLangAlpha1Parser.COMMA)
-                self.state = 342
+                self.state = 344
                 self.expression(0)
-                self.state = 347
+                self.state = 349
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+
+    class InputTypeContext(ParserRuleContext):
+        __slots__ = 'parser'
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+        def Int(self):
+            return self.getToken(ForgeLangAlpha1Parser.Int, 0)
+
+        def Float(self):
+            return self.getToken(ForgeLangAlpha1Parser.Float, 0)
+
+        def Generic(self):
+            return self.getToken(ForgeLangAlpha1Parser.Generic, 0)
+
+        def getRuleIndex(self):
+            return ForgeLangAlpha1Parser.RULE_inputType
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterInputType" ):
+                listener.enterInputType(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitInputType" ):
+                listener.exitInputType(self)
+
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitInputType" ):
+                return visitor.visitInputType(self)
+            else:
+                return visitor.visitChildren(self)
+
+
+
+
+    def inputType(self):
+
+        localctx = ForgeLangAlpha1Parser.InputTypeContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 64, self.RULE_inputType)
+        self._la = 0 # Token type
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 350
+            _la = self._input.LA(1)
+            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 3584) != 0)):
+                self._errHandler.recoverInline(self)
+            else:
+                self._errHandler.reportMatch(self)
+                self.consume()
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -3460,33 +3521,33 @@ class ForgeLangAlpha1Parser ( Parser ):
     def literal(self):
 
         localctx = ForgeLangAlpha1Parser.LiteralContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 64, self.RULE_literal)
+        self.enterRule(localctx, 66, self.RULE_literal)
         try:
-            self.state = 352
+            self.state = 356
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [54]:
                 localctx = ForgeLangAlpha1Parser.IntLiteralContext(self, localctx)
                 self.enterOuterAlt(localctx, 1)
-                self.state = 348
+                self.state = 352
                 self.match(ForgeLangAlpha1Parser.INT)
                 pass
             elif token in [53]:
                 localctx = ForgeLangAlpha1Parser.FloatLiteralContext(self, localctx)
                 self.enterOuterAlt(localctx, 2)
-                self.state = 349
+                self.state = 353
                 self.match(ForgeLangAlpha1Parser.FLOAT)
                 pass
             elif token in [55]:
                 localctx = ForgeLangAlpha1Parser.StringLiteralContext(self, localctx)
                 self.enterOuterAlt(localctx, 3)
-                self.state = 350
+                self.state = 354
                 self.match(ForgeLangAlpha1Parser.STRING)
                 pass
             elif token in [56]:
                 localctx = ForgeLangAlpha1Parser.InterpStringLiteralContext(self, localctx)
                 self.enterOuterAlt(localctx, 4)
-                self.state = 351
+                self.state = 355
                 self.match(ForgeLangAlpha1Parser.INTERP_STRING)
                 pass
             else:

@@ -2,6 +2,8 @@
 # ForgeLang regression suite: compiles every tests/features/*.anvil
 # and diffs the output against its .expected file.
 # Trailing-newline-insensitive: .expected files may or may not end in \n.
+# Optional .stdin file provides stdin; all other tests get /dev/null
+# so nothing can ever hang waiting for a terminal.
 
 DIR="$(cd "$(dirname "$0")/features" && pwd)"
 ROOT="$(dirname "$(dirname "$0")")"
@@ -24,7 +26,12 @@ for anvil in "$DIR"/*.anvil; do
     # Run and compare.
     # $(...) strips ALL trailing newlines from both sides, so it does not
     # matter whether the .expected file ends with 0, 1, or 3 newlines.
-    actual=$("$TMP/$name.out")
+    stdin_file="$DIR/$name.stdin"
+    if [ -f "$stdin_file" ]; then
+        actual=$("$TMP/$name.out" < "$stdin_file")
+    else
+        actual=$("$TMP/$name.out" < /dev/null)
+    fi
     wanted=$(cat "$expected")
 
     if [ "$actual" = "$wanted" ]; then

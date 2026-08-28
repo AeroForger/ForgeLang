@@ -1,0 +1,10 @@
+Open Nunction Main()
+{
+    Number Int age = Input(Int);
+    Number Float rate = Input(Float);
+    Weld name = Input();
+    Print(name);
+    Print(age);
+    Print(rate);
+    Print(\V"{name} is {age}");
+}

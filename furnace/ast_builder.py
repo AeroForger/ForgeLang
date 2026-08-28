@@ -3,7 +3,7 @@ from furnace.ast_nodes import (
     VariableDecl, DataDecl, ObjectDecl, FunctionDecl,
     AssignmentNode, PrintNode,
     NumberLiteral, StringLiteral, IdentifierExpr, MemberAccess,
-    BinaryOp, UnaryOp, CallExpr, ReturnNode, IfNode
+    BinaryOp, UnaryOp, CallExpr, ReturnNode, IfNode, InputNode
 )
 
 
@@ -133,10 +133,12 @@ class ASTBuilder(ForgeLangAlpha1Visitor):
         return CallExpr(ctx.qualifiedName().getText(), args)
 
     def visitInputCallExpr(self, ctx):
-        args = []
-        if ctx.argumentList():
-            args = [self.visit(e) for e in ctx.argumentList().expression()]
-        return CallExpr('Input', args)
+        if ctx.inputType():
+            t = ctx.inputType().getText()   # 'Int' | 'Float' | 'Generic'
+            if t == 'Generic':
+                t = 'Weld'                  # generic input is a string
+            return InputNode(t)
+        return InputNode('Weld')            # blank = generic = Weld
 
     def visitMemberAccessExpr(self, ctx):
         names = [t.getText() for t in ctx.qualifiedName().ID()]

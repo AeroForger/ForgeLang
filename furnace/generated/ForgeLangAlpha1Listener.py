@@ -431,6 +431,15 @@ class ForgeLangAlpha1Listener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by ForgeLangAlpha1Parser#inputType.
+    def enterInputType(self, ctx:ForgeLangAlpha1Parser.InputTypeContext):
+        pass
+
+    # Exit a parse tree produced by ForgeLangAlpha1Parser#inputType.
+    def exitInputType(self, ctx:ForgeLangAlpha1Parser.InputTypeContext):
+        pass
+
+
     # Enter a parse tree produced by ForgeLangAlpha1Parser#intLiteral.
     def enterIntLiteral(self, ctx:ForgeLangAlpha1Parser.IntLiteralContext):
         pass

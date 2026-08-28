@@ -2,8 +2,10 @@ from llvmlite import ir
 from furnace.ast_nodes import (
     FunctionDecl, VariableDecl, PrintNode, ObjectDecl, DataDecl,
     AssignmentNode, NumberLiteral, StringLiteral, IdentifierExpr,
-    MemberAccess, BinaryOp, UnaryOp, CallExpr, ReturnNode, IfNode
+    MemberAccess, BinaryOp, UnaryOp, CallExpr, ReturnNode, IfNode,
+    InputNode
 )
+from furnace.errors import ForgeError
 
 I32 = ir.IntType(32)
 I8P = ir.IntType(8).as_pointer()
@@ -50,13 +52,20 @@ class LLVMCodeGenerator:
         self.obj_types = {}
         self.global_inits = []
 
-        # Caches: identical strings share one global, and printing the
-        # same format twice no longer crashes with DuplicatedNameError
+        # Function tracking (signatures for future call support)
+        self.functions = {}
+        # Return type of the function currently being generated
+        self.current_ret_ty = ir.VoidType()
+
+        # Caches: identical strings share one global
         self.string_globals = {}
         self.fmt_globals = {}
 
         printf_ty = ir.FunctionType(I32, [I8P], var_arg=True)
         self.printf = ir.Function(self.module, printf_ty, name="printf")
+
+        scanf_ty = ir.FunctionType(I32, [I8P], var_arg=True)
+        self.scanf = ir.Function(self.module, scanf_ty, name="scanf")
 
         pow_ty = ir.FunctionType(F64, [F64, F64])
         self.pow_fn = ir.Function(self.module, pow_ty, name="pow")
@@ -86,6 +95,19 @@ class LLVMCodeGenerator:
         g.initializer = c
         self.string_globals[content] = g
         return self.builder.bitcast(g, I8P)
+
+    def fmt_ptr(self, fmt):
+        """Raw format string constant -> i8*. No newline appended
+        (unlike emit_printf). Shares the string cache."""
+        key = fmt + "\0"
+        if key not in self.string_globals:
+            c = ir.Constant(ir.ArrayType(ir.IntType(8), len(key)), bytearray(key, "utf-8"))
+            g = ir.GlobalVariable(self.module, c.type, name=f"str_{len(self.string_globals)}")
+            g.linkage = 'internal'
+            g.global_constant = True
+            g.initializer = c
+            self.string_globals[key] = g
+        return self.builder.bitcast(self.string_globals[key], I8P)
 
     def emit_printf(self, fmt, args):
         full = fmt + "\n\0"  # Print always ends the line
@@ -191,6 +213,9 @@ class LLVMCodeGenerator:
         block = func.append_basic_block(name="entry")
         self.builder = ir.IRBuilder(block)
 
+        # Return context for Return statements in this body
+        self.current_ret_ty = ret_ty
+
         # New scope: params first
         self.scopes.append({})
         for i, (ptype, pname) in enumerate(node.params):
@@ -203,18 +228,16 @@ class LLVMCodeGenerator:
         for stmt in node.body:
             self.gen_statement(stmt)
 
-        # Implicit return if the body didn't end with one
-        if is_void:
-            self.builder.ret_void()
-        else:
-            # Implicit 'return 0' - real compilers warn about this
-            self.builder.ret(ir.Constant(ret_ty, 0))
+        # Implicit return, only if the body didn't already Return
+        if not self.builder.block.is_terminated:
+            if is_void:
+                self.builder.ret_void()
+            else:
+                # Implicit 'return 0' - real compilers warn about this
+                self.builder.ret(ir.Constant(ret_ty, 0))
 
         self.scopes.pop()
 
-        # Track for calls
-        if not hasattr(self, 'functions'):
-            self.functions = {}
         self.functions[node.name] = (func, ret_ty)
         return func
 
@@ -227,10 +250,13 @@ class LLVMCodeGenerator:
             self.gen_assignment(node)
         elif isinstance(node, IfNode):
             self.gen_if(node)
+        elif isinstance(node, ReturnNode):
+            self.gen_return(node)
         elif isinstance(node, CallExpr):
             raise RuntimeError(
                 f"Compile error: function call '{node.name}(...)' is not "
                 f"implemented in the code generator yet")
+
     # ---------- declarations & assignment ----------
 
     def gen_var_decl(self, node):
@@ -265,6 +291,21 @@ class LLVMCodeGenerator:
         else:
             self.builder.store(self.coerce(value, vtype, var_type), var_ptr)
 
+    # ---------- return ----------
+
+    def gen_return(self, node):
+        if node.value is None:
+            self.builder.ret_void()
+            return
+
+        # Returning a value from a Nunction is a semantic error.
+        # Caught here for now; the semantic analyzer will formalize it.
+        if self.current_ret_ty == ir.VoidType():
+            raise ForgeError("cannot Return a value from a Nunction")
+
+        val, vty = self.gen_expression(node.value)
+        self.builder.ret(self.coerce(val, vty, self.current_ret_ty))
+
     # ---------- expressions ----------
 
     def gen_expression(self, node):
@@ -295,6 +336,7 @@ class LLVMCodeGenerator:
                         obj_ptr, [ir.IntType(32)(0), ir.IntType(32)(idx)])
                     return self.builder.load(field_ptr), field_ptr.type.pointee
             return ir.Constant(I32, 0), I32
+
         if isinstance(node, UnaryOp):
             val, ty = self.gen_expression(node.operand)
             if node.op == '+':
@@ -303,10 +345,14 @@ class LLVMCodeGenerator:
                 return self.builder.fsub(ir.Constant(F64, 0.0), val), F64
             return self.builder.sub(ir.Constant(I32, 0), val), I32
 
+        if isinstance(node, InputNode):
+            return self.gen_input(node)
+
         if isinstance(node, CallExpr):
             raise RuntimeError(
                 f"Compile error: function call '{node.name}(...)' is not "
                 f"implemented in the code generator yet")
+
         if isinstance(node, BinaryOp):
             return self.gen_binary_op(node)
 
@@ -355,6 +401,7 @@ class LLVMCodeGenerator:
                 lf = self.builder.sitofp(left, F64)
                 rf = self.builder.sitofp(right, F64)
                 return self.builder.call(self.pow_fn, [lf, rf]), F64
+
         # Logical ops: non-short-circuit, C-style semantics.
         # Result is i1 (true/false), operands coerced to i32 first.
         if op in ('And', 'Or', 'Xor'):
@@ -369,6 +416,41 @@ class LLVMCodeGenerator:
             return self.builder.xor(nz_l, nz_r), ir.IntType(1)
 
         return ir.Constant(I32, 0), I32
+
+    # ---------- input ----------
+
+    def gen_input(self, node):
+        """Compiles Input(Int/Float/Weld) via scanf.
+
+        Buffers are zero-initialized, so a failed read yields 0 / 0.0 /
+        "" instead of garbage. Weld input reads one whitespace-delimited
+        token into a 256-byte stack buffer.
+        """
+        t = node.input_type
+
+        if t == 'Int':
+            buf = self.builder.alloca(I32)
+            self.builder.store(ir.Constant(I32, 0), buf)
+            self.builder.call(
+                self.scanf,
+                [self.fmt_ptr("%d"), self.builder.bitcast(buf, I8P)])
+            return self.builder.load(buf), I32
+
+        if t == 'Float':
+            # %lf because ForgeLang Float is a C double
+            buf = self.builder.alloca(F64)
+            self.builder.store(ir.Constant(F64, 0.0), buf)
+            self.builder.call(
+                self.scanf,
+                [self.fmt_ptr("%lf"), self.builder.bitcast(buf, I8P)])
+            return self.builder.load(buf), F64
+
+        # Weld (blank / Generic): 256-byte buffer, one token
+        buf = self.builder.alloca(ir.ArrayType(ir.IntType(8), 256))
+        first = self.builder.bitcast(buf, I8P)
+        self.builder.store(ir.Constant(ir.IntType(8), 0), first)
+        self.builder.call(self.scanf, [self.fmt_ptr("%255s"), first])
+        return first, I8P
 
     # ---------- print ----------
 
@@ -453,6 +535,7 @@ class LLVMCodeGenerator:
             self.emit_printf("%f", [llvm_val])
         else:
             self.emit_printf("%d", [llvm_val])
+
     # ---------- control flow ----------
 
     def gen_if(self, node):
@@ -461,6 +544,8 @@ class LLVMCodeGenerator:
         Every branch gets its own block; every branch jumps to a shared
         merge block at the end. Else If chains are compiled recursively:
         each 'no' path contains the next If as a nested decision.
+        Branch jumps are guarded: a body that ends in Return has already
+        terminated its block, and must not emit another terminator.
         """
         func = self.builder.function
 
@@ -486,11 +571,12 @@ class LLVMCodeGenerator:
 
             self.builder.cbranch(cond_i1, then_bb, next_bb)
 
-            # THEN block: run body, jump to merge
+            # THEN block: run body, jump to merge (unless body Returned)
             self.builder.position_at_end(then_bb)
             for stmt in body:
                 self.gen_statement(stmt)
-            self.builder.branch(merge_bb)
+            if not self.builder.block.is_terminated:
+                self.builder.branch(merge_bb)
 
             # NEXT block: either the next Else If, the Else, or nothing
             self.builder.position_at_end(next_bb)
@@ -499,7 +585,8 @@ class LLVMCodeGenerator:
             elif node.else_body is not None:
                 for stmt in node.else_body:
                     self.gen_statement(stmt)
-                self.builder.branch(merge_bb)
+                if not self.builder.block.is_terminated:
+                    self.builder.branch(merge_bb)
             else:
                 self.builder.branch(merge_bb)
 
