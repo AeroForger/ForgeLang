@@ -1,48 +1,73 @@
-#!/bin/bash
-# ForgeLang regression suite: compiles every tests/features/*.anvil
-# and diffs the output against its .expected file.
-# Trailing-newline-insensitive: .expected files may or may not end in \n.
-# Optional .stdin file provides stdin; all other tests get /dev/null
-# so nothing can ever hang waiting for a terminal.
+#!/usr/bin/env bash
+# tests/run.sh — ForgeLang test runner (ported from Python reference)
+set -uo pipefail
 
-DIR="$(cd "$(dirname "$0")/features" && pwd)"
-ROOT="$(dirname "$(dirname "$0")")"
-TMP=$(mktemp -d)
-trap "rm -rf $TMP" EXIT
+FEATURES_DIR="$(cd "$(dirname "$0")" && pwd)/features"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+FURNACE="${FURNACE:-$ROOT/target/release/furnace}"
 
-pass=0; fail=0
-for anvil in "$DIR"/*.anvil; do
-    name=$(basename "$anvil" .anvil)
-    expected="$DIR/$name.expected"
+if [ ! -x "$FURNACE" ]; then
+    echo "furnace binary not found at $FURNACE" >&2
+    echo "build with: cargo build --release" >&2
+    exit 2
+fi
 
-    # Compile (IR to stdout via --emit-llvm, machine-clean)
-    if ! python3 "$ROOT/main.py" --emit-llvm "$anvil" > "$TMP/$name.ll" 2> "$TMP/$name.err"; then
-        echo "FAIL $name (compile error)"; cat "$TMP/$name.err"; fail=$((fail+1)); continue
+shopt -s nullglob
+TESTS=( "$FEATURES_DIR"/*.anvil )
+shopt -u nullglob
+
+if [ ${#TESTS[@]} -eq 0 ]; then
+    echo "ERROR: zero tests found in $FEATURES_DIR" >&2
+    exit 1
+fi
+
+PASS=0
+FAIL=0
+
+for anvil in "${TESTS[@]}"; do
+    name="$(basename "$anvil" .anvil)"
+    expected="$FEATURES_DIR/$name.expected"
+    stdin_file="$FEATURES_DIR/$name.stdin"
+
+    if [ ! -f "$expected" ]; then
+        echo "MISS $name (no .expected)"
+        FAIL=$((FAIL+1))
+        continue
     fi
-    if ! clang "$TMP/$name.ll" -o "$TMP/$name.out" -lm 2> "$TMP/$name.clangerr"; then
-        echo "FAIL $name (clang error)"; cat "$TMP/$name.clangerr"; fail=$((fail+1)); continue
+
+    tmpdir="$(mktemp -d)"
+    exe="$tmpdir/$name"
+
+    if ! "$FURNACE" "$anvil" -o "$exe" -lm >"$tmpdir/compile.log" 2>&1; then
+        echo "FAIL $name (compile)"
+        sed 's/^/    /' "$tmpdir/compile.log" >&2
+        FAIL=$((FAIL+1))
+        rm -rf "$tmpdir"
+        continue
     fi
 
-    # Run and compare.
-    # $(...) strips ALL trailing newlines from both sides, so it does not
-    # matter whether the .expected file ends with 0, 1, or 3 newlines.
-    stdin_file="$DIR/$name.stdin"
     if [ -f "$stdin_file" ]; then
-        actual=$("$TMP/$name.out" < "$stdin_file")
+        actual="$("$exe" < "$stdin_file" 2>&1)"
     else
-        actual=$("$TMP/$name.out" < /dev/null)
+        actual="$("$exe" < /dev/null 2>&1)"
     fi
-    wanted=$(cat "$expected")
+    expected_content="$(cat "$expected")"
 
-    if [ "$actual" = "$wanted" ]; then
-        echo "PASS $name"; pass=$((pass+1))
+    # bash $() strips trailing newlines on both sides → trailing-newline-insensitive
+    if [ "$actual" = "$expected_content" ]; then
+        echo "PASS $name"
+        PASS=$((PASS+1))
     else
-        echo "FAIL $name (output mismatch)"
-        diff -u <(echo "$wanted") <(echo "$actual") | tail -n +3
-        fail=$((fail+1))
+        echo "FAIL $name (output)"
+        echo "--- expected ---" >&2
+        echo "$expected_content" >&2
+        echo "--- actual ---" >&2
+        echo "$actual" >&2
+        FAIL=$((FAIL+1))
     fi
+    rm -rf "$tmpdir"
 done
 
 echo ""
-echo "----- $pass passed, $fail failed -----"
-[ $fail -eq 0 ]
+echo "Results: $PASS passed, $FAIL failed"
+[ "$FAIL" -eq 0 ]

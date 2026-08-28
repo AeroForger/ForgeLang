@@ -1,0 +1,15 @@
+Nunction Tick()
+{
+    Print("tick");
+}
+
+Open Nunction Main()
+{
+    Number Int i = 0;
+    While (i < 3)
+    {
+        Tick();
+        i = i + 1;
+    }
+    Print("done");
+}

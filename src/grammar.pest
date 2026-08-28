@@ -1,0 +1,158 @@
+// ForgeLang Grammar v2 - pest PEG port
+// PEG: NO left recursion. Precedence via nested rules.
+// High → low: primary > postfix > power > unary > mul > add
+//             > comparison > and > or > xor
+// Documented decision: unary binds LOOSER than **, so -2 ** 2 == -4.
+
+WHITESPACE = _{ " " | "\t" | "\r" | "\n" | COMMENT }
+COMMENT    = _{ "-[" ~ (!"]-" ~ ANY)* ~ "]-" }
+
+program    = { SOI ~ statement* ~ EOI }
+
+statement  = {
+      use_stmt
+    | data_decl
+    | function_decl
+    | var_decl
+    | object_decl
+    | print_stmt
+    | if_stmt
+    | while_stmt
+    | return_stmt
+    | input_stmt
+    | assignment
+    | expr_stmt
+}
+
+// --- Imports (parse-only for now) ---
+use_stmt        = { kw_use ~ qualified_name ~ ";"
+                  | kw_using ~ qualified_name ~ (":" ~ ident)? ~ ";" }
+qualified_name  = { ident ~ ("." ~ ident)* }
+
+// --- Modifiers & types ---
+modifier        = { kw_open | kw_closed | kw_showcase }
+subtype         = { kw_int | kw_float | kw_generic }
+type_decl       = { number_type | weld_type | ore_type | materials_type }
+
+number_type     = { kw_number ~ subtype }
+weld_type       = { kw_weld }
+ore_type        = { kw_ore ~ ("[" ~ integer ~ "]")? }
+materials_type  = { kw_materials ~ subtype ~ kw_new? }
+
+// --- Variable declaration ---
+var_decl        = { modifier? ~ type_decl ~ ident ~ ("=" ~ expr)? ~ ";" }
+
+// --- Data types & objects ---
+data_decl       = { modifier? ~ kw_data ~ ident ~ "{" ~ member_decl* ~ "}" }
+member_decl     = { modifier? ~ type_decl ~ ident ~ ";" }
+
+object_decl     = { ident ~ ident ~ "{" ~ member_init* ~ "}" }
+member_init     = { ident ~ ("." ~ ident)* ~ "=" ~ expr ~ (";" | ",")? }
+
+// --- Functions ---
+function_decl   = { modifier? ~ ret_kind ~ ident ~ "(" ~ param_list? ~ ")" ~ block }
+ret_kind        = { kw_int | kw_float | kw_generic | kw_weld | kw_ore | kw_materials | kw_function | kw_nunction }
+
+param_list      = { param ~ ("," ~ param)* }
+param           = { type_decl ~ ident }
+block           = { "{" ~ statement* ~ "}" }
+
+// --- Print / Input ---
+print_stmt      = { kw_print ~ "(" ~ expr ~ ")" ~ ";" }
+input_stmt      = { kw_input ~ "(" ~ subtype? ~ ")" ~ ";" }
+
+// --- Control flow ---
+if_stmt         = { kw_if ~ "(" ~ expr ~ ")" ~ block
+                  ~ (kw_else ~ kw_if ~ "(" ~ expr ~ ")" ~ block)*
+                  ~ (kw_else ~ block)? }
+while_stmt      = { kw_while ~ "(" ~ expr ~ ")" ~ block }
+return_stmt     = { kw_return ~ expr? ~ ";" }
+
+// --- Assignment & bare expr ---
+assignment      = { ident ~ ("." ~ ident)* ~ "=" ~ expr ~ ";" }
+expr_stmt       = { expr ~ ";" }
+
+// --- Expressions: nested precedence ---
+expr              = { xor_expr }
+xor_expr          = { or_expr ~ (kw_xor ~ or_expr)* }
+or_expr           = { and_expr ~ (kw_or ~ and_expr)* }
+and_expr          = { comparison ~ (kw_and ~ comparison)* }
+comparison        = { additive ~ (comp_op ~ additive)* }
+additive          = { multiplicative ~ (add_op ~ multiplicative)* }
+multiplicative    = { unary ~ (mul_op ~ unary)* }
+unary             = { (unary_op)* ~ power }
+power             = { postfix ~ (pow_op ~ power)? }
+postfix           = { primary ~ (("." ~ ident) | call_tail)* }
+call_tail         = { "(" ~ arg_list? ~ ")" }
+arg_list          = { expr ~ ("," ~ expr)* }
+primary           = {
+      "(" ~ expr ~ ")"
+    | interpolated_string
+    | string
+    | number
+    | input_expr
+    | ident
+}
+input_expr        = { kw_input ~ "(" ~ subtype? ~ ")" }
+
+// --- Named operator rules (appear in parse tree) ---
+comp_op         = { "==" | "!=" | "<=" | ">=" | "<" | ">" }
+add_op          = { "+" | "-" }
+mul_op          = { "*" | "/" }
+pow_op          = { "**" }
+unary_op        = { "+" | "-" }
+
+// --- Keyword Tokens (Atomic so they don't skip whitespace before !ident_char) ---
+kw_open       = ${ "Open" ~ !ident_char }
+kw_closed     = ${ "Closed" ~ !ident_char }
+kw_showcase   = ${ "Showcase" ~ !ident_char }
+kw_number     = ${ "Number" ~ !ident_char }
+kw_weld       = ${ "Weld" ~ !ident_char }
+kw_ore        = ${ "Ore" ~ !ident_char }
+kw_materials  = ${ "Materials" ~ !ident_char }
+kw_data       = ${ "Data" ~ !ident_char }
+kw_int        = ${ "Int" ~ !ident_char }
+kw_float      = ${ "Float" ~ !ident_char }
+kw_generic    = ${ "Generic" ~ !ident_char }
+kw_function   = ${ "function" ~ !ident_char }
+kw_nunction   = ${ "Nunction" ~ !ident_char }
+kw_return     = ${ "Return" ~ !ident_char }
+kw_if         = ${ "If" ~ !ident_char }
+kw_while      = ${ "While" ~ !ident_char }
+kw_else       = ${ "Else" ~ !ident_char }
+kw_switch     = ${ "Switch" ~ !ident_char }
+kw_deal       = ${ "Deal" ~ !ident_char }
+kw_base       = ${ "Base" ~ !ident_char }
+kw_do         = ${ "Do" ~ !ident_char }
+kw_fail       = ${ "Fail" ~ !ident_char }
+kw_final      = ${ "Final" ~ !ident_char }
+kw_and        = ${ "And" ~ !ident_char }
+kw_or         = ${ "Or" ~ !ident_char }
+kw_xor        = ${ "Xor" ~ !ident_char }
+kw_use        = ${ "Use" ~ !ident_char }
+kw_using      = ${ "Using" ~ !ident_char }
+kw_new        = ${ "New" ~ !ident_char }
+kw_print      = ${ "Print" ~ !ident_char }
+kw_input      = ${ "Input" ~ !ident_char }
+
+// --- Lexical Tokens ---
+ident              = ${ !keyword ~ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
+ident_char         = _{ ASCII_ALPHANUMERIC | "_" }
+keyword            = _{ 
+    kw_open | kw_closed | kw_showcase | kw_number | kw_weld | kw_ore
+    | kw_materials | kw_data | kw_int | kw_float | kw_generic | kw_function
+    | kw_nunction | kw_return | kw_if | kw_while | kw_else | kw_switch | kw_deal
+    | kw_base | kw_do | kw_fail | kw_final | kw_and | kw_or | kw_xor
+    | kw_use | kw_using | kw_new | kw_print | kw_input
+}
+
+number             = { float | integer }
+integer            = ${ ASCII_DIGIT+ }
+float              = ${ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ }
+
+string             = ${ "\"" ~ (escape | string_char)* ~ "\"" }
+interpolated_string = ${ "\\V\"" ~ (escape | interpolation | interp_char)* ~ "\"" }
+string_char        = { !("\"" | "\\") ~ ANY }
+interp_char        = { !("\"" | "\\") ~ !"{" ~ ANY }
+interpolation      = { "{" ~ ident ~ ("." ~ ident)* ~ "}" }
+escape             = { "\\" ~ ("n" | "t" | "r" | "0" | "\\" | "\"") }
