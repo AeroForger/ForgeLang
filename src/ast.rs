@@ -32,6 +32,7 @@ pub enum Statement {
     If(IfNode),
     While(WhileNode),
     Return(Option<Expr>),
+    Stop,
     Assignment(AssignmentNode),
     Use(UseNode),
     ExprStmt(Expr),
@@ -116,6 +117,7 @@ pub enum Expr {
     BinaryOp { op: BinOp, lhs: Box<Expr>, rhs: Box<Expr> },
     UnaryOp { op: UnOp, operand: Box<Expr> },
     Call { callee: String, args: Vec<Expr> },
+    NamespaceCall { namespace: String, method: String, args: Vec<Expr> },
     Input(InputNode),
 }
 

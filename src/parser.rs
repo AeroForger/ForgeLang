@@ -42,6 +42,7 @@ fn build_statement(pair: Pair<Rule>) -> ForgeResult<Statement> {
             let expr = inner.into_inner().next().map(build_expr).transpose()?;
             Statement::Return(expr)
         }
+        Rule::stop_stmt      => Statement::Stop,
         Rule::input_stmt     => Statement::Input(build_input(inner)?),
         Rule::function_decl  => Statement::FunctionDecl(build_function_decl(inner)?),
         Rule::if_stmt        => Statement::If(build_if_stmt(inner)?),
@@ -406,7 +407,7 @@ fn build_postfix(pair: Pair<Rule>) -> ForgeResult<Expr> {
     let mut acc = build_expr(it.next().unwrap())?;
     while let Some(tail) = it.next() {
         match tail.as_rule() {
-            Rule::ident => {
+            Rule::ident | Rule::member_ident => {
                 acc = Expr::MemberAccess { object: Box::new(acc), member: tail.as_str().to_string() };
             }
             Rule::call_tail => {
@@ -415,10 +416,22 @@ fn build_postfix(pair: Pair<Rule>) -> ForgeResult<Expr> {
                     .flat_map(|p| p.into_inner())
                     .map(build_expr)
                     .collect::<ForgeResult<Vec<_>>>()?;
-                if let Expr::Identifier(name) = acc {
-                    acc = Expr::Call { callee: name, args };
-                } else {
-                    return Err(nyi("call on non-identifier"));
+                match acc {
+                    Expr::Identifier(name) => {
+                        acc = Expr::Call { callee: name, args };
+                    }
+                    Expr::MemberAccess { object, member } => {
+                        if let Expr::Identifier(namespace) = *object {
+                            acc = Expr::NamespaceCall {
+                                namespace,
+                                method: member,
+                                args,
+                            };
+                        } else {
+                            return Err(nyi("call on complex member expression"));
+                        }
+                    }
+                    _ => return Err(nyi("call on non-identifier")),
                 }
             }
             r => return Err(ForgeError::parse(format!("unexpected postfix tail: {:?}", r))),

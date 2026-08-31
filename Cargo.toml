@@ -6,9 +6,13 @@ description = "Compiler for the ForgeLang systems programming language"
 license = "GPL-3.0-only"
 repository = "github.com/AeroForger/ForgeLang"
 
+[lib]
+name = "furnace"
+path = "src/lib.rs"
+
 [[bin]]
 name = "furnace"
-path = "src/main.rs"
+path = "Cli/main.rs"
 
 [dependencies]
 pest = "2.7"

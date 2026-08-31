@@ -19,6 +19,7 @@ statement  = {
     | if_stmt
     | while_stmt
     | return_stmt
+    | stop_stmt
     | input_stmt
     | assignment
     | expr_stmt
@@ -67,6 +68,7 @@ if_stmt         = { kw_if ~ "(" ~ expr ~ ")" ~ block
                   ~ (kw_else ~ block)? }
 while_stmt      = { kw_while ~ "(" ~ expr ~ ")" ~ block }
 return_stmt     = { kw_return ~ expr? ~ ";" }
+stop_stmt       = { kw_stop ~ ";" }
 
 // --- Assignment & bare expr ---
 assignment      = { ident ~ ("." ~ ident)* ~ "=" ~ expr ~ ";" }
@@ -82,7 +84,8 @@ additive          = { multiplicative ~ (add_op ~ multiplicative)* }
 multiplicative    = { unary ~ (mul_op ~ unary)* }
 unary             = { (unary_op)* ~ power }
 power             = { postfix ~ (pow_op ~ power)? }
-postfix           = { primary ~ (("." ~ ident) | call_tail)* }
+postfix           = { primary ~ (("." ~ member_ident) | call_tail)* }
+member_ident      = ${ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
 call_tail         = { "(" ~ arg_list? ~ ")" }
 arg_list          = { expr ~ ("," ~ expr)* }
 primary           = {
@@ -134,6 +137,7 @@ kw_using      = ${ "Using" ~ !ident_char }
 kw_new        = ${ "New" ~ !ident_char }
 kw_print      = ${ "Print" ~ !ident_char }
 kw_input      = ${ "Input" ~ !ident_char }
+kw_stop       = ${ "Stop" ~ !ident_char }
 
 // --- Lexical Tokens ---
 ident              = ${ !keyword ~ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
@@ -143,7 +147,7 @@ keyword            = _{
     | kw_materials | kw_data | kw_int | kw_float | kw_generic | kw_function
     | kw_nunction | kw_return | kw_if | kw_while | kw_else | kw_switch | kw_deal
     | kw_base | kw_do | kw_fail | kw_final | kw_and | kw_or | kw_xor
-    | kw_use | kw_using | kw_new | kw_print | kw_input
+    | kw_use | kw_using | kw_new | kw_print | kw_input | kw_stop
 }
 
 number             = { float | integer }

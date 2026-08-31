@@ -1,0 +1,33 @@
+Nunction TestWhileStop()
+{
+    Number Int x = 0;
+    While (x < 10)
+    {
+        If (x == 3)
+        {
+            Stop;
+        }
+        Print(x);
+        x = x + 1;
+    }
+    Print("exited while");
+}
+
+Nunction TestIfStop()
+{
+    Number Int y = 5;
+    If (y == 5)
+    {
+        Print("in if");
+        Stop;
+        Print("after stop in if");
+    }
+    Print("after if");
+}
+
+Open Nunction Main()
+{
+    TestWhileStop();
+    TestIfStop();
+}
+

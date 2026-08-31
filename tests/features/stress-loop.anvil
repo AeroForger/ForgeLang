@@ -1,0 +1,19 @@
+Open Nunction Main()
+{
+    Number Int total = 0;
+    Number Int i = 0;
+
+    While (i < 4)
+    {
+        Number Int j = 0;
+        While (j < 5)
+        {
+            total = total + i * 10 + j;
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+
+    Print(total);
+    Print("stress-ok");
+}

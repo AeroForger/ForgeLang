@@ -1,0 +1,14 @@
+Nunction TerminateEarly()
+{
+    Print("subfunc start");
+    Program.Stop();
+    Print("subfunc end");
+}
+
+Open Nunction Main()
+{
+    Print("main start");
+    TerminateEarly();
+    Print("main end");
+}
+

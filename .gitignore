@@ -9,4 +9,6 @@
 .vscode/
 .idea/
 .DS_Store
-/target
+/FutureIdeas/*.blower
+/testing
+/testing.anvil

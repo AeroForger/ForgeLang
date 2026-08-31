@@ -1,0 +1,4 @@
+Open Nunction Main()
+{
+    Print("cli-compile");
+}
