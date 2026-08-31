@@ -105,6 +105,61 @@ ForgeLang uses braces `{}` to delimit function and control-flow bodies.
 
 Statements are terminated with `;`.
 
+## 3.1 Current Alpha 3 additions
+
+The current Rust implementation includes several features that are not just future aspirations. They are reflected in the actual AST, semantic validation, and code generation.
+
+### The `Program` namespace
+
+The current AST includes a `NamespaceCall` form in `src/ast.rs` and the semantic layer checks for `Program.Stop()` in `src/semantic.rs`.
+
+```forge
+Program.Stop();
+```
+
+This is treated as a namespace call, not a normal function call. The semantic pass enforces two rules:
+
+* it can only be used inside a function scope
+* it must be called with zero arguments
+
+This is a deliberate early-exit mechanism for the runtime, and it is validated before code generation.
+
+### The `Stop` statement
+
+The language also supports a direct `Stop` statement:
+
+```forge
+While (I < 10)
+{
+    If (I == 5)
+    {
+        Stop;
+    }
+    I = I + 1;
+}
+```
+
+In the current implementation, `Stop` is represented as `Statement::Stop` in `src/ast.rs`, checked by `semantic.rs`, and lowered by `FunctionCompiler::compile_statement` in `src/codegen.rs`.
+
+A `Stop` only works as a break-like escape from a loop or conditional target. If it appears outside a valid target, the compiler raises a codegen error.
+
+This is not a general-purpose exception system; it is a structured early exit encoded by the compiler's block-flow logic.
+
+### Command-line entrypoints and build flow
+
+The current project now includes a real CLI under `Cli/`.
+
+The binary is declared in `Cargo.toml`, and the CLI accepts:
+
+```text
+Furnace compile <file>.anvil <platform>
+Furnace run <file>.anvil
+Furnace -version
+Furnace -help
+```
+
+The CLI validates `.anvil` files, parses the input program, runs semantic analysis, emits a native object, then invokes the system linker with `cc -lm` automatically.
+
 ---
 
 # 4. Functions
@@ -824,39 +879,82 @@ target/release/furnace
 
 ## 25.2 Compile a ForgeLang Program
 
-Given:
-
-```text
-main.anvil
-```
-
-run:
+The current CLI flow is implemented explicitly in the `Cli/` modules and uses the library compiler under the hood.
 
 ```fish
-./target/release/furnace main.anvil
+./target/debug/furnace compile main.anvil linux
 ```
 
-Without `-o`, Furnace generates:
+This workflow now does the following:
+
+1. validates the file ends in `.anvil`
+2. reads and parses the source
+3. runs semantic validation
+4. emits a native object file
+5. invokes the platform linker with `cc -lm`
+6. prints the final executable path
+
+Example output:
 
 ```text
-main.o
+Compiling main.anvil...
+Linking...
+Build successful!
+Output: ./main
 ```
 
-When an executable output is requested, Furnace invokes the system linker automatically:
+The CLI uses the `Platform` enum in `Cli/platform.rs` so new targets can be added without rewriting the command layer. At the moment, the supported target is `linux`.
+
+## 25.3 Run a ForgeLang Program
+
+The CLI also supports direct execution:
 
 ```fish
-./target/release/furnace main.anvil -o main -lm
+./target/debug/furnace run main.anvil
 ```
 
-## 25.3 Link the Object Manually
+This command compiles the `.anvil` file, links it, and then executes the generated binary while forwarding stdout, stderr, and the child exit code.
 
-Use the system linker:
+## 25.4 Version and Help
+
+The compiler exposes centralized version metadata from `src/lib.rs`:
+
+```rust
+pub const VERSION: &str = "Alpha 3";
+```
+
+The commands are:
+
+```fish
+./target/debug/furnace -version
+./target/debug/furnace -help
+```
+
+which emit:
+
+```text
+Furnace Alpha 3
+```
+
+and the usage summary:
+
+```text
+Usage:
+    Furnace compile <file>.anvil <platform>
+    Furnace run <file>.anvil
+    Furnace -version
+    Furnace -help
+```
+
+## 25.5 Link the Object Manually
+
+The underlying object generation still produces a native object, and the linker is still the system C toolchain:
 
 ```fish
 cc main.o -o main -lm
 ```
 
-## 25.4 Run
+## 25.6 Run
 
 ```fish
 ./main
