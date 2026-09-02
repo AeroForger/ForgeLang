@@ -1,6 +1,6 @@
 use rayon::prelude::*;
 
-use crate::ast::{Expr, FunctionDecl, Program, Statement};
+use crate::ast::{AssignmentTarget, Expr, FunctionDecl, ForNode, Program, Statement, Subtype, TypeDecl};
 use crate::errors::{ForgeError, ForgeResult};
 
 #[derive(Debug, Clone, Copy)]
@@ -62,14 +62,10 @@ fn validate_statement(
 ) -> ForgeResult<()> {
 	match statement {
 		Statement::VarDecl(decl) => {
-			if let Some(initializer) = &decl.initializer {
-				validate_expr(initializer, parameters, program, context)?;
-			}
+			validate_var_decl(decl, parameters, program, context)?;
 		}
 		Statement::Assignment(assignment) => {
-			if assignment.target_path.len() > 1 {
-				return Err(ForgeError::parse("concurrent functions cannot mutate shared members"));
-			}
+			validate_assignment_target(&assignment.target, parameters, program, context)?;
 			validate_expr(&assignment.value, parameters, program, context)?;
 		}
 		Statement::If(node) => {
@@ -93,7 +89,10 @@ fn validate_statement(
 			validate_expr(&node.condition, parameters, program, context)?;
 			validate_statements(&node.body, parameters, program, loop_ctx)?;
 		}
-		Statement::Stop => {
+        Statement::For(node) => {
+            validate_for_stmt(node, parameters, program, context)?;
+        }
+        Statement::Stop => {
 			if context.current_function == Some("Main") {
 				return Err(ForgeError::parse("Stop cannot be used in Main"));
 			}
@@ -111,6 +110,114 @@ fn validate_statement(
 		_ => {}
 	}
 	Ok(())
+}
+
+fn validate_for_stmt(
+	node: &ForNode,
+	parameters: &std::collections::HashSet<&str>,
+	program: &Program,
+	context: ValidationContext,
+) -> ForgeResult<()> {
+	let loop_ctx = ValidationContext { in_loop_or_if: true, ..context };
+	if let Some(init_value) = &node.init.initializer {
+		validate_expr(init_value, parameters, program, context)?;
+	}
+	validate_expr(&node.condition, parameters, program, context)?;
+	validate_statements(&node.body, parameters, program, loop_ctx)
+}
+
+fn validate_var_decl(
+	decl: &crate::ast::VarDecl,
+	parameters: &std::collections::HashSet<&str>,
+	program: &Program,
+	context: ValidationContext,
+) -> ForgeResult<()> {
+	match &decl.type_decl {
+		TypeDecl::Ore(Some(expected_size)) => {
+			if let Some(init) = &decl.initializer {
+				if let Expr::ArrayLiteral(elements) = init {
+					if elements.len() as i64 != *expected_size {
+						return Err(ForgeError::parse(format!(
+							"Array size mismatch: expected {} elements, got {}",
+							expected_size,
+							elements.len()
+						)));
+					}
+				}
+			}
+		}
+		TypeDecl::OreTuple(fields) => {
+			if let Some(init) = &decl.initializer {
+				if let Expr::TupleLiteral(elements) = init {
+					if elements.len() != fields.len() {
+						return Err(ForgeError::parse(format!(
+							"Tuple field count mismatch: expected {} fields, got {}",
+							fields.len(),
+							elements.len()
+						)));
+					}
+					for (elem, (field_type, field_name)) in elements.iter().zip(fields.iter()) {
+						if !expr_matches_subtype(elem, field_type) {
+							return Err(ForgeError::parse(format!(
+								"Type mismatch for tuple field '{}': expected {:?}",
+								field_name, field_type
+							)));
+						}
+					}
+				}
+			}
+		}
+		TypeDecl::Materials(elem_type, has_new) => {
+			if *has_new && decl.initializer.is_some() {
+				return Err(ForgeError::parse("Empty list declared with 'new' cannot have an initializer"));
+			}
+			if !has_new {
+				if let Some(Expr::ListLiteral(elements)) = &decl.initializer {
+					for elem in elements {
+						if !expr_matches_subtype(elem, elem_type) {
+							return Err(ForgeError::parse(format!(
+								"Type mismatch in list initializer: expected element of type {:?}",
+								elem_type
+							)));
+						}
+					}
+				}
+			}
+		}
+		_ => {}
+	}
+
+	if let Some(initializer) = &decl.initializer {
+		validate_expr(initializer, parameters, program, context)?;
+	}
+	Ok(())
+}
+
+fn expr_matches_subtype(expr: &Expr, expected: &Subtype) -> bool {
+	match expected {
+		Subtype::Int => matches!(expr, Expr::Number(n) if !n.is_float) || matches!(expr, Expr::BinaryOp { .. } | Expr::UnaryOp { .. } | Expr::Identifier(_)),
+		Subtype::Float => matches!(expr, Expr::Number(n) if n.is_float) || matches!(expr, Expr::BinaryOp { .. } | Expr::UnaryOp { .. } | Expr::Identifier(_)),
+		Subtype::Weld => matches!(expr, Expr::Str(_)) || matches!(expr, Expr::Identifier(_)),
+		Subtype::Generic => true,
+	}
+}
+
+fn validate_assignment_target(
+	target: &AssignmentTarget,
+	parameters: &std::collections::HashSet<&str>,
+	program: &Program,
+	context: ValidationContext,
+) -> ForgeResult<()> {
+	match target {
+		AssignmentTarget::Var(_) => Ok(()),
+		AssignmentTarget::Member { object, .. } => {
+			validate_assignment_target(object, parameters, program, context)
+		}
+		AssignmentTarget::Index { object, index } => {
+			validate_assignment_target(object, parameters, program, context)?;
+			validate_expr(index, parameters, program, context)
+		}
+	}
 }
 
 fn validate_expr(
@@ -149,6 +256,25 @@ fn validate_expr(
 			}
 			for arg in args {
 				validate_expr(arg, parameters, program, context)?;
+			}
+		}
+		Expr::MethodCall { object, method, args } => {
+			validate_expr(object, parameters, program, context)?;
+			for arg in args {
+				validate_expr(arg, parameters, program, context)?;
+			}
+			match method.as_str() {
+				"Add" | "Remove" | "RemoveAt" | "Length" | "Len" => Ok(()),
+				other => Err(ForgeError::parse(format!("Unknown method: {}", other))),
+			}?;
+		}
+		Expr::IndexAccess { object, index } => {
+			validate_expr(object, parameters, program, context)?;
+			validate_expr(index, parameters, program, context)?;
+		}
+		Expr::ArrayLiteral(elements) | Expr::TupleLiteral(elements) | Expr::ListLiteral(elements) => {
+			for elem in elements {
+				validate_expr(elem, parameters, program, context)?;
 			}
 		}
 		Expr::BinaryOp { lhs, rhs, .. } => {

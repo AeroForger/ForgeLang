@@ -16,6 +16,7 @@ statement  = {
     | var_decl
     | object_decl
     | print_stmt
+    | for_stmt
     | if_stmt
     | while_stmt
     | return_stmt
@@ -32,13 +33,19 @@ qualified_name  = { ident ~ ("." ~ ident)* }
 
 // --- Modifiers & types ---
 modifier        = { kw_open | kw_closed | kw_showcase }
-subtype         = { kw_int | kw_float | kw_generic }
+subtype         = { kw_int | kw_float | kw_weld | kw_generic }
 type_decl       = { number_type | weld_type | ore_type | materials_type }
 
 number_type     = { kw_number ~ subtype }
 weld_type       = { kw_weld }
-ore_type        = { kw_ore ~ ("[" ~ integer ~ "]")? }
+ore_type        = { (kw_ore ~ "[" ~ (integer | kw_empty) ~ "]") | (kw_ore ~ "(" ~ tuple_field ~ ("," ~ tuple_field)* ~ ","? ~ ")") }
+tuple_field     = { subtype ~ ident }
 materials_type  = { kw_materials ~ subtype ~ kw_new? }
+
+// --- Collection Literals ---
+array_init      = { "[" ~ (expr ~ ("," ~ expr)* ~ ","?)? ~ "]" }
+tuple_init      = { "{" ~ (expr ~ ("," ~ expr)* ~ ","?)? ~ "}" }
+list_init       = { "(" ~ (expr ~ ("," ~ expr)+ ~ ","? | expr ~ "," | "") ~ ")" }
 
 // --- Variable declaration ---
 var_decl        = { modifier? ~ type_decl ~ ident ~ ("=" ~ expr)? ~ ";" }
@@ -67,11 +74,16 @@ if_stmt         = { kw_if ~ "(" ~ expr ~ ")" ~ block
                   ~ (kw_else ~ kw_if ~ "(" ~ expr ~ ")" ~ block)*
                   ~ (kw_else ~ block)? }
 while_stmt      = { kw_while ~ "(" ~ expr ~ ")" ~ block }
+for_stmt        = { kw_for ~ "(" ~ for_init ~ ";" ~ expr ~ ";" ~ for_increment ~ ")" ~ block }
+for_init        = { modifier? ~ type_decl ~ ident ~ ("=" ~ expr)? }
+for_increment   = { ident ~ incr_op }
+incr_op         = { "++" | "--" }
 return_stmt     = { kw_return ~ expr? ~ ";" }
 stop_stmt       = { kw_stop ~ ";" }
 
 // --- Assignment & bare expr ---
-assignment      = { ident ~ ("." ~ ident)* ~ "=" ~ expr ~ ";" }
+assignment      = { assignment_target ~ "=" ~ expr ~ ";" }
+assignment_target = { ident ~ (("." ~ member_ident) | index_tail)* }
 expr_stmt       = { expr ~ ";" }
 
 // --- Expressions: nested precedence ---
@@ -84,17 +96,21 @@ additive          = { multiplicative ~ (add_op ~ multiplicative)* }
 multiplicative    = { unary ~ (mul_op ~ unary)* }
 unary             = { (unary_op)* ~ power }
 power             = { postfix ~ (pow_op ~ power)? }
-postfix           = { primary ~ (("." ~ member_ident) | call_tail)* }
+postfix           = { primary ~ (("." ~ member_ident) | index_tail | call_tail)* }
 member_ident      = ${ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
+index_tail        = { "[" ~ expr ~ "]" }
 call_tail         = { "(" ~ arg_list? ~ ")" }
 arg_list          = { expr ~ ("," ~ expr)* }
 primary           = {
-      "(" ~ expr ~ ")"
-    | interpolated_string
-    | string
-    | number
-    | input_expr
-    | ident
+    list_init
+  | "(" ~ expr ~ ")"
+  | interpolated_string
+  | string
+  | number
+  | input_expr
+  | ident
+  | array_init
+  | tuple_init
 }
 input_expr        = { kw_input ~ "(" ~ subtype? ~ ")" }
 
@@ -134,10 +150,12 @@ kw_or         = ${ "Or" ~ !ident_char }
 kw_xor        = ${ "Xor" ~ !ident_char }
 kw_use        = ${ "Use" ~ !ident_char }
 kw_using      = ${ "Using" ~ !ident_char }
-kw_new        = ${ "New" ~ !ident_char }
+kw_new        = ${ ("New" | "new") ~ !ident_char }
 kw_print      = ${ "Print" ~ !ident_char }
 kw_input      = ${ "Input" ~ !ident_char }
 kw_stop       = ${ "Stop" ~ !ident_char }
+kw_empty      = ${ "EMPTY" ~ !ident_char }
+kw_for        = ${ "For" ~ !ident_char }
 
 // --- Lexical Tokens ---
 ident              = ${ !keyword ~ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
@@ -147,7 +165,8 @@ keyword            = _{
     | kw_materials | kw_data | kw_int | kw_float | kw_generic | kw_function
     | kw_nunction | kw_return | kw_if | kw_while | kw_else | kw_switch | kw_deal
     | kw_base | kw_do | kw_fail | kw_final | kw_and | kw_or | kw_xor
-    | kw_use | kw_using | kw_new | kw_print | kw_input | kw_stop
+    | kw_use | kw_using | kw_new | kw_print | kw_input | kw_stop | kw_empty
+    | kw_for
 }
 
 number             = { float | integer }

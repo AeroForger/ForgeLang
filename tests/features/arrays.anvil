@@ -1,0 +1,17 @@
+Open Nunction Main()
+{
+    Ore[3] FixedNums = [10, 20, 30,];
+    Print(FixedNums[0]);
+    Print(FixedNums[1]);
+    Print(FixedNums[2]);
+
+    FixedNums[1] = 55;
+    Print(FixedNums[1]);
+    Print(FixedNums.Length);
+
+    Ore[EMPTY] InferredNums = [100, 200, 300, 400,];
+    Print(InferredNums[0]);
+    Print(InferredNums[3]);
+    Print(InferredNums.Length);
+}
+

@@ -38,7 +38,7 @@ for anvil in "${TESTS[@]}"; do
     tmpdir="$(mktemp -d)"
     exe="$tmpdir/$name"
 
-    if ! "$FURNACE" "$anvil" -o "$exe" -lm >"$tmpdir/compile.log" 2>&1; then
+    if ! (cd "$tmpdir" && "$FURNACE" compile "$anvil" linux >"$tmpdir/compile.log" 2>&1); then
         echo "FAIL $name (compile)"
         sed 's/^/    /' "$tmpdir/compile.log" >&2
         FAIL=$((FAIL+1))

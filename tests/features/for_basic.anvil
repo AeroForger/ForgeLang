@@ -1,0 +1,39 @@
+Open Nunction Main()
+{
+    Print("--- Basic For ---");
+    For (Number Int i = 0; i < 10; i++)
+    {
+        Print(i);
+    }
+
+    Print("--- Zero Iterations ---");
+    For (Number Int i = 0; i < 0; i++)
+    {
+        Print("FAIL: should not execute");
+    }
+
+    Print("--- Decrement ---");
+    For (Number Int i = 3; i > 0; i--)
+    {
+        Print(i);
+    }
+
+    Print("--- Nested ---");
+    For (Number Int i = 0; i < 2; i++)
+    {
+        For (Number Int j = 0; j < 2; j++)
+        {
+            Number Int val = i * 10 + j;
+            Print(val);
+        }
+    }
+
+    Print("--- Modified Inside ---");
+    For (Number Int i = 0; i < 5; i++)
+    {
+        Print(i);
+        i = i + 1;
+    }
+
+    Print("done");
+}

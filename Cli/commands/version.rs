@@ -1,5 +1,6 @@
-use furnace::VERSION;
+use std::process::ExitCode;
 
-pub fn print_version() {
-    println!("Furnace {}", VERSION);
+pub fn execute() -> ExitCode {
+    println!("Furnace {}", furnace::VERSION);
+    ExitCode::SUCCESS
 }

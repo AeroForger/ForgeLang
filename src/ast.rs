@@ -4,13 +4,14 @@
 pub enum Modifier { Open, Closed, Showcase }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Subtype { Int, Float, Generic }
+pub enum Subtype { Int, Float, Generic, Weld }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TypeDecl {
     Number(Subtype),
     Weld,
     Ore(Option<i64>),
+    OreTuple(Vec<(Subtype, String)>),
     Materials(Subtype, bool /* New */),
 }
 
@@ -31,12 +32,28 @@ pub enum Statement {
     Input(InputNode),
     If(IfNode),
     While(WhileNode),
+    For(ForNode),
     Return(Option<Expr>),
     Stop,
     Assignment(AssignmentNode),
     Use(UseNode),
     ExprStmt(Expr),
 }
+
+/// Increment/decrement direction for For loop headers.
+#[derive(Debug, Clone, PartialEq)]
+pub enum IncrOp { Inc, Dec }
+
+/// For loop: `For (init; condition; increment) { body }`
+#[derive(Debug, Clone)]
+pub struct ForNode {
+    pub init: VarDecl,
+    pub condition: Expr,
+    pub increment_var: String,
+    pub increment_op: IncrOp,
+    pub body: Vec<Statement>,
+}
+
 
 #[derive(Debug, Clone)]
 pub struct VarDecl {
@@ -73,16 +90,16 @@ pub struct FunctionDecl {
 pub struct Param { pub type_decl: TypeDecl, pub name: String }
 
 #[derive(Debug, Clone)]
-pub struct PrintNode { pub expr: Expr } // Changed to hold any expression
+pub struct PrintNode { pub expr: Expr }
 
 #[derive(Debug, Clone)]
 pub enum StringPart {
     Literal(String),
-    Interp(String), // "x" or "obj.member" - string form for now; codegen resolves
+    Interp(String),
 }
 
 #[derive(Debug, Clone)]
-pub struct InputNode { pub subtype: Option<Subtype> } // None/Generic = Weld/string
+pub struct InputNode { pub subtype: Option<Subtype> }
 
 #[derive(Debug, Clone)]
 pub struct IfNode {
@@ -97,8 +114,15 @@ pub struct WhileNode {
 }
 
 #[derive(Debug, Clone)]
+pub enum AssignmentTarget {
+    Var(String),
+    Member { object: Box<AssignmentTarget>, member: String },
+    Index { object: Box<AssignmentTarget>, index: Expr },
+}
+
+#[derive(Debug, Clone)]
 pub struct AssignmentNode {
-    pub target_path: Vec<String>, // ["x"] or ["obj","member"]
+    pub target: AssignmentTarget,
     pub value: Expr,
 }
 
@@ -111,14 +135,19 @@ pub struct UseNode {
 #[derive(Debug, Clone)]
 pub enum Expr {
     Number(NumberLiteral),
-    Str(Vec<StringPart>), // plain string only contains Literal parts
+    Str(Vec<StringPart>),
     Identifier(String),
     MemberAccess { object: Box<Expr>, member: String },
+    IndexAccess { object: Box<Expr>, index: Box<Expr> },
     BinaryOp { op: BinOp, lhs: Box<Expr>, rhs: Box<Expr> },
     UnaryOp { op: UnOp, operand: Box<Expr> },
     Call { callee: String, args: Vec<Expr> },
     NamespaceCall { namespace: String, method: String, args: Vec<Expr> },
+    MethodCall { object: Box<Expr>, method: String, args: Vec<Expr> },
     Input(InputNode),
+    ArrayLiteral(Vec<Expr>),
+    TupleLiteral(Vec<Expr>),
+    ListLiteral(Vec<Expr>),
 }
 
 #[derive(Debug, Clone, PartialEq)]

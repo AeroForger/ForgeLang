@@ -1,0 +1,41 @@
+Open Nunction Main()
+{
+    Print("--- Single Iteration ---");
+    For (Number Int i = 0; i < 1; i++)
+    {
+        Print(i);
+    }
+
+    Print("--- Not Equal ---");
+    For (Number Int i = 0; i != 5; i++)
+    {
+        Print(i);
+    }
+
+    Print("--- Greater Than ---");
+    For (Number Int i = 5; i > 0; i--)
+    {
+        Print(i);
+    }
+
+    Print("--- Less Equal ---");
+    For (Number Int i = 0; i <= 4; i++)
+    {
+        Print(i);
+    }
+
+    Print("--- Equal Condition ---");
+    For (Number Int i = 5; i == 5; i++)
+    {
+        Print(i);
+        i = 10;
+    }
+
+    Print("--- Zero Iterations ---");
+    For (Number Int i = 10; i < 5; i++)
+    {
+        Print("FAIL");
+    }
+
+    Print("done");
+}

@@ -1,0 +1,44 @@
+Open Nunction Main()
+{
+    Print("--- Outer Variable ---");
+    Number Int Outer = 100;
+    For (Number Int i = 0; i < 3; i++)
+    {
+        Print(Outer);
+        Outer = Outer + 10;
+    }
+    Print(Outer);
+
+    Print("--- Variable in Body ---");
+    For (Number Int i = 0; i < 3; i++)
+    {
+        Number Int Inner = i * 10;
+        Print(Inner);
+    }
+
+    Print("--- Nested Independent ---");
+    For (Number Int i = 0; i < 2; i++)
+    {
+        For (Number Int j = 0; j < 3; j++)
+        {
+            Print(i);
+            Print(j);
+        }
+    }
+
+    Print("--- Loop Var in Condition ---");
+    Number Int Count = 0;
+    For (Number Int i = 0; i < 5; i++)
+    {
+        Count = Count + 1;
+    }
+    Print(Count);
+
+    Print("--- No Init Value ---");
+    For (Number Int i; i < 3; i++)
+    {
+        Print(i);
+    }
+
+    Print("done");
+}

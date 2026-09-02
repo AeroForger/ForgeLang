@@ -1,0 +1,7 @@
+Open Nunction Main()
+{
+    For ()
+    {
+        Print(1);
+    }
+}

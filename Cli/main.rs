@@ -1,39 +1,28 @@
+use std::process::ExitCode;
+
 mod args;
 mod commands;
 mod platform;
 
-use std::process::ExitCode;
-
-use crate::args::{parse_args, Command};
-
 fn main() -> ExitCode {
-    let args: Vec<String> = std::env::args().skip(1).collect();
+    let raw_args: Vec<String> = std::env::args().skip(1).collect();
+    let command = match args::parse_args(&raw_args) {
+        Ok(cmd) => cmd,
+        Err(exit_code) => return exit_code,
+    };
 
-    match parse_args(&args) {
-        Ok(Command::Compile { input, platform }) => {
-            if let Err(err) = commands::compile::execute(&input, platform) {
-                eprintln!("{}", err);
-                return ExitCode::FAILURE;
-            }
-            ExitCode::SUCCESS
+    match command {
+        args::Command::Compile { input, platform } => {
+            commands::compile::execute(&input, platform)
         }
-        Ok(Command::Run { input }) => {
-            match commands::run::execute(&input) {
-                Ok(code) => ExitCode::from(code as u8),
-                Err(err) => {
-                    eprintln!("{}", err);
-                    ExitCode::FAILURE
-                }
-            }
+        args::Command::Run { input } => {
+            commands::run::execute(&input)
         }
-        Ok(Command::Version) => {
-            commands::version::print_version();
-            ExitCode::SUCCESS
+        args::Command::Version => {
+            commands::version::execute()
         }
-        Ok(Command::Help) => {
-            commands::help::print_help();
-            ExitCode::SUCCESS
+        args::Command::Help => {
+            commands::help::execute()
         }
-        Err(code) => code,
     }
 }

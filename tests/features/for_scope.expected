@@ -1,0 +1,29 @@
+--- Outer Variable ---
+100
+110
+120
+130
+--- Variable in Body ---
+0
+10
+20
+--- Nested Independent ---
+0
+0
+0
+1
+0
+2
+1
+0
+1
+1
+1
+2
+--- Loop Var in Condition ---
+5
+--- No Init Value ---
+0
+1
+2
+done

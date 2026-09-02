@@ -1,0 +1,7 @@
+Open Nunction Main()
+{
+    For (Number Int i; i < 10)
+    {
+        Print(1);
+    }
+}

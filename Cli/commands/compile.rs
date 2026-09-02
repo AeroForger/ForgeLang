@@ -1,81 +1,69 @@
-use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
-
-use furnace::{codegen, parser::parse_program, semantic};
+use std::process::{Command, ExitCode};
 
 use crate::platform::Platform;
 
-pub fn execute(input: &Path, platform: Platform) -> Result<(), String> {
+pub fn execute(input: &Path, platform: Platform) -> ExitCode {
+    let source = match std::fs::read_to_string(input) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("error: cannot read '{}': {}", input.display(), e);
+            return ExitCode::from(1);
+        }
+    };
+
     println!("Compiling {}...", input.display());
 
-    let (obj_path, output_path) = compile_to_object(input)?;
+    let program = match furnace::parser::parse_program(&source) {
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("{}", e);
+            return ExitCode::from(1);
+        }
+    };
+
+    if let Err(e) = furnace::semantic::analyze(&program) {
+        eprintln!("{}", e);
+        return ExitCode::from(1);
+    }
+
+    let stem = match input.file_stem().and_then(|s| s.to_str()) {
+        Some(s) => s,
+        None => "main",
+    };
+
+    let obj_path = PathBuf::from(format!("{}.o", stem));
+    let output_exe = PathBuf::from(format!("./{}", stem));
+
+    if let Err(e) = furnace::codegen::compile(&program, &obj_path, true) {
+        eprintln!("{}", e);
+        return ExitCode::from(1);
+    }
 
     println!("Linking...");
-    link_object(&obj_path, &output_path, platform)?;
 
-    println!("Build successful!");
-    println!("Output: {}", output_path.display());
-    Ok(())
-}
-
-pub(crate) fn compile_to_object(input: &Path) -> Result<(PathBuf, PathBuf), String> {
-    if !input.exists() {
-        return Err(format!("error: input file '{}' does not exist", input.display()));
+    let mut linker = Command::new(platform.linker_name());
+    linker.arg(&obj_path).arg("-o").arg(&output_exe);
+    for flag in platform.default_linker_flags() {
+        linker.arg(flag);
     }
 
-    let source = fs::read_to_string(input)
-        .map_err(|e| format!("error: failed to read '{}': {}", input.display(), e))?;
-
-    let program = parse_program(&source)
-        .map_err(|e| format!("error: failed to parse '{}': {}", input.display(), e))?;
-
-    semantic::analyze(&program)
-        .map_err(|e| format!("error: semantic analysis failed for '{}': {}", input.display(), e))?;
-
-    let output_dir = input
-        .parent()
-        .filter(|p| !p.as_os_str().is_empty())
-        .unwrap_or_else(|| Path::new("."));
-
-    let stem = input
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .ok_or_else(|| format!("error: invalid input file name '{}'", input.display()))?;
-
-    let obj_path = output_dir.join(format!("{}.o", stem));
-    let output_path = output_dir.join(stem);
-
-    codegen::compile(&program, &obj_path, true)
-        .map_err(|e| format!("error: code generation failed for '{}': {}", input.display(), e))?;
-
-    Ok((obj_path, output_path))
-}
-
-pub(crate) fn link_object(obj_path: &Path, output_path: &Path, platform: Platform) -> Result<(), String> {
-    let mut cmd = Command::new(platform.linker_name());
-    cmd.arg(obj_path)
-        .arg("-o")
-        .arg(output_path)
-        .args(platform.default_linker_flags());
-
-    let status = cmd.status().map_err(|e| {
-        format!(
-            "error: failed to invoke linker '{}' for '{}': {}",
-            platform.linker_name(),
-            output_path.display(),
-            e
-        )
-    })?;
-
-    if !status.success() {
-        return Err(format!(
-            "error: linking failed for '{}' ({} exited with status {:?})",
-            output_path.display(),
-            platform.linker_name(),
-            status.code().unwrap_or_default()
-        ));
+    match linker.status() {
+        Ok(status) if status.success() => {
+            let _ = std::fs::remove_file(&obj_path);
+            println!("Build successful!");
+            println!("Output: {}", output_exe.display());
+            ExitCode::SUCCESS
+        }
+        Ok(status) => {
+            let _ = std::fs::remove_file(&obj_path);
+            eprintln!("error: linker exited with status {}", status);
+            ExitCode::from(1)
+        }
+        Err(e) => {
+            let _ = std::fs::remove_file(&obj_path);
+            eprintln!("error: cannot invoke linker '{}': {}", platform.linker_name(), e);
+            ExitCode::from(1)
+        }
     }
-
-    Ok(())
 }

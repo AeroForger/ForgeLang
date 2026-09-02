@@ -1,0 +1,14 @@
+Open Nunction Main()
+{
+    Ore(Int Number1, Int Number2) TwoNumbers = {1, 2};
+    Print(TwoNumbers.Number1);
+    Print(TwoNumbers.Number2);
+
+    Ore(Int Age, Weld Name) Person = {14, "Den"};
+    Print(Person.Age);
+    Print(Person.Name);
+
+    Person.Age = 15;
+    Print(Person.Age);
+}
+

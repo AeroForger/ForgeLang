@@ -21,6 +21,10 @@ pub struct RuntimeSymbols {
     pub scanf_id: FuncId,
     pub pow_id: FuncId,
     pub exit_id: FuncId,
+    pub malloc_id: FuncId,
+    pub realloc_id: FuncId,
+    pub free_id: FuncId,
+    pub memmove_id: FuncId,
     pub int_fmt_id: DataId,
     pub float_fmt_id: DataId,
     pub int_inline_fmt_id: DataId,
@@ -28,6 +32,7 @@ pub struct RuntimeSymbols {
     pub int_scanf_id: DataId,
     pub float_scanf_id: DataId,
     pub str_scanf_id: DataId,
+    pub oob_fmt_id: DataId,
 }
 
 /// Function-local Cranelift handles (GlobalValues and FuncRefs) bound to a specific function's IR context.
@@ -39,6 +44,10 @@ pub struct RuntimeRefs {
     pub scanf: FuncRef,
     pub pow: FuncRef,
     pub exit: FuncRef,
+    pub malloc: FuncRef,
+    pub realloc: FuncRef,
+    pub free: FuncRef,
+    pub memmove: FuncRef,
     pub int_fmt: GlobalValue,
     pub float_fmt: GlobalValue,
     pub int_inline_fmt: GlobalValue,
@@ -46,6 +55,7 @@ pub struct RuntimeRefs {
     pub int_scanf: GlobalValue,
     pub float_scanf: GlobalValue,
     pub str_scanf: GlobalValue,
+    pub oob_fmt: GlobalValue,
 }
 
 /// Owns module-level compilation state and external dependencies.
@@ -121,6 +131,36 @@ impl CodeGenContext {
             .declare_function("exit", Linkage::Import, &exit_sig)
             .map_err(|e| ForgeError::codegen(format!("declare exit: {}", e)))?;
 
+        let mut malloc_sig = module.make_signature();
+        malloc_sig.params.push(AbiParam::new(ptr_type));
+        malloc_sig.returns.push(AbiParam::new(ptr_type));
+        let malloc_id = module
+            .declare_function("malloc", Linkage::Import, &malloc_sig)
+            .map_err(|e| ForgeError::codegen(format!("declare malloc: {}", e)))?;
+
+        let mut realloc_sig = module.make_signature();
+        realloc_sig.params.push(AbiParam::new(ptr_type));
+        realloc_sig.params.push(AbiParam::new(ptr_type));
+        realloc_sig.returns.push(AbiParam::new(ptr_type));
+        let realloc_id = module
+            .declare_function("realloc", Linkage::Import, &realloc_sig)
+            .map_err(|e| ForgeError::codegen(format!("declare realloc: {}", e)))?;
+
+        let mut free_sig = module.make_signature();
+        free_sig.params.push(AbiParam::new(ptr_type));
+        let free_id = module
+            .declare_function("free", Linkage::Import, &free_sig)
+            .map_err(|e| ForgeError::codegen(format!("declare free: {}", e)))?;
+
+        let mut memmove_sig = module.make_signature();
+        memmove_sig.params.push(AbiParam::new(ptr_type));
+        memmove_sig.params.push(AbiParam::new(ptr_type));
+        memmove_sig.params.push(AbiParam::new(ptr_type));
+        memmove_sig.returns.push(AbiParam::new(ptr_type));
+        let memmove_id = module
+            .declare_function("memmove", Linkage::Import, &memmove_sig)
+            .map_err(|e| ForgeError::codegen(format!("declare memmove: {}", e)))?;
+
         // Define global format strings
         let int_fmt_id = Self::define_string_in_module(&mut module, "int_fmt", b"%.0f\n\0")?;
         let float_fmt_id = Self::define_string_in_module(&mut module, "float_fmt", b"%f\n\0")?;
@@ -129,6 +169,7 @@ impl CodeGenContext {
         let int_scanf_id = Self::define_string_in_module(&mut module, "int_scanf", b"%d\0")?;
         let float_scanf_id = Self::define_string_in_module(&mut module, "float_scanf", b"%lf\0")?;
         let str_scanf_id = Self::define_string_in_module(&mut module, "str_scanf", b"%255s\0")?;
+        let oob_fmt_id = Self::define_string_in_module(&mut module, "oob_fmt", b"Index out of bounds\0")?;
 
         let runtime_symbols = RuntimeSymbols {
             printf_id,
@@ -138,6 +179,10 @@ impl CodeGenContext {
             scanf_id,
             pow_id,
             exit_id,
+            malloc_id,
+            realloc_id,
+            free_id,
+            memmove_id,
             int_fmt_id,
             float_fmt_id,
             int_inline_fmt_id,
@@ -145,6 +190,7 @@ impl CodeGenContext {
             int_scanf_id,
             float_scanf_id,
             str_scanf_id,
+            oob_fmt_id,
         };
 
         Ok(Self {
@@ -179,6 +225,7 @@ impl CodeGenContext {
         let int_scanf = self.module.declare_data_in_func(self.runtime_symbols.int_scanf_id, func);
         let float_scanf = self.module.declare_data_in_func(self.runtime_symbols.float_scanf_id, func);
         let str_scanf = self.module.declare_data_in_func(self.runtime_symbols.str_scanf_id, func);
+        let oob_fmt = self.module.declare_data_in_func(self.runtime_symbols.oob_fmt_id, func);
         let printf = self.module.declare_func_in_func(self.runtime_symbols.printf_id, func);
         let puts = self.module.declare_func_in_func(self.runtime_symbols.puts_id, func);
         let fputs = self.module.declare_func_in_func(self.runtime_symbols.fputs_id, func);
@@ -186,6 +233,10 @@ impl CodeGenContext {
         let scanf = self.module.declare_func_in_func(self.runtime_symbols.scanf_id, func);
         let pow = self.module.declare_func_in_func(self.runtime_symbols.pow_id, func);
         let exit = self.module.declare_func_in_func(self.runtime_symbols.exit_id, func);
+        let malloc = self.module.declare_func_in_func(self.runtime_symbols.malloc_id, func);
+        let realloc = self.module.declare_func_in_func(self.runtime_symbols.realloc_id, func);
+        let free = self.module.declare_func_in_func(self.runtime_symbols.free_id, func);
+        let memmove = self.module.declare_func_in_func(self.runtime_symbols.memmove_id, func);
 
         RuntimeRefs {
             printf,
@@ -195,6 +246,10 @@ impl CodeGenContext {
             scanf,
             pow,
             exit,
+            malloc,
+            realloc,
+            free,
+            memmove,
             int_fmt,
             float_fmt,
             int_inline_fmt,
@@ -202,8 +257,17 @@ impl CodeGenContext {
             int_scanf,
             float_scanf,
             str_scanf,
+            oob_fmt,
         }
     }
+}
+
+#[derive(Debug, Clone)]
+pub enum VarInfo {
+    Primitive(types::Type),
+    Array { element_type: Subtype, size: usize },
+    Tuple { fields: Vec<(Subtype, String)> },
+    List { element_type: Subtype },
 }
 
 /// Owns the active function's IR construction and function-local compilation state.
@@ -213,6 +277,7 @@ pub struct FunctionCompiler<'a, 'ctx> {
     pub runtime: RuntimeRefs,
     pub string_map: HashMap<String, GlobalValue>,
     pub var_map: HashMap<String, Variable>,
+    pub var_info: HashMap<String, VarInfo>,
     pub float_vars: HashSet<String>,
     pub string_vars: HashSet<String>,
     pub break_targets: Vec<cranelift_codegen::ir::Block>,
@@ -231,6 +296,7 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
             runtime,
             string_map,
             var_map: HashMap::new(),
+            var_info: HashMap::new(),
             float_vars: HashSet::new(),
             string_vars: HashSet::new(),
             break_targets: Vec::new(),
@@ -241,11 +307,104 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
         match expr {
             Expr::Number(n) => n.is_float,
             Expr::Identifier(name) => self.float_vars.contains(name),
+            Expr::MemberAccess { object, member } => {
+                if let Expr::Identifier(name) = &**object {
+                    if let Some(VarInfo::Tuple { fields }) = self.var_info.get(name) {
+                        if let Some((Subtype::Float, _)) = fields.iter().find(|(_, f_name)| f_name == member) {
+                            return true;
+                        }
+                    }
+                }
+                false
+            }
+            Expr::IndexAccess { object, .. } => {
+                if let Expr::Identifier(name) = &**object {
+                    if let Some(VarInfo::Array { element_type: Subtype::Float, .. }) = self.var_info.get(name) {
+                        return true;
+                    }
+                    if let Some(VarInfo::List { element_type: Subtype::Float, .. }) = self.var_info.get(name) {
+                        return true;
+                    }
+                }
+                false
+            }
             Expr::BinaryOp { lhs, rhs, .. } => self.is_float_expr(lhs) || self.is_float_expr(rhs),
             Expr::UnaryOp { operand, .. } => self.is_float_expr(operand),
             Expr::Input(InputNode { subtype: Some(Subtype::Float) }) => true,
             _ => false,
         }
+    }
+
+    fn is_string_expr(&self, expr: &Expr) -> bool {
+        match expr {
+            Expr::Str(_) => true,
+            Expr::Identifier(name) => self.string_vars.contains(name),
+            Expr::MemberAccess { object, member } => {
+                if let Expr::Identifier(name) = &**object {
+                    if let Some(VarInfo::Tuple { fields }) = self.var_info.get(name) {
+                        if let Some((Subtype::Weld, _)) = fields.iter().find(|(_, f_name)| f_name == member) {
+                            return true;
+                        }
+                    }
+                }
+                false
+            }
+            Expr::IndexAccess { object, .. } => {
+                if let Expr::Identifier(name) = &**object {
+                    if let Some(VarInfo::Array { element_type: Subtype::Weld, .. }) = self.var_info.get(name) {
+                        return true;
+                    }
+                    if let Some(VarInfo::List { element_type: Subtype::Weld, .. }) = self.var_info.get(name) {
+                        return true;
+                    }
+                }
+                false
+            }
+            _ => false,
+        }
+    }
+
+    fn emit_bounds_check(&mut self, index_val: Value, len_val: Value) -> ForgeResult<()> {
+        let in_bounds = self.builder.ins().icmp(IntCC::UnsignedLessThan, index_val, len_val);
+        let ok_block = self.builder.create_block();
+        let err_block = self.builder.create_block();
+        self.builder.ins().brif(in_bounds, ok_block, &[], err_block, &[]);
+
+        self.builder.switch_to_block(err_block);
+        self.builder.seal_block(err_block);
+        let oob_msg = self.builder.ins().symbol_value(self.ctx.ptr_type, self.runtime.oob_fmt);
+        self.builder.ins().call(self.runtime.puts, &[oob_msg]);
+        let one = self.builder.ins().iconst(types::I32, 1);
+        self.builder.ins().call(self.runtime.exit, &[one]);
+        self.builder.ins().return_(&[one]);
+
+        self.builder.switch_to_block(ok_block);
+        self.builder.seal_block(ok_block);
+        Ok(())
+    }
+
+    fn emit_increment(&mut self, var_name: &str, op: &IncrOp) -> ForgeResult<()> {
+        let var = self.var_map.get(var_name).copied()
+            .ok_or_else(|| ForgeError::codegen(format!("Undefined variable: {}", var_name)))?;
+        let current = self.builder.use_var(var);
+
+        let is_float = self.float_vars.contains(var_name);
+        let new_val = if is_float {
+            let one = self.builder.ins().f64const(1.0);
+            match op {
+                IncrOp::Inc => self.builder.ins().fadd(current, one),
+                IncrOp::Dec => self.builder.ins().fsub(current, one),
+            }
+        } else {
+            let one = self.builder.ins().iconst(types::I32, 1);
+            match op {
+                IncrOp::Inc => self.builder.ins().iadd(current, one),
+                IncrOp::Dec => self.builder.ins().isub(current, one),
+            }
+        };
+
+        self.builder.def_var(var, new_val);
+        Ok(())
     }
 
     fn compile_namespace_call(&mut self, namespace: &str, method: &str, _args: &[Expr]) -> ForgeResult<Value> {
@@ -263,18 +422,109 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
         }
     }
 
+    fn compile_empty_list(&mut self) -> ForgeResult<Value> {
+        let header_size = self.builder.ins().iconst(self.ctx.ptr_type, 24);
+        let call_inst = self.builder.ins().call(self.runtime.malloc, &[header_size]);
+        let list_ptr = self.builder.inst_results(call_inst)[0];
+
+        let buf_size = self.builder.ins().iconst(self.ctx.ptr_type, 32); // initial cap 4 * 8
+        let call_buf = self.builder.ins().call(self.runtime.malloc, &[buf_size]);
+        let buf_ptr = self.builder.inst_results(call_buf)[0];
+
+        let zero = self.builder.ins().iconst(self.ctx.ptr_type, 0);
+        let four = self.builder.ins().iconst(self.ctx.ptr_type, 4);
+
+        self.builder.ins().store(MachMemFlags::new(), zero, list_ptr, 0);
+        self.builder.ins().store(MachMemFlags::new(), four, list_ptr, 8);
+        self.builder.ins().store(MachMemFlags::new(), buf_ptr, list_ptr, 16);
+
+        Ok(list_ptr)
+    }
+
+    fn compile_assignment_target_ptr(&mut self, target: &AssignmentTarget) -> ForgeResult<Value> {
+        match target {
+            AssignmentTarget::Var(name) => {
+                if let Some(var) = self.var_map.get(name).copied() {
+                    Ok(self.builder.use_var(var))
+                } else {
+                    Err(ForgeError::codegen(format!("Undefined variable: {}", name)))
+                }
+            }
+            AssignmentTarget::Member { object, member } => {
+                let obj_ptr = self.compile_assignment_target_ptr(object)?;
+                let info = self.get_target_info(object)?;
+                if let VarInfo::Tuple { fields } = info {
+                    let idx = fields.iter().position(|(_, f_name)| f_name == member).ok_or_else(|| {
+                        ForgeError::codegen(format!("Unknown tuple field: {}", member))
+                    })?;
+                    let offset = (idx * 8) as i32;
+                    let off_val = self.builder.ins().iconst(self.ctx.ptr_type, offset as i64);
+                    Ok(self.builder.ins().iadd(obj_ptr, off_val))
+                } else {
+                    Err(ForgeError::codegen(format!("Member target not supported on {:?}", info)))
+                }
+            }
+            AssignmentTarget::Index { object, index } => {
+                let obj_ptr = self.compile_assignment_target_ptr(object)?;
+                let idx_val = self.compile_expr(index)?;
+                let idx_val_ptr = self.builder.ins().sextend(self.ctx.ptr_type, idx_val);
+                let info = self.get_target_info(object)?;
+                match info {
+                    VarInfo::Array { .. } => {
+                        let len = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_ptr, 0);
+                        self.emit_bounds_check(idx_val_ptr, len)?;
+                        let eight = self.builder.ins().iconst(self.ctx.ptr_type, 8);
+                        let byte_offset = self.builder.ins().imul(idx_val_ptr, eight);
+                        let elem_addr = self.builder.ins().iadd(obj_ptr, byte_offset);
+                        let sixteen = self.builder.ins().iconst(self.ctx.ptr_type, 16);
+                        Ok(self.builder.ins().iadd(elem_addr, sixteen))
+                    }
+                    VarInfo::List { .. } => {
+                        let len = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_ptr, 0);
+                        self.emit_bounds_check(idx_val_ptr, len)?;
+                        let buf_ptr = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_ptr, 16);
+                        let eight = self.builder.ins().iconst(self.ctx.ptr_type, 8);
+                        let byte_offset = self.builder.ins().imul(idx_val_ptr, eight);
+                        Ok(self.builder.ins().iadd(buf_ptr, byte_offset))
+                    }
+                    _ => Err(ForgeError::codegen("Index assignment target must be Array or List")),
+                }
+            }
+        }
+    }
+
+    fn get_target_info(&self, target: &AssignmentTarget) -> ForgeResult<VarInfo> {
+        match target {
+            AssignmentTarget::Var(name) => {
+                self.var_info.get(name).cloned().ok_or_else(|| {
+                    ForgeError::codegen(format!("Undefined variable info for: {}", name))
+                })
+            }
+            _ => Ok(VarInfo::Primitive(self.ctx.ptr_type)),
+        }
+    }
+
     pub fn compile_statement(&mut self, stmt: &Statement) -> ForgeResult<()> {
         match stmt {
             Statement::VarDecl(v) => {
-                let ty = if type_decl_is_float(&v.type_decl) {
-                    types::F64
-                } else if matches!(v.type_decl, TypeDecl::Weld) {
-                    self.ctx.ptr_type
-                } else {
-                    types::I32
+                let (ty, info) = match &v.type_decl {
+                    TypeDecl::Number(Subtype::Float) => (types::F64, VarInfo::Primitive(types::F64)),
+                    TypeDecl::Number(_) => (types::I32, VarInfo::Primitive(types::I32)),
+                    TypeDecl::Weld => (self.ctx.ptr_type, VarInfo::Primitive(self.ctx.ptr_type)),
+                    TypeDecl::Ore(size_opt) => {
+                        let size = size_opt.unwrap_or(0) as usize;
+                        (self.ctx.ptr_type, VarInfo::Array { element_type: Subtype::Int, size })
+                    }
+                    TypeDecl::OreTuple(fields) => {
+                        (self.ctx.ptr_type, VarInfo::Tuple { fields: fields.clone() })
+                    }
+                    TypeDecl::Materials(elem_type, _) => {
+                        (self.ctx.ptr_type, VarInfo::List { element_type: elem_type.clone() })
+                    }
                 };
                 let var = self.builder.declare_var(ty);
                 self.var_map.insert(v.name.clone(), var);
+                self.var_info.insert(v.name.clone(), info);
                 if ty == types::F64 {
                     self.float_vars.insert(v.name.clone());
                 }
@@ -285,6 +535,9 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                 if let Some(init) = &v.initializer {
                     let val = self.compile_expr(init)?;
                     self.builder.def_var(var, val);
+                } else if matches!(&v.type_decl, TypeDecl::Materials(_, true)) {
+                    let list_val = self.compile_empty_list()?;
+                    self.builder.def_var(var, list_val);
                 } else {
                     let zero = if ty == types::F64 {
                         self.builder.ins().f64const(0.0)
@@ -340,8 +593,7 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                     }
                 }
                 let val = self.compile_expr(&p.expr)?;
-                let is_string = matches!(&p.expr, Expr::Str(_))
-                    || matches!(&p.expr, Expr::Identifier(name) if self.string_vars.contains(name));
+                let is_string = self.is_string_expr(&p.expr);
                 let is_float = self.is_float_expr(&p.expr);
 
                 if is_string {
@@ -362,17 +614,54 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                 }
             }
             Statement::Assignment(a) => {
-                if a.target_path.len() == 1 {
-                    let var_name = &a.target_path[0];
-                    let var = self.var_map.get(var_name).copied();
-                    if let Some(var) = var {
-                        let val = self.compile_expr(&a.value)?;
-                        self.builder.def_var(var, val);
-                    } else {
-                        return Err(ForgeError::codegen(format!("Undefined variable: {}", var_name)));
+                let val = self.compile_expr(&a.value)?;
+                match &a.target {
+                    AssignmentTarget::Var(name) => {
+                        if let Some(var) = self.var_map.get(name).copied() {
+                            self.builder.def_var(var, val);
+                        } else {
+                            return Err(ForgeError::codegen(format!("Undefined variable: {}", name)));
+                        }
                     }
-                } else {
-                    return Err(ForgeError::codegen("Member assignment not supported yet"));
+                    AssignmentTarget::Member { object, member } => {
+                        let target_ptr = self.compile_assignment_target_ptr(object)?;
+                        let info = self.get_target_info(object)?;
+                        if let VarInfo::Tuple { fields } = info {
+                            let idx = fields.iter().position(|(_, f_name)| f_name == member).ok_or_else(|| {
+                                ForgeError::codegen(format!("Unknown tuple field: {}", member))
+                            })?;
+                            let offset = (idx * 8) as i32;
+                            self.builder.ins().store(MachMemFlags::new(), val, target_ptr, offset);
+                        } else {
+                            return Err(ForgeError::codegen("Member assignment not supported on non-tuple"));
+                        }
+                    }
+                    AssignmentTarget::Index { object, index } => {
+                        let target_ptr = self.compile_assignment_target_ptr(object)?;
+                        let idx_val = self.compile_expr(index)?;
+                        let idx_val_ptr = self.builder.ins().sextend(self.ctx.ptr_type, idx_val);
+                        let info = self.get_target_info(object)?;
+                        match info {
+                            VarInfo::Array { .. } => {
+                                let len = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), target_ptr, 0);
+                                self.emit_bounds_check(idx_val_ptr, len)?;
+                                let eight = self.builder.ins().iconst(self.ctx.ptr_type, 8);
+                                let byte_offset = self.builder.ins().imul(idx_val_ptr, eight);
+                                let elem_addr = self.builder.ins().iadd(target_ptr, byte_offset);
+                                self.builder.ins().store(MachMemFlags::new(), val, elem_addr, 16);
+                            }
+                            VarInfo::List { .. } => {
+                                let len = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), target_ptr, 0);
+                                self.emit_bounds_check(idx_val_ptr, len)?;
+                                let buf_ptr = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), target_ptr, 16);
+                                let eight = self.builder.ins().iconst(self.ctx.ptr_type, 8);
+                                let byte_offset = self.builder.ins().imul(idx_val_ptr, eight);
+                                let elem_addr = self.builder.ins().iadd(buf_ptr, byte_offset);
+                                self.builder.ins().store(MachMemFlags::new(), val, elem_addr, 0);
+                            }
+                            _ => return Err(ForgeError::codegen("Index assignment on non-collection")),
+                        }
+                    }
                 }
             }
             Statement::If(if_node) => {
@@ -443,6 +732,37 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                 self.builder.switch_to_block(exit_block);
                 self.builder.seal_block(exit_block);
             }
+            Statement::For(for_node) => {
+                self.compile_statement(&Statement::VarDecl(for_node.init.clone()))?;
+
+                let cond_block = self.builder.create_block();
+                let body_block = self.builder.create_block();
+                let exit_block = self.builder.create_block();
+                self.builder.ins().jump(cond_block, &[]);
+
+                self.builder.switch_to_block(cond_block);
+                let cond_val = self.compile_expr(&for_node.condition)?;
+                let cond_bool = self.builder.ins().icmp_imm_u(IntCC::NotEqual, cond_val, 0);
+                self.builder.ins().brif(cond_bool, body_block, &[], exit_block, &[]);
+
+                self.break_targets.push(exit_block);
+
+                self.builder.switch_to_block(body_block);
+                for s in &for_node.body {
+                    self.compile_statement(s)?;
+                }
+
+                self.emit_increment(&for_node.increment_var, &for_node.increment_op)?;
+
+                self.builder.ins().jump(cond_block, &[]);
+                self.builder.seal_block(body_block);
+                self.builder.seal_block(cond_block);
+
+                self.break_targets.pop();
+
+                self.builder.switch_to_block(exit_block);
+                self.builder.seal_block(exit_block);
+            }
             Statement::Stop => {
                 let target = self.break_targets.last().copied().ok_or_else(|| {
                     ForgeError::codegen("Stop used outside of break target")
@@ -479,6 +799,210 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                     Ok(self.builder.ins().symbol_value(self.ctx.ptr_type, gv))
                 } else {
                     Err(ForgeError::codegen(format!("Undefined variable: {}", name)))
+                }
+            }
+            Expr::ArrayLiteral(elements) => {
+                let len = elements.len();
+                let total_size = (16 + len * 8) as i64;
+                let size_val = self.builder.ins().iconst(self.ctx.ptr_type, total_size);
+                let call_inst = self.builder.ins().call(self.runtime.malloc, &[size_val]);
+                let array_ptr = self.builder.inst_results(call_inst)[0];
+
+                let len_val = self.builder.ins().iconst(self.ctx.ptr_type, len as i64);
+                let elem_size_val = self.builder.ins().iconst(self.ctx.ptr_type, 8);
+                self.builder.ins().store(MachMemFlags::new(), len_val, array_ptr, 0);
+                self.builder.ins().store(MachMemFlags::new(), elem_size_val, array_ptr, 8);
+
+                for (i, elem) in elements.iter().enumerate() {
+                    let val = self.compile_expr(elem)?;
+                    let offset = (16 + i * 8) as i32;
+                    self.builder.ins().store(MachMemFlags::new(), val, array_ptr, offset);
+                }
+
+                Ok(array_ptr)
+            }
+            Expr::TupleLiteral(elements) => {
+                let len = elements.len();
+                let total_size = (len * 8) as i64;
+                let size_val = self.builder.ins().iconst(self.ctx.ptr_type, total_size);
+                let call_inst = self.builder.ins().call(self.runtime.malloc, &[size_val]);
+                let tuple_ptr = self.builder.inst_results(call_inst)[0];
+
+                for (i, elem) in elements.iter().enumerate() {
+                    let val = self.compile_expr(elem)?;
+                    let offset = (i * 8) as i32;
+                    self.builder.ins().store(MachMemFlags::new(), val, tuple_ptr, offset);
+                }
+
+                Ok(tuple_ptr)
+            }
+            Expr::ListLiteral(elements) => {
+                let len = elements.len();
+                let capacity = if len == 0 { 4 } else { len };
+
+                let header_size = self.builder.ins().iconst(self.ctx.ptr_type, 24);
+                let call_inst = self.builder.ins().call(self.runtime.malloc, &[header_size]);
+                let list_ptr = self.builder.inst_results(call_inst)[0];
+
+                let buf_size = self.builder.ins().iconst(self.ctx.ptr_type, (capacity * 8) as i64);
+                let call_buf = self.builder.ins().call(self.runtime.malloc, &[buf_size]);
+                let buf_ptr = self.builder.inst_results(call_buf)[0];
+
+                let len_val = self.builder.ins().iconst(self.ctx.ptr_type, len as i64);
+                let cap_val = self.builder.ins().iconst(self.ctx.ptr_type, capacity as i64);
+
+                self.builder.ins().store(MachMemFlags::new(), len_val, list_ptr, 0);
+                self.builder.ins().store(MachMemFlags::new(), cap_val, list_ptr, 8);
+                self.builder.ins().store(MachMemFlags::new(), buf_ptr, list_ptr, 16);
+
+                for (i, elem) in elements.iter().enumerate() {
+                    let val = self.compile_expr(elem)?;
+                    let offset = (i * 8) as i32;
+                    self.builder.ins().store(MachMemFlags::new(), val, buf_ptr, offset);
+                }
+
+                Ok(list_ptr)
+            }
+            Expr::IndexAccess { object, index } => {
+                let obj_val = self.compile_expr(object)?;
+                let idx_val = self.compile_expr(index)?;
+                let idx_val_ptr = self.builder.ins().sextend(self.ctx.ptr_type, idx_val);
+
+                // Determine if Array or List
+                let mut is_list = false;
+                if let Expr::Identifier(name) = &**object {
+                    if let Some(info) = self.var_info.get(name) {
+                        if matches!(info, VarInfo::List { .. }) {
+                            is_list = true;
+                        }
+                    }
+                }
+
+                let len = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_val, 0);
+                self.emit_bounds_check(idx_val_ptr, len)?;
+
+                let eight = self.builder.ins().iconst(self.ctx.ptr_type, 8);
+                let byte_offset = self.builder.ins().imul(idx_val_ptr, eight);
+
+                if is_list {
+                    let buf_ptr = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_val, 16);
+                    let elem_addr = self.builder.ins().iadd(buf_ptr, byte_offset);
+                    Ok(self.builder.ins().load(types::I32, MachMemFlags::new(), elem_addr, 0))
+                } else {
+                    let elem_addr = self.builder.ins().iadd(obj_val, byte_offset);
+                    Ok(self.builder.ins().load(types::I32, MachMemFlags::new(), elem_addr, 16))
+                }
+            }
+            Expr::MemberAccess { object, member } => {
+                let obj_val = self.compile_expr(object)?;
+                if member == "Length" || member == "Len" {
+                    // Length is stored at offset 0
+                    let len_val = self.builder.ins().load(types::I32, MachMemFlags::new(), obj_val, 0);
+                    return Ok(len_val);
+                }
+
+                // Field access on tuple
+                if let Expr::Identifier(name) = &**object {
+                    if let Some(VarInfo::Tuple { fields }) = self.var_info.get(name).cloned() {
+                        let idx = fields.iter().position(|(_, f_name)| f_name == member).ok_or_else(|| {
+                            ForgeError::codegen(format!("Unknown tuple field: {}", member))
+                        })?;
+                        let (field_type, _) = &fields[idx];
+                        let offset = (idx * 8) as i32;
+                        let val_type = match field_type {
+                            Subtype::Float => types::F64,
+                            Subtype::Weld => self.ctx.ptr_type,
+                            _ => types::I32,
+                        };
+                        return Ok(self.builder.ins().load(val_type, MachMemFlags::new(), obj_val, offset));
+                    }
+                }
+
+                Err(ForgeError::codegen(format!("Member access not supported: {}.{}", "obj", member)))
+            }
+            Expr::MethodCall { object, method, args } => {
+                let obj_val = self.compile_expr(object)?;
+                match method.as_str() {
+                    "Length" | "Len" => {
+                        let len_val = self.builder.ins().load(types::I32, MachMemFlags::new(), obj_val, 0);
+                        Ok(len_val)
+                    }
+                    "Add" => {
+                        if args.is_empty() {
+                            return Err(ForgeError::codegen("Add expects 1 argument"));
+                        }
+                        let item_val = self.compile_expr(&args[0])?;
+                        let len_val = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_val, 0);
+                        let cap_val = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_val, 8);
+                        let buf_val = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_val, 16);
+
+                        let need_realloc = self.builder.ins().icmp(IntCC::SignedGreaterThanOrEqual, len_val, cap_val);
+                        let grow_block = self.builder.create_block();
+                        let append_block = self.builder.create_block();
+
+                        self.builder.ins().brif(need_realloc, grow_block, &[], append_block, &[]);
+
+                        self.builder.switch_to_block(grow_block);
+                        self.builder.seal_block(grow_block);
+                        let two = self.builder.ins().iconst(self.ctx.ptr_type, 2);
+                        let new_cap = self.builder.ins().imul(cap_val, two);
+                        let eight = self.builder.ins().iconst(self.ctx.ptr_type, 8);
+                        let new_buf_size = self.builder.ins().imul(new_cap, eight);
+                        let call_realloc = self.builder.ins().call(self.runtime.realloc, &[buf_val, new_buf_size]);
+                        let new_buf = self.builder.inst_results(call_realloc)[0];
+                        self.builder.ins().store(MachMemFlags::new(), new_cap, obj_val, 8);
+                        self.builder.ins().store(MachMemFlags::new(), new_buf, obj_val, 16);
+                        self.builder.ins().jump(append_block, &[]);
+
+                        self.builder.switch_to_block(append_block);
+                        self.builder.seal_block(append_block);
+
+                        let current_buf = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_val, 16);
+                        let eight = self.builder.ins().iconst(self.ctx.ptr_type, 8);
+                        let offset = self.builder.ins().imul(len_val, eight);
+                        let slot_addr = self.builder.ins().iadd(current_buf, offset);
+                        self.builder.ins().store(MachMemFlags::new(), item_val, slot_addr, 0);
+
+                        let one = self.builder.ins().iconst(self.ctx.ptr_type, 1);
+                        let new_len = self.builder.ins().iadd(len_val, one);
+                        self.builder.ins().store(MachMemFlags::new(), new_len, obj_val, 0);
+
+                        let zero = self.builder.ins().iconst(types::I32, 0);
+                        Ok(zero)
+                    }
+                    "Remove" | "RemoveAt" => {
+                        if args.is_empty() {
+                            return Err(ForgeError::codegen("Remove expects 1 argument"));
+                        }
+                        let idx_val = self.compile_expr(&args[0])?;
+                        let idx_val_ptr = self.builder.ins().sextend(self.ctx.ptr_type, idx_val);
+
+                        let len_val = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_val, 0);
+                        let buf_val = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_val, 16);
+                        self.emit_bounds_check(idx_val_ptr, len_val)?;
+
+                        let eight = self.builder.ins().iconst(self.ctx.ptr_type, 8);
+                        let one = self.builder.ins().iconst(self.ctx.ptr_type, 1);
+
+                        let dest_offset = self.builder.ins().imul(idx_val_ptr, eight);
+                        let dest_addr = self.builder.ins().iadd(buf_val, dest_offset);
+
+                        let next_idx = self.builder.ins().iadd(idx_val_ptr, one);
+                        let src_offset = self.builder.ins().imul(next_idx, eight);
+                        let src_addr = self.builder.ins().iadd(buf_val, src_offset);
+
+                        let remaining_elements = self.builder.ins().isub(len_val, next_idx);
+                        let bytes_to_move = self.builder.ins().imul(remaining_elements, eight);
+
+                        self.builder.ins().call(self.runtime.memmove, &[dest_addr, src_addr, bytes_to_move]);
+
+                        let new_len = self.builder.ins().isub(len_val, one);
+                        self.builder.ins().store(MachMemFlags::new(), new_len, obj_val, 0);
+
+                        let zero = self.builder.ins().iconst(types::I32, 0);
+                        Ok(zero)
+                    }
+                    other => Err(ForgeError::codegen(format!("Unknown method call: {}", other))),
                 }
             }
             Expr::NamespaceCall { namespace, method, args } => {
@@ -696,28 +1220,15 @@ fn collect_strings(
 ) -> ForgeResult<()> {
     match stmt {
         Statement::Print(p) => {
-            if let Expr::Str(parts) = &p.expr {
-                let mut s = String::new();
-                for part in parts {
-                    if let StringPart::Literal(l) = part { s.push_str(l); }
-                }
-                if !string_map.contains_key(&s) {
-                    let name = format!("str_lit_{}", string_map.len());
-                    let id = ctx.define_string(&name, format!("{}\0", s).as_bytes())?;
-                    let gv = ctx.module.declare_data_in_func(id, &mut clif_ctx.func);
-                    string_map.insert(s.clone(), gv);
-                }
-                for part in parts {
-                    if let StringPart::Literal(text) = part {
-                        if !string_map.contains_key(text) {
-                            let name = format!("str_lit_{}", string_map.len());
-                            let id = ctx.define_string(&name, format!("{}\0", text).as_bytes())?;
-                            let gv = ctx.module.declare_data_in_func(id, &mut clif_ctx.func);
-                            string_map.insert(text.clone(), gv);
-                        }
-                    }
-                }
+            collect_strings_in_expr(&p.expr, string_map, ctx, clif_ctx)?;
+        }
+        Statement::VarDecl(v) => {
+            if let Some(init) = &v.initializer {
+                collect_strings_in_expr(init, string_map, ctx, clif_ctx)?;
             }
+        }
+        Statement::Assignment(a) => {
+            collect_strings_in_expr(&a.value, string_map, ctx, clif_ctx)?;
         }
         Statement::If(if_node) => {
             for (_, body) in &if_node.branches {
@@ -729,6 +1240,52 @@ fn collect_strings(
         }
         Statement::While(while_node) => {
             collect_strings_in_body(&while_node.body, string_map, ctx, clif_ctx)?;
+        }
+        Statement::For(for_node) => {
+            if let Some(init) = &for_node.init.initializer {
+                collect_strings_in_expr(init, string_map, ctx, clif_ctx)?;
+            }
+            collect_strings_in_expr(&for_node.condition, string_map, ctx, clif_ctx)?;
+            collect_strings_in_body(&for_node.body, string_map, ctx, clif_ctx)?;
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
+fn collect_strings_in_expr(
+    expr: &Expr,
+    string_map: &mut HashMap<String, GlobalValue>,
+    ctx: &mut CodeGenContext,
+    clif_ctx: &mut cranelift_codegen::Context,
+) -> ForgeResult<()> {
+    match expr {
+        Expr::Str(parts) => {
+            let mut s = String::new();
+            for part in parts {
+                if let StringPart::Literal(l) = part { s.push_str(l); }
+            }
+            if !string_map.contains_key(&s) {
+                let name = format!("str_lit_{}", string_map.len());
+                let id = ctx.define_string(&name, format!("{}\0", s).as_bytes())?;
+                let gv = ctx.module.declare_data_in_func(id, &mut clif_ctx.func);
+                string_map.insert(s.clone(), gv);
+            }
+            for part in parts {
+                if let StringPart::Literal(text) = part {
+                    if !string_map.contains_key(text) {
+                        let name = format!("str_lit_{}", string_map.len());
+                        let id = ctx.define_string(&name, format!("{}\0", text).as_bytes())?;
+                        let gv = ctx.module.declare_data_in_func(id, &mut clif_ctx.func);
+                        string_map.insert(text.clone(), gv);
+                    }
+                }
+            }
+        }
+        Expr::ArrayLiteral(elements) | Expr::TupleLiteral(elements) | Expr::ListLiteral(elements) => {
+            for elem in elements {
+                collect_strings_in_expr(elem, string_map, ctx, clif_ctx)?;
+            }
         }
         _ => {}
     }
@@ -781,13 +1338,14 @@ fn expand_function_calls(
                 node.body = expand_function_calls(&node.body, functions)?;
                 expanded.push(Statement::While(node));
             }
+            Statement::For(node) => {
+                let mut node = node.clone();
+                node.body = expand_function_calls(&node.body, functions)?;
+                expanded.push(Statement::For(node));
+            }
             Statement::Stop => expanded.push(Statement::Stop),
             _ => expanded.push(statement.clone()),
         }
     }
     Ok(expanded)
-}
-
-fn type_decl_is_float(type_decl: &TypeDecl) -> bool {
-    matches!(type_decl, TypeDecl::Number(Subtype::Float))
 }

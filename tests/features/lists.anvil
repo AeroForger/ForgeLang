@@ -1,0 +1,34 @@
+Open Nunction Main()
+{
+    Materials Int Numbers = (10, 20, 30,);
+    Print(Numbers[0]);
+    Print(Numbers[1]);
+    Print(Numbers[2]);
+    Print(Numbers.Length);
+
+    Numbers[1] = 50;
+    Print(Numbers[1]);
+
+    Numbers.Add(40);
+    Print(Numbers[3]);
+    Print(Numbers.Length);
+
+    Numbers.Remove(0);
+    Print(Numbers[0]);
+    Print(Numbers.Length);
+
+    Materials Int new EmptyList;
+    Print(EmptyList.Length);
+    EmptyList.Add(100);
+    EmptyList.Add(200);
+    Print(EmptyList[0]);
+    Print(EmptyList[1]);
+    Print(EmptyList.Length);
+
+    Materials Generic new Items;
+    Items.Add(999);
+    Items.Add(1234);
+    Print(Items[0]);
+    Print(Items[1]);
+}
+

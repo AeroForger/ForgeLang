@@ -1,0 +1,24 @@
+--- Single Iteration ---
+0
+--- Not Equal ---
+0
+1
+2
+3
+4
+--- Greater Than ---
+5
+4
+3
+2
+1
+--- Less Equal ---
+0
+1
+2
+3
+4
+--- Equal Condition ---
+5
+--- Zero Iterations ---
+done
