@@ -1,12 +1,12 @@
-# ForgeLang Alpha 3 - Language Documentation
+# ForgeLang Alpha 3.2 Language Documentation
 
-**ForgeLang** is a strictly typed, native systems programming language designed around explicit control, predictable execution, and low-level performance.
+**ForgeLang** is a statically typed systems programming language that compiles to native machine code.
 
 ForgeLang source files use the `.anvil` extension. If you drop one on the floor, it will not make a sound.
 
 The compiler is **Furnace**.
 
-> **Status:** Alpha 3
+> **Status:** Alpha 3.2
 > **Compiler:** Furnace
 > **Implementation:** Rust
 > **Parser:** pest
@@ -67,21 +67,31 @@ The compiler is **Furnace**.
 32. [Compilation](#32-compilation)
 33. [Complete Example](#33-complete-example)
 34. [Current Limitations](#34-current-limitations)
-35. [Alpha 3 Roadmap](#35-alpha-3-roadmap)
+35. [Alpha 3.2 Roadmap](#35-alpha-32-roadmap)
 
 ---
 
 # 1. Introduction
 
-ForgeLang is designed to provide a strongly typed programming environment while compiling directly to native machine code.
+ForgeLang is a statically typed programming language that compiles source code to native machine code.
 
-Unlike interpreted languages, ForgeLang does not require a virtual machine or interpreter to execute a compiled program.
+Compiled ForgeLang programs do not require a virtual machine or interpreter at runtime.
 
-The basic compilation pipeline is:
+The compiler pipeline is:
 
+```text
 ForgeLang source -> pest -> AST -> Semantic Analysis -> Cranelift -> Native Object -> System Linker -> Executable
+```
 
 Furnace is written in Rust.
+
+Alpha 3.2 uses:
+
+* **Rust** for the compiler
+* **pest** for parsing
+* **Cranelift** for code generation
+* **Rayon** for parallel semantic analysis
+* **cc** for linking
 
 ---
 
@@ -106,7 +116,7 @@ Open Nunction Main()
 
 A ForgeLang program consists of declarations and statements.
 
-A typical program looks like:
+A simple program looks like:
 
 ```forge
 Open Nunction Main()
@@ -125,18 +135,27 @@ ForgeLang uses braces `{}` to delimit function and control-flow bodies.
 
 Statements are terminated with `;`.
 
-Declarations include function definitions, variable declarations, data type definitions, and import statements. These can appear at the top level of a program file.
+Top-level declarations can include:
+
+* Function definitions
+* Variable declarations
+* Data declarations
+* Import statements
+
+The exact behavior of some declarations depends on the current compiler implementation.
 
 ---
 
 # 4. Functions
 
-ForgeLang supports function declarations. The current backend fully supports zero-argument `Nunction` procedures through call inlining. Parameterized functions and value-returning functions are parsed and checked, but are not yet lowered to native code.
+ForgeLang currently has two function forms:
 
-There are currently two function forms:
-
-* `function`
 * `Nunction`
+* `function`
+
+The current backend can inline zero-argument `Nunction` calls.
+
+Parameterized functions and return-value functions are accepted by parts of the frontend but are not yet generated as native function calls.
 
 ## 4.1 `Nunction`
 
@@ -149,15 +168,19 @@ Nunction Tick()
 }
 ```
 
-It can be called from `Main` with:
+It can be called with:
 
 ```forge
 Tick();
 ```
 
+Zero-argument `Nunction` calls can currently be expanded directly into the caller during code generation.
+
 ## 4.2 `function`
 
-`function` is reserved for functions that return a value. Return-value code generation is not implemented in the current compiler.
+`function` is reserved for functions that return a value.
+
+Example syntax:
 
 ```forge
 function Add(Number Int A, Number Int B)
@@ -166,13 +189,15 @@ function Add(Number Int A, Number Int B)
 }
 ```
 
-A returned value can be used in an expression:
+A returned value can be used like this:
 
 ```forge
 Number Int Result = Add(10, 20);
 ```
 
-> Function return syntax and return-type syntax are still part of the evolving Alpha specification.
+Return-value code generation is not currently implemented.
+
+The syntax exists because eventually the compiler will have to deal with functions that actually return things. Otherwise `function` would be a rather optimistic keyword.
 
 ## 4.3 Function Parameters
 
@@ -185,19 +210,51 @@ Nunction PrintNumber(Number Int Value)
 }
 ```
 
-Call the function with:
+A call can be written as:
 
 ```forge
 PrintNumber(42);
 ```
 
-Furnace validates function argument counts during semantic analysis. Parameterized calls are currently rejected before code generation. The parser is slightly ahead of the backend, as parsers occasionally are.
+Furnace checks the number of supplied arguments during semantic analysis.
+
+Parameterized calls are currently rejected before native code generation.
+
+The parser is currently ahead of the backend in this area. The parser has seen the future. The backend has not.
 
 ## 4.4 Zero-Argument Call Inlining
 
-The current backend does not implement a native calling convention for user-defined functions. Instead, zero-argument `Nunction` calls are inlined directly into the caller's body during code generation. This means `Tick()` above will work, but `PrintNumber(42)` will not.
+The current backend does not yet use a native calling convention for user-defined functions.
 
-This inlining is transparent. The `expand_function_calls` pass in `src/codegen.rs` walks the `Main` function body and replaces each eligible call with the callee's statements. Recursive inlining is not supported, and the callee must be a zero-argument `Nunction`. For loops are the only thing that goes up but never comes down, unless you use `--` instead.
+Instead, zero-argument `Nunction` calls are expanded before code generation.
+
+For example:
+
+```forge
+Nunction Tick()
+{
+    Print("tick");
+}
+
+Open Nunction Main()
+{
+    Tick();
+}
+```
+
+The compiler can replace the `Tick()` call with the statements inside `Tick`.
+
+The `expand_function_calls` pass in `src/codegen.rs` handles this transformation.
+
+The pass can also process calls inside:
+
+* `If`
+* `While`
+* `For`
+
+Recursive inlining is not supported.
+
+The callee must be a zero-argument `Nunction`.
 
 ---
 
@@ -216,13 +273,15 @@ Open Nunction Main()
 
 `Open` controls visibility.
 
-`Main` is the function used as the executable entry point. The compiler searches for a function named `Main` and uses it as the root of code generation.
+`Main` is used as the root of executable code generation.
+
+Furnace searches for a function named `Main`.
 
 ---
 
 # 6. Variables
 
-Variables are declared using a type followed by a name and optional initial value.
+Variables are declared using a type, a name, and optionally an initial value.
 
 Example:
 
@@ -230,13 +289,13 @@ Example:
 Number Int I = 0;
 ```
 
-A variable can subsequently be assigned:
+A variable can later be assigned:
 
 ```forge
 I = 10;
 ```
 
-Variables may be modified multiple times:
+Variables can be modified multiple times:
 
 ```forge
 I = I + 1;
@@ -281,39 +340,41 @@ The assigned value must be compatible with the variable's type.
 
 # 7. Types
 
-Alpha 3 provides primitive types, fixed-size arrays, named-field tuples, growable lists, and generic collections.
+Alpha 3.2 currently includes primitive types, arrays, tuples, lists, and a limited generic type.
 
 ## 7.1 Primitive Types
 
 The primary primitive types are:
 
-| Type           | Purpose                |
-| -------------- | ---------------------- |
-| `Number Int`   | Integer numbers        |
-| `Number Float` | Floating-point numbers |
-| `Weld`         | Strings                |
+| Type           | Purpose               |
+| -------------- | --------------------- |
+| `Number Int`   | Integer values        |
+| `Number Float` | Floating-point values |
+| `Weld`         | String values         |
 
-ForgeLang is strictly typed.
+ForgeLang uses static type checking.
 
 ## 7.2 Arrays
 
-Arrays are declared with the `Ore` keyword followed by a size in brackets.
+Arrays use the `Ore` keyword followed by a size.
 
-A fixed-size array with an explicit size:
+A fixed-size array:
 
 ```forge
 Ore[3] FixedNums = [10, 20, 30,];
 ```
 
-An array with an inferred size uses the `EMPTY` keyword:
+An array with an inferred size:
 
 ```forge
 Ore[EMPTY] InferredNums = [100, 200, 300, 400,];
 ```
 
-Array literals are written in square brackets. A trailing comma is permitted.
+Array literals use square brackets.
 
-Elements can be read by index:
+A trailing comma is allowed.
+
+Elements can be accessed by index:
 
 ```forge
 Print(FixedNums[0]);
@@ -325,113 +386,127 @@ Elements can be assigned by index:
 FixedNums[1] = 55;
 ```
 
-Arrays expose a `.Length` property:
+Arrays expose `.Length`:
 
 ```forge
 Print(FixedNums.Length);
 ```
 
-The semantic analyzer rejects arrays whose initializer count does not match the declared size. Arrays are fixed in size, much like your patience at a compiler bug.
+The semantic analyzer checks that an explicitly declared array size matches the initializer count.
+
+Arrays have a fixed number of elements after creation.
+
+Your array will not spontaneously grow because it has decided that four elements are not enough. That job belongs to `Materials`.
 
 ## 7.3 Tuples
 
-Tuples are declared with `Ore` followed by a parenthesized list of named fields, each specifying a subtype and a field name.
+Tuples use `Ore` followed by named fields.
+
+Example:
 
 ```forge
 Ore(Int Number1, Int Number2) TwoNumbers = {1, 2};
 ```
 
-Tuple elements are initialized with curly-brace literals:
+A tuple containing different field types:
 
 ```forge
 Ore(Int Age, Weld Name) Person = {14, "Den"};
 ```
 
-Individual fields are accessed by name:
+Fields are accessed by name:
 
 ```forge
 Print(Person.Age);
 Print(Person.Name);
 ```
 
-Fields can also be assigned directly:
+Fields can be assigned:
 
 ```forge
 Person.Age = 15;
 ```
 
-The semantic analyzer checks that the number of initializer elements matches the number of declared fields and that each element's type is compatible with its declared field.
+The semantic analyzer checks the number and types of tuple initializer values.
 
 ## 7.4 Lists
 
-Lists are growable, heap-allocated collections declared with the `Materials` keyword followed by an element subtype.
+Lists use the `Materials` keyword.
 
-A list initialized with values uses parenthesized syntax:
+A list initialized with values:
 
 ```forge
 Materials Int Numbers = (10, 20, 30,);
 ```
 
-An empty list is declared with the `new` keyword:
+An empty list:
 
 ```forge
 Materials Int new EmptyList;
 ```
 
-`EmptyList` starts with zero elements and a capacity of four. It can grow at runtime, unlike your disk space when you forget to clean up temp files.
+An empty list starts with zero elements and an initial capacity of four.
 
-Elements are read and assigned the same way as arrays:
+Elements can be read and assigned by index:
 
 ```forge
 Print(Numbers[0]);
 Numbers[1] = 50;
 ```
 
-Lists expose `.Length` (or `.Len`) for the current element count:
+Lists expose `.Length` and `.Len`:
 
 ```forge
 Print(Numbers.Length);
 ```
 
-List methods:
+Available methods include:
 
-| Method          | Description                                        |
-| --------------- | -------------------------------------------------- |
-| `.Add(value)`   | Appends an element, growing capacity if needed     |
-| `.Remove(index)` | Removes the element at `index` and shifts remaining elements |
-| `.RemoveAt(index)` | Alias for `Remove`                              |
+| Method             | Description                                  |
+| ------------------ | -------------------------------------------- |
+| `.Add(value)`      | Adds an element to the list                  |
+| `.Remove(index)`   | Removes an element and shifts later elements |
+| `.RemoveAt(index)` | Alias for `.Remove(index)`                   |
 
 Example:
 
 ```forge
 Numbers.Add(40);
+
 Print(Numbers[3]);
 Print(Numbers.Length);
 
 Numbers.Remove(0);
+
 Print(Numbers[0]);
 Print(Numbers.Length);
 ```
 
 ## 7.5 Generic Types
 
-The `Generic` subtype allows type-erased collections. A generic list:
+`Generic` can be used as the element type of a list.
+
+Example:
 
 ```forge
 Materials Generic new Items;
+
 Items.Add(999);
 Items.Add(1234);
+
 Print(Items[0]);
 Print(Items[1]);
 ```
 
-Generic lists store all elements as integers internally. They do not yet support mixed-type storage in a type-checked way.
+The current implementation stores generic list elements as integers internally.
+
+Mixed-type generic storage is not currently implemented as a type-checked feature.
 
 ---
 
 # 8. Integers
 
-Integer variables use:
+Integer values use:
 
 ```forge
 Number Int
@@ -455,7 +530,7 @@ Number Int Multiply = A * B;
 Number Int Divide = A / B;
 ```
 
-Integer variables can also be modified directly:
+Integer variables can be modified:
 
 ```forge
 Counter = Counter + 1;
@@ -498,7 +573,7 @@ Example:
 Weld Name = "ForgeLang";
 ```
 
-A string literal is written using double quotes:
+String literals use double quotes:
 
 ```forge
 "Hello"
@@ -512,16 +587,16 @@ Print("Hello, World!");
 
 ## 10.1 String Escapes
 
-String literals support the following escape sequences:
+String literals support:
 
-| Sequence | Meaning          |
-| -------- | ---------------- |
-| `\n`     | Newline          |
-| `\t`     | Tab              |
-| `\r`     | Carriage return  |
-| `\0`     | Null byte        |
-| `\\`     | Backslash        |
-| `\"`     | Double quote     |
+| Sequence | Meaning         |
+| -------- | --------------- |
+| `\n`     | Newline         |
+| `\t`     | Tab             |
+| `\r`     | Carriage return |
+| `\0`     | Null byte       |
+| `\\`     | Backslash       |
+| `\"`     | Double quote    |
 
 Example:
 
@@ -533,7 +608,7 @@ Weld Line = "Hello\nWorld";
 
 # 11. String Interpolation
 
-ForgeLang supports variable interpolation using the `\V` string form.
+ForgeLang supports interpolation using the `\V` string form.
 
 Example:
 
@@ -545,7 +620,7 @@ Print(\V"{I}");
 
 The value of `I` is inserted into the string.
 
-Multiple values can be interpolated:
+Multiple values can be used:
 
 ```forge
 Number Int A = 10;
@@ -554,10 +629,11 @@ Number Int B = 20;
 Print(\V"A = {A}, B = {B}");
 ```
 
-This allows values to be converted into printable strings without manually constructing the output. Member access is also supported in interpolation expressions:
+Member access is also supported:
 
 ```forge
 Ore(Int Age, Weld Name) Person = {14, "Den"};
+
 Print(\V"{Person.Name} is {Person.Age}");
 ```
 
@@ -597,7 +673,7 @@ The current implementation uses standard C input facilities internally.
 
 # 13. Operators
 
-Alpha 3 supports arithmetic operators including:
+Alpha 3.2 supports arithmetic, comparison, bitwise, unary, and loop increment operators.
 
 ## 13.1 Arithmetic
 
@@ -623,7 +699,7 @@ Number Int F = A / B;
 
 ## 13.2 Power
 
-The `**` operator represents exponentiation.
+The `**` operator performs exponentiation.
 
 ```forge
 Number Int Result = 2 ** 8;
@@ -631,7 +707,7 @@ Number Int Result = 2 ** 8;
 
 Power expressions are right-associative.
 
-Conceptually:
+For example:
 
 ```text
 A ** B ** C
@@ -643,11 +719,13 @@ is interpreted as:
 A ** (B ** C)
 ```
 
-Power operations are lowered through the compiler's power implementation, which calls the C `pow` function.
+The current implementation lowers power operations through the C `pow` function.
 
 ## 13.3 Increment and Decrement
 
-The `++` and `--` operators are postfix increment and decrement operators. They are currently only valid in the increment clause of a `For` loop header.
+`++` and `--` are postfix operators currently used in the increment section of a `For` loop.
+
+Example:
 
 ```forge
 For (Number Int I = 0; I < 10; I++)
@@ -656,7 +734,7 @@ For (Number Int I = 0; I < 10; I++)
 }
 ```
 
-Using `--` decrements the loop variable:
+Decrementing is also supported:
 
 ```forge
 For (Number Int I = 10; I > 0; I--)
@@ -669,7 +747,7 @@ For (Number Int I = 10; I > 0; I--)
 
 # 14. Unary Operators
 
-Alpha 3 supports unary negation and unary plus.
+Alpha 3.2 supports unary negation and unary plus.
 
 Example:
 
@@ -677,25 +755,25 @@ Example:
 Number Int Value = -10;
 ```
 
-It can also be applied to an expression:
+Unary negation can also be applied to an expression:
 
 ```forge
 Number Int Result = -(A + B);
 ```
 
-Unary plus is a no-op that exists for symmetry:
+Unary plus is a no-op:
 
 ```forge
 Number Int Value = +42;
 ```
 
+It exists because sometimes a language designer looks at unary minus and thinks, "why should minus get all the attention?"
+
 ---
 
 # 15. Comparisons
 
-Comparison operators can be used in conditional expressions and loops.
-
-The supported comparison operators are:
+Comparison operators can be used in conditions and loops.
 
 | Operator | Meaning               |
 | -------- | --------------------- |
@@ -719,25 +797,32 @@ If (A < B)
 
 # 16. Logical Operators
 
-Alpha 3 supports bitwise `And`, `Or`, and `Xor` operators. These operate on integer operands as bitwise operations.
+ForgeLang currently provides `And`, `Or`, and `Xor` as bitwise operators for integer values.
 
-| Operator | Operation       |
-| -------- | --------------- |
-| `And`    | Bitwise AND     |
-| `Or`     | Bitwise OR      |
-| `Xor`    | Bitwise XOR     |
+| Operator | Operation   |
+| -------- | ----------- |
+| `And`    | Bitwise AND |
+| `Or`     | Bitwise OR  |
+| `Xor`    | Bitwise XOR |
 
-Precedence is: `And` binds tighter than `Or`, and `Or` binds tighter than `Xor`.
+Precedence is:
+
+```text
+And > Or > Xor
+```
 
 Example:
 
 ```forge
 Number Int A = 12;
 Number Int B = 10;
+
 Number Int C = A And B;
 Number Int D = A Or B;
 Number Int E = A Xor B;
 ```
+
+These operators currently operate on integer operands.
 
 ---
 
@@ -788,7 +873,7 @@ Else
 }
 ```
 
-Conditions must evaluate to a valid boolean condition.
+Conditions must evaluate to a valid condition for the current compiler.
 
 ---
 
@@ -816,11 +901,11 @@ While (I < 10)
 }
 ```
 
-The condition is evaluated before each iteration.
+The condition is evaluated before every iteration.
 
 ## 18.1 Nested Loops
 
-`While` loops can be nested.
+`While` loops can be nested:
 
 ```forge
 Number Int I = 0;
@@ -839,13 +924,17 @@ While (I < 100)
 }
 ```
 
-Nested loops can be used for computational workloads and are compiled into native control flow. Normal ForgeLang `While` loops still execute on one thread. A loop does not become multicore merely because the compiler owns a fast laptop.
+Nested loops are compiled to native control flow.
+
+Normal ForgeLang `While` loops execute on one thread.
+
+The compiler using multiple CPU cores for semantic analysis does not make the generated loop multicore. The compiler cannot simply yell "parallel!" at a loop and hope for the best.
 
 ---
 
 # 19. For Loops
 
-ForgeLang supports `For` loops with a C-style header.
+ForgeLang supports C-style `For` loops.
 
 Basic syntax:
 
@@ -865,13 +954,20 @@ For (Number Int I = 0; I < 10; I++)
 }
 ```
 
-The `For` loop has three parts separated by semicolons:
+A `For` loop has three parts:
 
-1. **Init** - a variable declaration that runs once before the loop starts
-2. **Condition** - an expression evaluated before each iteration; the loop continues while it is non-zero
-3. **Increment** - a variable name followed by `++` or `--`, applied after each iteration body
+1. **Init**
+   Runs once before the loop.
 
-Decrementing is also supported:
+2. **Condition**
+   Is evaluated before each iteration.
+
+3. **Increment**
+   Runs after each iteration.
+
+The increment expression currently uses `++` or `--`.
+
+Example:
 
 ```forge
 For (Number Int I = 10; I > 0; I--)
@@ -886,7 +982,9 @@ A `For` loop without braces produces an error.
 
 # 20. The `Stop` Statement
 
-The `Stop` statement provides a structured early exit from a loop or conditional block. It behaves like a `break` that jumps to the exit of the nearest enclosing loop or top-level `If` statement.
+`Stop` provides an early exit from a loop or conditional block.
+
+Example:
 
 ```forge
 While (I < 10)
@@ -895,39 +993,58 @@ While (I < 10)
     {
         Stop;
     }
+
     I = I + 1;
 }
 ```
 
-The semantic analyzer enforces two rules for `Stop`:
+The semantic analyzer currently enforces these rules:
 
-* it cannot be used inside `Main`
-* it can only be used inside a loop or `If` statement
+* `Stop` cannot be used inside `Main`
+* `Stop` must be inside a loop or `If` statement
 
-In the current implementation, `Stop` is represented as `Statement::Stop` in `src/ast.rs`, checked by `src/semantic.rs`, and lowered by `FunctionCompiler::compile_statement` in `src/codegen.rs`.
+In the compiler, `Stop` is represented as `Statement::Stop` in `src/ast.rs`.
 
-This is not a general-purpose exception system. It is a structured early exit encoded by the compiler's block-flow logic.
+The semantic checks are implemented in `src/semantic.rs`.
+
+Code generation is handled by `FunctionCompiler::compile_statement` in `src/codegen.rs`.
+
+`Stop` is not an exception mechanism. It represents a structured early exit.
 
 ---
 
 # 21. The `Program` Namespace
 
-The `Program` namespace provides access to runtime-level operations.
+The `Program` namespace provides runtime operations.
 
-Currently, the only member is:
+The currently implemented member is:
 
 ```forge
 Program.Stop();
 ```
 
-This terminates the program immediately by calling the C `exit` function with a status of 0.
+This terminates the program by calling the C `exit` function with a status of `0`.
 
-This is treated as a namespace call, not a normal function call. The semantic pass enforces two rules:
+`Program.Stop()` is treated as a namespace operation rather than a normal user-defined function call.
 
-* it can only be used inside a function scope (not at the top level)
-* it must be called with zero arguments
+The semantic analyzer checks that:
 
-This is a deliberate early-exit mechanism for the runtime, and it is validated before code generation.
+* It is used inside a function
+* It has zero arguments
+* The namespace and operation are valid
+
+Example:
+
+```forge
+Open Nunction Main()
+{
+    Print("before");
+    Program.Stop();
+    Print("after");
+}
+```
+
+The second `Print` is never reached.
 
 ---
 
@@ -935,33 +1052,35 @@ This is a deliberate early-exit mechanism for the runtime, and it is validated b
 
 Functions are called using their name followed by parentheses.
 
-A function with no arguments:
+A zero-argument call:
 
 ```forge
 Tick();
 ```
 
-A function with arguments:
+A call with arguments:
 
 ```forge
 PrintNumber(42);
 ```
 
-Multiple arguments:
+A call with multiple arguments:
 
 ```forge
 Add(10, 20);
 ```
 
-Zero-argument calls are inlined during code generation. Calls with arguments are parsed and semantically validated but are not yet lowered to native code.
+Currently, only zero-argument `Nunction` calls can be expanded into executable code by the backend.
 
-Furnace validates function calls during semantic analysis. Invalid argument counts are rejected before code generation.
+Calls with arguments can be parsed and checked by the frontend, but are not yet lowered to native function calls.
+
+Furnace checks function argument counts during semantic analysis.
 
 ---
 
 # 23. Recursion
 
-The grammar can represent recursive functions, but the current backend does not yet generate parameterized or return-value functions. Recursion is therefore planned rather than executable in this release.
+The grammar can represent recursive functions.
 
 Example:
 
@@ -976,13 +1095,17 @@ function Countdown(Number Int I)
 }
 ```
 
-Native recursive calls will use Cranelift's function calling mechanism once the function ABI is implemented.
+The current backend does not yet generate parameterized function calls or return-value functions.
+
+As a result, general recursive functions are not currently executable.
+
+Native recursive calls are planned once the compiler has a function calling convention.
 
 ---
 
 # 24. Scope
 
-Variables declared inside a block belong to that scope.
+Variables declared inside a block are intended to belong to that block.
 
 Example:
 
@@ -998,9 +1121,11 @@ Open Nunction Main()
 }
 ```
 
-`V` is local to the block in which it is declared.
+`V` is declared inside the `If` block.
 
-The AST represents nested blocks, but the current backend uses a function-level variable map. Full lexical scope, shadowing, and capture rules remain under development.
+The AST represents nested blocks, while the current backend uses a function-level variable map.
+
+Full lexical scope, shadowing, and capture rules are still under development.
 
 ---
 
@@ -1022,15 +1147,15 @@ Comments are ignored by the compiler.
 
 # 26. Visibility
 
-ForgeLang uses visibility modifiers to control which declarations are externally accessible.
+ForgeLang uses visibility modifiers to control declaration visibility.
 
-The primary visibility keywords are:
+The current visibility keywords are:
 
 * `Open`
 * `Closed`
 * `Showcase`
 
-An externally visible function can be declared:
+Example:
 
 ```forge
 Open Nunction Main()
@@ -1038,13 +1163,17 @@ Open Nunction Main()
 }
 ```
 
-A declaration without external visibility is not automatically exposed as part of the public interface.
-
-The module system and complete visibility rules are still under development.
+The complete module and visibility system is still under development.
 
 ## 26.1 `Showcase`
 
-`Showcase` is a third visibility modifier. It is currently parsed and stored in the AST but does not yet affect code generation. It is reserved for future use, where it will mark declarations as suitable for export to documentation or REPL introspection.
+`Showcase` is a third visibility modifier.
+
+It is currently parsed and stored in the AST but does not affect code generation.
+
+It is reserved for future functionality related to exported declarations, documentation, or REPL introspection.
+
+Example:
 
 ```forge
 Showcase Nunction Helper()
@@ -1057,7 +1186,9 @@ Showcase Nunction Helper()
 
 # 27. Data Declarations
 
-ForgeLang supports declaring structured data types using the `Data` keyword.
+ForgeLang supports the `Data` keyword for declaring structured types.
+
+Example:
 
 ```forge
 Data Person
@@ -1067,9 +1198,9 @@ Data Person
 }
 ```
 
-A `Data` declaration defines a named type with a set of typed fields. Each field is declared with a type and a name, terminated by `;`.
+A `Data` declaration contains typed fields.
 
-The `Data` keyword can be preceded by a visibility modifier:
+The `Data` declaration can use a visibility modifier:
 
 ```forge
 Open Data Point
@@ -1079,13 +1210,17 @@ Open Data Point
 }
 ```
 
-Data declarations are parsed and included in the AST, but the current backend does not yet generate code for them. They are validated for well-formedness but cannot yet be instantiated or used in code generation.
+Data declarations are currently parsed and represented in the AST.
+
+The current backend does not generate executable code for `Data` declarations.
 
 ---
 
 # 28. Object Instantiation
 
-Once a `Data` type is declared, instances are created using object declaration syntax. The type name is followed by the variable name, then a brace block of member initializations.
+Instances of `Data` types use object declaration syntax.
+
+Example:
 
 ```forge
 Person Den
@@ -1095,25 +1230,29 @@ Person Den
 }
 ```
 
-Members are initialized by name, separated by semicolons or commas:
+Members can also be separated using commas:
 
 ```forge
 Person Den { Age = 14, Name = "Den"; }
 ```
 
-Nested member paths are also supported:
+Nested member paths are supported by the parser:
 
 ```forge
 Person Den { Address.City = "Den", Age = 14; }
 ```
 
-Object declarations are parsed and included in the AST as `Statement::ObjectDecl`, but the current backend ignores them for code generation. They are validated for well-formedness.
+Object declarations are represented as `Statement::ObjectDecl`.
+
+The current backend does not generate executable code for object declarations.
+
+They are currently checked for structural validity.
 
 ---
 
 # 29. Imports
 
-ForgeLang supports importing modules using `Use` and `Using`.
+ForgeLang provides `Use` and `Using` syntax for imports.
 
 ## 29.1 Use
 
@@ -1121,7 +1260,7 @@ ForgeLang supports importing modules using `Use` and `Using`.
 Use std.io;
 ```
 
-`Use` imports an entire module by its qualified path.
+`Use` specifies a module path.
 
 ## 29.2 Using
 
@@ -1129,132 +1268,193 @@ Use std.io;
 Using std.io: Print;
 ```
 
-`Using` imports a specific item from a module. The item name follows the module path, separated by `:`.
+`Using` specifies an item from a module.
 
-The module system and complete `Use` / `Using` implementation are still under development. These statements are parsed and stored in the AST but do not yet affect code generation.
+The module system is not yet fully implemented.
+
+These statements can be parsed and stored in the AST, but they do not currently provide a working module system during code generation.
 
 ---
 
 # 30. Semantic Analysis
 
-Before code generation, Furnace performs semantic validation.
+Furnace performs semantic analysis before code generation.
 
-Alpha 3 introduces a dedicated semantic-analysis stage.
+The semantic stage checks the parsed AST for invalid programs.
 
-The semantic stage is responsible for detecting errors such as:
+It currently handles checks including:
 
 * Undefined variables
 * Invalid function calls
 * Incorrect function argument counts
 * Invalid `Main` parameters
-* Invalid access to shared members
+* Invalid shared-member access
 * Forbidden shared-member mutation
-* `Stop` used outside a loop or `If`
-* `Stop` used inside `Main`
-* `Program.Stop()` used outside a function
-* `Program.Stop()` called with arguments
-* `Program.Stop()` used with an unknown namespace
-* Unknown methods on collections
+* Invalid `Stop` usage
+* Invalid `Program.Stop()` usage
+* Unknown collection methods
 * Array size mismatches
 * Tuple field count mismatches
 * List element type mismatches
-* Empty lists declared with `new` that have initializers
-* Other semantic violations
+* Invalid empty-list declarations
+* Other language-level errors
 
-Semantic analysis occurs **before** Cranelift code generation.
+Semantic analysis happens before Cranelift code generation.
 
-This prevents invalid programs from reaching the backend.
+This keeps invalid programs from being passed directly to the backend.
 
 ## 30.1 Parallel Semantic Analysis
 
-Furnace uses **Rayon** to provide a parallel semantic-analysis infrastructure.
+Furnace uses **Rayon** for parallel semantic analysis.
 
-The architecture is designed so independent portions of the AST can be analyzed concurrently. Independent function declarations are analyzed concurrently with Rayon. Normal ForgeLang `While` loops still execute on one thread. A loop does not become multicore merely because the compiler owns a fast laptop.
+Independent portions of the AST can be analyzed concurrently.
+
+For example, independent function declarations can be processed concurrently.
+
+This applies to compiler analysis only.
+
+A ForgeLang program containing:
+
+```forge
+While (Condition)
+{
+    // work
+}
+```
+
+still executes that loop on one thread unless future language features explicitly introduce parallel execution.
 
 ---
 
 # 31. Compiler Architecture
 
-Furnace is divided into several major stages.
+Furnace is divided into several stages.
 
 ## 31.1 Parser
 
-The parser is implemented using **pest**, a PEG parser generator for Rust.
+The parser uses **pest**, a PEG parser generator for Rust.
 
-The parser converts ForgeLang source code into structured syntax.
+It converts ForgeLang source into the AST.
 
-.anvil source ->
-   pest ->
-    AST
+The grammar uses explicit precedence rules rather than left-recursive expression rules.
 
-The grammar uses explicit precedence rules rather than left-recursive expression rules. Operator precedence, from highest to lowest, is:
+Operator precedence, from highest to lowest, is:
 
+```text
 primary -> postfix -> power -> unary -> multiplicative -> additive -> comparison -> and -> or -> xor
+```
 
-A key documented decision: unary binds looser than `**`, so `-2 ** 2` equals `-4`.
+A documented language rule is that unary operators bind looser than `**`.
+
+Therefore:
+
+```forge
+-2 ** 2
+```
+
+is interpreted as:
+
+```text
+-(2 ** 2)
+```
+
+which produces:
+
+```text
+-4
+```
 
 ## 31.2 AST
 
-The AST is represented by strongly typed Rust structures.
+The AST is represented using Rust structures.
 
-It provides a stable intermediate representation between parsing and code generation.
+It acts as the representation shared between parsing, semantic analysis, and code generation.
 
-Conceptually:
-
-Source
-->
-Parser
-->
-AST
-->
-Semantic Analysis
-->
-Codegen
+The compiler works with the AST rather than passing raw source text between compiler stages.
 
 ## 31.3 Semantic Analysis
 
 `src/semantic.rs` validates the AST before code generation.
 
-This stage is responsible for language-level correctness.
+This stage handles language-level checks such as:
+
+* Type compatibility
+* Variable lookup
+* Function lookup
+* Function argument counts
+* Collection operations
+* Scope-related checks
+* Control-flow restrictions
 
 ## 31.4 Code Generation
 
-`src/codegen.rs` lowers ForgeLang constructs into **Cranelift IR**.
+`src/codegen.rs` converts supported ForgeLang constructs into **Cranelift IR**.
 
 Cranelift handles:
 
-* Machine-code generation
 * Instruction selection
 * Register allocation
+* Machine code generation
 * Target-specific code generation
 * Object-file generation
 
-The resulting output is a native object file.
+Furnace produces a native object file from the generated code.
 
 ### 31.4.1 Function Call Expansion
 
-Before generating code for `Main`, the compiler runs `expand_function_calls` from `src/codegen.rs`. This pass inlines zero-argument `Nunction` calls into the call site. It also recurses into `If`, `While`, and `For` bodies to expand calls within those constructs. Parameterized calls and `Return` statements are not yet handled by this pass.
+Before generating code for `Main`, Furnace runs `expand_function_calls`.
+
+The pass is located in `src/codegen.rs`.
+
+It replaces eligible zero-argument `Nunction` calls with the statements contained in the called function.
+
+The pass also searches inside:
+
+* `If`
+* `While`
+* `For`
+
+blocks.
+
+Parameterized calls and `Return` statements are not handled by this pass.
 
 ### 31.4.2 Collection Layout
 
-Arrays, tuples, and lists are heap-allocated using `malloc`. Their in-memory layouts are:
+The current backend uses `malloc` for heap allocation of arrays, tuples, and lists.
 
-**Array** (`Ore`):
-* Offset 0: length (pointer-sized)
-* Offset 8: element size (pointer-sized)
-* Offset 16 onwards: element data (each element is 8 bytes)
+Their layouts are:
 
-**List** (`Materials`):
-* Offset 0: length (pointer-sized)
-* Offset 8: capacity (pointer-sized)
-* Offset 16: buffer pointer (pointer-sized)
+**Array (`Ore`)**
 
-**Tuple** (`Ore` with named fields):
-* Offset 0 onwards: field data (each field is 8 bytes, in declaration order)
+| Offset    | Contents     |
+| --------- | ------------ |
+| 0         | Length       |
+| 8         | Element size |
+| 16 onward | Element data |
+
+Each element currently occupies 8 bytes.
+
+**List (`Materials`)**
+
+| Offset | Contents       |
+| ------ | -------------- |
+| 0      | Length         |
+| 8      | Capacity       |
+| 16     | Buffer pointer |
+
+**Tuple (`Ore` with named fields)**
+
+Fields are stored starting at offset 0 in declaration order.
+
+Each field currently occupies 8 bytes.
+
+These layouts are implementation details of the current backend and may change in future compiler versions.
 
 ## 31.5 Linking
 
-The generated object file is linked using the system C compiler/linker.
+Furnace generates a native object file.
+
+The object file is linked using the system C compiler.
 
 For example:
 
@@ -1262,7 +1462,7 @@ For example:
 cc main.o -o main -lm
 ```
 
-The linker combines the generated object with the required system libraries and produces the final executable.
+The linker produces the final executable.
 
 ---
 
@@ -1270,13 +1470,13 @@ The linker combines the generated object with the required system libraries and 
 
 ## 32.1 Build Furnace
 
-Furnace is built using Cargo.
+Furnace is built using Cargo:
 
 ```fish
 cargo build --release
 ```
 
-The resulting compiler is located at:
+The release compiler is located at:
 
 ```text
 target/release/furnace
@@ -1284,21 +1484,23 @@ target/release/furnace
 
 ## 32.2 Compile a ForgeLang Program
 
-The current CLI flow is implemented explicitly in the `Cli/` modules and uses the library compiler under the hood.
+The current CLI command is:
 
 ```fish
 ./target/debug/furnace compile main.anvil linux
 ```
 
-This workflow does the following:
+The compile process:
 
-1. validates the file ends in `.anvil`
-2. reads and parses the source
-3. runs semantic validation
-4. runs function-call expansion (inlining zero-arg Nunctions)
-5. emits a native object file
-6. invokes the platform linker with `cc -lm`
-7. prints the final executable path
+1. Checks that the input file uses the `.anvil` extension.
+2. Reads the source file.
+3. Parses the source.
+4. Builds the AST.
+5. Performs semantic analysis.
+6. Expands eligible zero-argument `Nunction` calls.
+7. Generates a native object file.
+8. Invokes the platform linker.
+9. Produces the executable.
 
 Example output:
 
@@ -1309,40 +1511,61 @@ Build successful!
 Output: ./main
 ```
 
-The CLI uses the `Platform` enum in `Cli/platform.rs` so new targets can be added without rewriting the command layer. At the moment, the supported target is `linux`.
+The CLI uses the `Platform` enum in `Cli/platform.rs`.
+
+The currently supported target is:
+
+```text
+linux
+```
+
+Additional targets can be added as compiler support is implemented.
 
 ## 32.3 Run a ForgeLang Program
 
-The CLI also supports direct execution:
+The CLI can compile and execute a program directly:
 
 ```fish
 ./target/debug/furnace run main.anvil
 ```
 
-This command compiles the `.anvil` file, links it, and then executes the generated binary while forwarding stdout, stderr, and the child exit code.
+This command:
+
+1. Compiles the source.
+2. Links the generated object.
+3. Executes the resulting binary.
+4. Forwards the program's standard output and standard error.
+5. Returns the child process exit code.
 
 ## 32.4 Version and Help
 
-The compiler exposes centralized version metadata from `src/lib.rs`:
+Furnace exposes its version through centralized compiler metadata.
+
+The current version is:
 
 ```rust
-pub const VERSION: &str = "Alpha 3";
+pub const VERSION: &str = "Alpha 3.2";
 ```
 
-The commands are:
+Version information can be requested with:
 
 ```fish
 ./target/debug/furnace -version
+```
+
+Help can be requested with:
+
+```fish
 ./target/debug/furnace -help
 ```
 
-Which emit:
+Example version output:
 
 ```text
-Furnace Alpha 3
+Furnace Alpha 3.2
 ```
 
-And the usage summary:
+Usage:
 
 ```text
 Usage:
@@ -1354,13 +1577,17 @@ Usage:
 
 ## 32.5 Link the Object Manually
 
-The underlying object generation still produces a native object, and the linker is still the system C toolchain:
+Furnace produces a native object file that can be linked separately:
 
 ```fish
 cc main.o -o main -lm
 ```
 
+The exact libraries required may depend on the generated program and target platform.
+
 ## 32.6 Run
+
+The resulting executable can be started normally:
 
 ```fish
 ./main
@@ -1370,22 +1597,22 @@ cc main.o -o main -lm
 
 # 33. Complete Example
 
-The following program demonstrates the intended Alpha 3 syntax for several features.
+The following program demonstrates several features available in Alpha 3.2:
 
-* Functions
 * `Nunction`
 * Variables
+* Arrays
+* Tuples
+* Lists
 * `While`
 * `For`
 * `If`
 * `Else`
 * Arithmetic
-* Function calls (zero-argument, inlined)
 * String interpolation
-* Arrays
-* Tuples
-* Lists
 * `Stop`
+* Bitwise operations
+* Zero-argument function calls
 
 ```forge
 Nunction Tick()
@@ -1397,29 +1624,41 @@ Open Nunction Main()
 {
     // Array
     Ore[3] FixedNums = [10, 20, 30,];
+
     Print(FixedNums[0]);
+
     FixedNums[1] = 55;
+
     Print(FixedNums[1]);
     Print(FixedNums.Length);
 
     // Tuple
     Ore(Int Age, Weld Name) Person = {14, "Den"};
+
     Print(Person.Age);
     Print(Person.Name);
+
     Person.Age = 15;
+
     Print(Person.Age);
 
     // List
     Materials Int Numbers = (10, 20, 30,);
+
     Print(Numbers[0]);
     Print(Numbers.Length);
+
     Numbers.Add(40);
+
     Print(Numbers[3]);
+
     Numbers.Remove(0);
+
     Print(Numbers[0]);
 
     // While loop
     Number Int I = 0;
+
     While (I < 5)
     {
         Print(\V"{I}");
@@ -1434,23 +1673,28 @@ Open Nunction Main()
 
     // Stop inside a loop
     Number Int K = 0;
+
     While (K < 10)
     {
         If (K == 3)
         {
             Stop;
         }
+
         Print(\V"{K}");
         K = K + 1;
     }
 
-    // Zero-argument Nunction call (inlined)
+    // Zero-argument Nunction call
     Tick();
 
+    // Bitwise operations
     Number Int A = 12;
     Number Int B = 10;
+
     Print(A And B);
     Print(A Or B);
+    Print(A Xor B);
 }
 ```
 
@@ -1458,31 +1702,45 @@ Open Nunction Main()
 
 # 34. Current Limitations
 
-Alpha 3 is an early development release.
+Alpha 3.2 is an early development release.
 
-The following features are **not yet part of the complete Alpha 3 language**:
+The following features are not currently fully implemented in the backend:
 
-* Parameterized function code generation (only zero-argument calls are inlined)
+* Parameterized function code generation
+* Native calls to parameterized user-defined functions
 * Function return-value code generation
 * `Return` statements
-* `Data` declaration code generation (parsed but not emitted)
-* `Object` instantiation code generation (parsed but not emitted)
-* `Switch` / `Deal` / `Base` pattern matching (parsed but not emitted)
-* `Do` / `Fail` / `Final` error-handling blocks (parsed but not emitted)
-* `Use` / `Using` module imports (parsed but not functional)
+* `Data` declaration code generation
+* Object instantiation code generation
+* `Switch` / `Deal` / `Base` pattern matching
+* `Do` / `Fail` / `Final` error handling
+* Functional `Use` / `Using` imports
 * Complete module system
-* Multicore ForgeLang runtime execution
-* Garbage collection (Scrap is planned)
+* Complete lexical scope handling
+* Multicore ForgeLang program execution
+* Garbage collection
 * Self-hosting Furnace
 * Complete systems-level standard library
 
-These features are planned for future releases.
+Some of these features are already represented in the grammar or AST.
+
+There is an important distinction:
+
+**Parsed** means Furnace can recognize the syntax.
+
+**Semantically checked** means Furnace can inspect the construct and report certain errors.
+
+**Code generated** means Furnace can produce executable native code for the construct.
+
+A feature being parsed does not mean that it can currently be used in an executable program.
+
+This distinction saves everyone from discovering that the compiler supports something only after the compiler politely refuses to compile it.
 
 ---
 
-# 35. Alpha 3 Roadmap
+# 35. Alpha 3.2 Roadmap
 
-Alpha 3 establishes the new Rust-based compiler architecture.
+Alpha 3.2 continues development of the Rust-based Furnace compiler.
 
 ## Short Term
 
@@ -1496,11 +1754,11 @@ Deal
 Base
 ```
 
-These will eventually provide pattern-matching functionality.
+These are intended to provide pattern matching.
 
 ### Error Handling
 
-Planned constructs:
+Planned constructs include:
 
 ```text
 Do
@@ -1508,24 +1766,26 @@ Fail
 Final
 ```
 
-These will provide structured error handling.
+These are intended to provide structured error handling.
 
 ### Generic Data Types
 
-The `Generic` subtype is currently limited to lists. Full generic data type support, including generic function parameters, is planned.
+`Generic` is currently limited.
+
+Future versions are planned to support generic data types and generic function parameters.
 
 ## Mid Term
 
 ### Module System
 
-ForgeLang will gain a module/import system based around:
+ForgeLang will gain a working module system based around:
 
 ```text
 Use
 Using
 ```
 
-Modules will integrate with:
+The module system will interact with:
 
 ```text
 Open
@@ -1537,79 +1797,72 @@ visibility rules.
 
 ### Parameterized Functions
 
-Current code generation inlines only zero-argument `Nunction` calls. A proper calling convention with stack frames, parameter passing, and return values is planned.
+The current backend handles zero-argument `Nunction` calls through inlining.
+
+Future versions will introduce native function calls with:
+
+* Parameter passing
+* Return values
+* Stack management
+* Function frames
+* A defined calling convention
 
 ### Multicore Runtime
 
-Alpha 3 currently uses Rayon for **parallel compiler analysis**.
+Alpha 3.2 uses Rayon for compiler-side parallel analysis.
 
-Future versions will introduce explicit mechanisms for ForgeLang programs to execute work across multiple CPU cores.
+Future versions are planned to provide mechanisms for ForgeLang programs to execute work on multiple CPU cores.
 
-The goal is to distinguish:
-
-```text
-Parallel compilation
-```
-
-from:
+Possible constructs include:
 
 ```text
-Parallel program execution
+Spawn
+Join
 ```
 
-Explicit `Spawn` / `Join` syntax is planned. The intended safety model uses isolated tasks with explicit arguments and results rather than shared mutable globals competing for the same memory.
+The exact syntax and safety rules are not final.
+
+The compiler's parallel analysis and a program's parallel execution are separate features.
 
 ## Long-Term Ecosystem
 
 ### Scrap
 
-**Scrap** will be ForgeLang's garbage collector.
+**Scrap** is planned as an optional garbage collector for ForgeLang.
 
-Scrap is planned to be **disabled by default**.
+It is intended to be disabled by default.
 
-The default ForgeLang model is intended to retain explicit control over memory rather than requiring garbage collection for every program.
+The default memory model is intended to keep memory management explicit.
 
-Scrap can therefore eventually provide a higher-level memory-management option without making garbage collection mandatory.
+Scrap would provide another memory-management option without making garbage collection mandatory.
 
 ### Ironwork
 
-**Ironwork** will be the ForgeLang package manager.
+**Ironwork** is planned as the ForgeLang package manager.
 
-Its purpose will be to provide:
+Its planned responsibilities include:
 
 * Package management
 * Dependency resolution
 * Library distribution
 * Project management
-* ForgeLang ecosystem integration
+* ForgeLang package integration
 
 ### Self-Hosting
 
-The long-term goal is for Furnace to eventually be rewritten in ForgeLang itself.
+A long-term goal is to rewrite Furnace in ForgeLang itself.
 
 This is targeted for the **2.0 generation** of ForgeLang.
 
-The intended progression is:
-
-Furnace written in Rust
-        ->
-ForgeLang becomes more capable
-        ->
-ForgeLang standard library matures
-        ->
-Compiler components become expressible in ForgeLang
-        ->
-Furnace rewritten in ForgeLang
-        ->
-Self-hosted ForgeLang compiler
+The compiler will need sufficient language features, standard library support, and tooling before this becomes practical.
 
 ---
 
-# Alpha 3 Philosophy
+# Alpha 3.2 Implementation Notes
 
-Alpha 3 represents a fundamental change in ForgeLang's implementation.
+Alpha 3.2 uses a different compiler implementation from the earlier experimental versions of ForgeLang.
 
-Earlier experimental implementations relied on:
+Earlier versions used:
 
 ```text
 Python
@@ -1617,7 +1870,7 @@ ANTLR
 LLVM
 ```
 
-Alpha 3 moves to:
+Alpha 3.2 uses:
 
 ```text
 Rust
@@ -1625,31 +1878,22 @@ pest
 Cranelift
 ```
 
-The result is a substantially smaller and more direct compiler architecture:
+The current compiler pipeline is:
 
-ForgeLang
-->
-Rust
-->
-pest
-->
-AST
-->
-Semantic Analysis
-->
-Cranelift
-->
-Native Object Code
+```text
+ForgeLang source -> pest -> AST -> Semantic Analysis -> Cranelift -> Native Object Code
+```
 
-The goal of ForgeLang is to provide a language and ecosystem capable of supporting:
+The change to Rust also makes the compiler itself part of the ForgeLang project's systems-level development work.
 
-* Strong static typing
-* Native execution
-* Low-level control
-* Explicit memory management
-* Optional garbage collection
-* Multicore execution
-* A native package ecosystem
-* Eventually, a self-hosted compiler
+Alpha 3.2 should not be treated as a finished language specification.
 
-Alpha 3 is an architectural foundation, not a claim that every feature is finished. The compiler can currently parse more of the language than it can generate, which is a traditional way for a young compiler to keep its developers humble.
+Some syntax exists before its backend implementation.
+
+Some AST structures exist before their code generation.
+
+Some planned language features are already represented in the parser even though the compiler cannot execute them yet.
+
+That is normal for a compiler under active development.
+
+For now, Furnace can compile a growing subset of ForgeLang to native code while the rest of the language catches up.
