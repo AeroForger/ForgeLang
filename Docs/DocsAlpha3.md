@@ -1896,4 +1896,8 @@ Some planned language features are already represented in the parser even though
 
 That is normal for a compiler under active development.
 
+<<<<<<< HEAD
 For now, Furnace can compile a growing subset of ForgeLang to native code while the rest of the language catches up.
+=======
+For now, Furnace can compile a growing subset of ForgeLang to native code while the rest of the language catches up.
+>>>>>>> 42d5220 (Alpha 3.2 Docs and Readme Update)
