@@ -1,7 +1,7 @@
 <p align="center">
     <img src="ForgeLangLogo128.png">
     <br>
-  <strong>ForgeLang - A fast, type-safe systems programming language built in Rust.</strong>
+  <strong>ForgeLang, a statically typed systems programming language built in Rust.</strong>
   <br>
   Source files use the <code>.anvil</code> extension. The compiler is <code>Furnace</code>.
 </p>
@@ -10,42 +10,43 @@
 
 ## What is ForgeLang?
 
-ForgeLang is a strictly-typed, C-style systems programming language designed for bare-metal performance and memory safety. 
+ForgeLang is a statically typed, C-style systems programming language designed for native execution and explicit control.
 
-**Alpha 3** marks a massive architectural milestone: the compiler has been entirely rewritten from the ground up in **Rust**, replacing the Python/ANTLR/LLVM reference implementation. The backend now uses **pest** (PEG parser) and **Cranelift**, allowing Furnace to compile ForgeLang code directly to native machine code in milliseconds.
+**Alpha 3.2** uses a compiler written in **Rust**. The compiler uses **pest** for parsing and **Cranelift** for native code generation.
 
 ### The Stack
-- **Compiler Language:** Rust
-- **Parser:** pest (PEG, no left recursion)
-- **Codegen:** Cranelift (native object files)
-- **Linking:** System C compiler (`cc`)
-- **Parallelism:** Rayon (for semantic analysis)
+
+* **Compiler:** Rust
+* **Parser:** pest
+* **Code generation:** Cranelift
+* **Linking:** System C compiler (`cc`)
+* **Parallel semantic analysis:** Rayon
 
 ---
 
-## Alpha 3 Features
+## Alpha 3.2 Features
 
-### Blazing Fast Native Code
-ForgeLang compiles directly to raw machine code. There is no interpreter, no VM, and no JIT warmup. 
-- **Benchmark:** A triple-nested `While` loop executing **1 trillion iterations** completes in ~312 seconds (~3.2 billion iterations per second).
-- **Compile Time:** A 100-million iteration stress test compiles in **~3.5 milliseconds**.
+### Native Code Generation
+
+ForgeLang programs are compiled to native object code. Furnace does not use an interpreter or virtual machine for compiled programs.
+
+* **Benchmark:** A triple-nested `While` loop executing **1 trillion iterations** completes in approximately 312 seconds, or about 3.2 billion iterations per second.
+* **Compile Time:** A 100-million iteration stress test compiles in approximately **3.5 milliseconds**.
 
 ### The Language
-Alpha 3 supports a robust subset of the planned language spec:
 
 ```forge
-//functions
 Nunction Tick()
 {
     Print("tick");
 }
+
 Open Nunction Main()
 {
     Number Int I = 0;
     Number Int A = 0;
     Number Int B = 0;
 
-    // While loops
     While (I < 100000)
     {
         A = 0;
@@ -53,7 +54,6 @@ Open Nunction Main()
 
         While (A < 1000)
         {
-            // If / Else branching
             If (A < 500) {
                 B = B + 3;
             } Else {
@@ -62,85 +62,161 @@ Open Nunction Main()
 
             A = A + 1;
         }
+
         Tick();
         I = I + 1;
     }
 
-    // Interpolated string printing
     Print(\V"{B}");
 }
-
 ```
 
-- **Types:** `Number Int`, `Number Float`, `Weld` (strings).
-- **Control Flow:** `If` / `Else If` / `Else`, `While` loops.
-- **Functions:** `function` (dynamic return), `Nunction` (void), standard calls and recursion.
-- **Strings:** Plain `"text"` and interpolated `\V"text {var}"`.
-- **Math:** `+`, `-`, `*`, `/`, right-associative `**` (via `pow`), and unary `-`.
-- **Input:** `Input(Int)` and `Input(Float)` via standard `scanf`.
+Alpha 3.2 currently supports:
+
+* **Types:** `Number Int`, `Number Float`, `Weld`
+* **Control flow:** `If`, `Else If`, `Else`, `While`, `For`
+* **Functions:** `Nunction`, `function`, zero-argument calls and call inlining
+* **Strings:** Plain strings and `\V` interpolation
+* **Arrays:** Fixed-size `Ore` arrays
+* **Tuples:** Named-field `Ore` tuples
+* **Lists:** `Materials`
+* **Input:** `Input(Int)`, `Input(Float)`, `Input(Weld)`
+* **Arithmetic:** `+`, `-`, `*`, `/`, `**`
+* **Unary operators:** `+`, `-`
+* **Comparisons:** `<`, `>`, `<=`, `>=`, `==`, `!=`
+* **Bitwise operators:** `And`, `Or`, `Xor`
+* **Loop control:** `Stop`
+* **Runtime exit:** `Program.Stop()`
 
 ### Parallel Semantic Analysis
-Alpha 3 introduces a semantic analysis seam powered by **Rayon**. Before code generation begins, the compiler analyzes the AST in parallel across all CPU cores to catch errors early.
-- Validates function arity and `Main` parameters.
-- Rejects shared-member mutation and unsafe shared member access.
-- Catches undefined variables before they can crash the Cranelift backend.
+
+Furnace contains a semantic-analysis stage using **Rayon**.
+
+The semantic stage checks the parsed program before code generation. It can analyze independent function declarations concurrently.
+
+It currently checks things including:
+
+* Function argument counts
+* `Main` parameters
+* Undefined variables
+* Shared-member access
+* Shared-member mutation
+* Invalid collection operations
+* Array size mismatches
+* Tuple field counts
+* List element types
+* Invalid `Stop` usage
+* Invalid `Program.Stop()` usage
 
 ---
 
 ## Getting Started
 
 ### Prerequisites
-1. **Rust** (via `rustup`)
-2. **A C Linker** (`gcc`, `clang`, or `cc` usually pre-installed on Linux)
-3. **Math library** (usually shipped with your C linker, accessed via `-lm`)
 
-### Building the Compiler
-Clone the repository and build the release binary:
+1. **Rust** through `rustup`
+2. **A C linker**, such as `gcc`, `clang`, or `cc`
+3. **The math library**, normally provided by the system C toolchain
+
+### Building Furnace
+
+Clone the repository and build the compiler:
+
 ```fish
 git clone https://github.com/AeroForger/ForgeLang.git
 cd ForgeLang
 cargo build --release
 ```
-The compiler binary will be at `target/release/furnace`.
 
-### Compiling and Running a Program
-Furnace automatically compiles your `.anvil` file to an object file and links it into a native executable.
+The compiler binary will be located at:
+
+```text
+target/release/furnace
+```
+
+### Compiling a Program
+
+The current CLI uses:
 
 ```fish
-./target/release/furnace main.anvil
-cc main.o -o main -lm
-./main
+./target/release/furnace compile main.anvil linux
+```
+
+Furnace parses the source, performs semantic analysis, generates a native object file, and links the program using the system C toolchain.
+
+### Running a Program
+
+```fish
+./target/release/furnace run main.anvil
 ```
 
 ---
 
 ## Architecture
 
-The compiler pipeline is strictly separated to ensure stability and future extensibility:
+The compiler is divided into several stages:
 
-1. **Parser (`pest`)**: Tokenizes `.anvil` source files and builds an Abstract Syntax Tree (AST) using nested precedence rules (no left recursion).
-2. **AST (`ast.rs`)**: Stable, strongly-typed Rust structs representing the program.
-3. **Semantic Seam (`semantic.rs`)**: Rayon-powered parallel validation of the AST. Ensures type safety and aliasing rules before code generation.
-4. **Codegen (`codegen.rs`)**: Lowers the AST into Cranelift IR, performs register allocation, and emits a native `.o` object file. System `cc` is then invoked to link the final executable.
+1. **Parser (`pest`)**
+   Reads `.anvil` source code and produces an AST.
+
+2. **AST (`ast.rs`)**
+   Stores the program in strongly typed Rust structures.
+
+3. **Semantic Analysis (`semantic.rs`)**
+   Checks the AST before code generation.
+
+4. **Code Generation (`codegen.rs`)**
+   Converts the AST into Cranelift IR and produces a native object file.
+
+5. **Linking**
+   The system C compiler links the object file and required libraries into an executable.
+
+The overall pipeline is:
+
+ForgeLang source
+        ->
+       pest
+        ->
+       AST
+        ->
+Semantic Analysis
+        ->
+    Cranelift
+        ->
+Native Object
+        ->
+    System cc
+        ->
+    Executable
 
 ---
 
 ## Roadmap
 
-Alpha 3 establishes the foundation. The future of ForgeLang is ambitious:
+### Short Term
 
-- **Short Term:**
-  - `For` loops (syntax TBD).
-  - `Switch` / `Deal` / `Base` (Pattern matching).
-  - `Do` / `Fail` / `Final` error handling blocks.
-- **Mid Term:**
-  - Module system (`Use` / `Using`) with enforced `Open`/`Closed` visibility.
-  - Multicore runtime (executing parallel code, not just parallel compiling).
-- **Long Term (The Ecosystem):**
-  - **Scrap**: Default-**off** garbage collector.
-  - **Ironwork**: The ForgeLang package manager.
-  - **Self-Hosting (2.0)**: Furnace rewritten entirely in ForgeLang.
+* `Switch` / `Deal` / `Base` pattern matching
+* `Do` / `Fail` / `Final` error handling
+* Parameterized function code generation
+* Function return values
+* Improved scope handling
+* More standard library functionality
 
+### Mid Term
+
+* `Use` / `Using` module system
+* `Open` / `Closed` / `Showcase` visibility rules
+* Multicore program execution
+* Generic data types
+* More complete data and object support
+
+### Long Term
+
+* **Scrap:** Optional garbage collector
+* **Ironwork:** ForgeLang package manager
+* **Self-hosting:** Rewrite Furnace in ForgeLang for the 2.0 generation
+
+---
 
 ## License
 
