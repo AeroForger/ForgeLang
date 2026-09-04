@@ -1,0 +1,27 @@
+[book]
+title = "ForgeLang Alpha 3.4"
+authors = ["ForgeLang Contributors"]
+language = "en"
+src = "src"
+description = "Official documentation for the ForgeLang Alpha 3.4 programming language and its Furnace compiler."
+
+[build]
+build-dir = "book"
+create-missing = true
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
+git-repository-url = ""
+edit-url-template = ""
+mathjax-support = false
+
+[output.html.fold]
+enable = true
+level = 1
+
+[output.html.playground]
+editable = false
+copyable = true
+copy-js = true
+line-numbers = true
