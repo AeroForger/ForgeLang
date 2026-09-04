@@ -10,6 +10,7 @@ Alpha 3.4 supports arithmetic, comparison, bitwise, unary, and loop increment op
 | `-`      | Subtraction    |
 | `*`      | Multiplication |
 | `/`      | Division       |
+| `%`      | Modulo         |
 | `**`     | Power          |
 
 Example:
@@ -22,7 +23,10 @@ Number Int C = A + B;
 Number Int D = A - B;
 Number Int E = A * B;
 Number Int F = A / B;
+Number Int G = A % B;
 ```
+
+`%` requires integer operands and returns the integer remainder.
 
 ## Power
 

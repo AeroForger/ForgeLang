@@ -21,6 +21,7 @@ statement  = {
     | while_stmt
     | return_stmt
     | stop_stmt
+    | skip_stmt
     | input_stmt
     | assignment
     | expr_stmt
@@ -28,8 +29,9 @@ statement  = {
 
 // --- Imports (parse-only for now) ---
 use_stmt        = { kw_use ~ qualified_name ~ ";"
-                  | kw_using ~ qualified_name ~ (":" ~ ident)? ~ ";" }
+                  | kw_using ~ qualified_name ~ (":" ~ using_item) ~ ";" }
 qualified_name  = { ident ~ ("." ~ ident)* }
+using_item      = { ident ~ ("(" ~ ")")? }
 
 // --- Modifiers & types ---
 modifier        = { kw_open | kw_closed | kw_showcase }
@@ -81,6 +83,7 @@ for_increment   = { ident ~ incr_op }
 incr_op         = { "++" | "--" }
 return_stmt     = { kw_return ~ expr? ~ ";" }
 stop_stmt       = { kw_stop ~ ";" }
+skip_stmt       = { kw_skip ~ ";" }
 
 // --- Assignment & bare expr ---
 assignment      = { assignment_target ~ "=" ~ expr ~ ";" }
@@ -119,7 +122,7 @@ input_expr        = { kw_input ~ "(" ~ subtype? ~ ")" }
 // --- Named operator rules (appear in parse tree) ---
 comp_op         = { "==" | "!=" | "<=" | ">=" | "<" | ">" }
 add_op          = { "+" | "-" }
-mul_op          = { "*" | "/" }
+mul_op          = { "*" | "/" | "%" }
 pow_op          = { "**" }
 unary_op        = { "+" | "-" }
 
@@ -156,6 +159,7 @@ kw_new        = ${ ("New" | "new") ~ !ident_char }
 kw_print      = ${ "Print" ~ !ident_char }
 kw_input      = ${ "Input" ~ !ident_char }
 kw_stop       = ${ "Stop" ~ !ident_char }
+kw_skip       = ${ "Skip" ~ !ident_char }
 kw_empty      = ${ "EMPTY" ~ !ident_char }
 kw_for        = ${ "For" ~ !ident_char }
 kw_bool       = ${ "Bool" ~ !ident_char }
@@ -171,7 +175,7 @@ keyword            = _{
     | kw_materials | kw_data | kw_int | kw_float | kw_generic | kw_function
     | kw_nunction | kw_return | kw_if | kw_while | kw_else | kw_switch | kw_deal
     | kw_base | kw_do | kw_fail | kw_final | kw_and | kw_or | kw_xor
-    | kw_use | kw_using | kw_new | kw_print | kw_input | kw_stop | kw_empty
+    | kw_use | kw_using | kw_new | kw_print | kw_input | kw_stop | kw_skip | kw_empty
     | kw_for | kw_bool | kw_boolean | kw_true | kw_false
 }
 

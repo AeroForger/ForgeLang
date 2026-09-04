@@ -10,6 +10,7 @@ This is a compact reference for the operators described in the language chapters
 | `-` | Subtraction |
 | `*` | Multiplication |
 | `/` | Division |
+| `%` | Modulo |
 | `**` | Exponentiation |
 
 ## Comparison

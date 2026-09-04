@@ -294,6 +294,7 @@ pub struct FunctionCompiler<'a, 'ctx> {
     pub string_vars: HashSet<String>,
     pub bool_vars: HashSet<String>,
     pub break_targets: Vec<cranelift_codegen::ir::Block>,
+    pub continue_targets: Vec<cranelift_codegen::ir::Block>,
 }
 
 impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
@@ -314,6 +315,7 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
             string_vars: HashSet::new(),
             bool_vars: HashSet::new(),
             break_targets: Vec::new(),
+            continue_targets: Vec::new(),
         }
     }
 
@@ -768,6 +770,7 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                 self.builder.ins().brif(condition, body_block, &[], exit_block, &[]);
 
                 self.break_targets.push(exit_block);
+                self.continue_targets.push(header_block);
 
                 self.builder.switch_to_block(body_block);
                 for s in &while_node.body {
@@ -778,6 +781,7 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                 self.builder.seal_block(header_block);
 
                 self.break_targets.pop();
+                self.continue_targets.pop();
 
                 self.builder.switch_to_block(exit_block);
                 self.builder.seal_block(exit_block);
@@ -787,6 +791,7 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
 
                 let cond_block = self.builder.create_block();
                 let body_block = self.builder.create_block();
+                let incr_block = self.builder.create_block();
                 let exit_block = self.builder.create_block();
                 self.builder.ins().jump(cond_block, &[]);
 
@@ -796,19 +801,24 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                 self.builder.ins().brif(cond_bool, body_block, &[], exit_block, &[]);
 
                 self.break_targets.push(exit_block);
+                self.continue_targets.push(incr_block);
 
                 self.builder.switch_to_block(body_block);
                 for s in &for_node.body {
                     self.compile_statement(s)?;
                 }
-
-                self.emit_increment(&for_node.increment_var, &for_node.increment_op)?;
-
-                self.builder.ins().jump(cond_block, &[]);
+                self.builder.ins().jump(incr_block, &[]);
                 self.builder.seal_block(body_block);
+
+                self.builder.switch_to_block(incr_block);
+                self.builder.seal_block(incr_block);
+                self.emit_increment(&for_node.increment_var, &for_node.increment_op)?;
+                self.builder.ins().jump(cond_block, &[]);
+
                 self.builder.seal_block(cond_block);
 
                 self.break_targets.pop();
+                self.continue_targets.pop();
 
                 self.builder.switch_to_block(exit_block);
                 self.builder.seal_block(exit_block);
@@ -816,6 +826,15 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
             Statement::Stop => {
                 let target = self.break_targets.last().copied().ok_or_else(|| {
                     ForgeError::codegen("Stop used outside of break target")
+                })?;
+                self.builder.ins().jump(target, &[]);
+                let dead_block = self.builder.create_block();
+                self.builder.switch_to_block(dead_block);
+                self.builder.seal_block(dead_block);
+            }
+            Statement::Skip => {
+                let target = self.continue_targets.last().copied().ok_or_else(|| {
+                    ForgeError::codegen("Skip used outside of loop")
                 })?;
                 self.builder.ins().jump(target, &[]);
                 let dead_block = self.builder.create_block();
@@ -1084,6 +1103,7 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                             let pow_inst = self.builder.ins().call(self.runtime.pow, &[l_f, r_f]);
                             Ok(self.builder.inst_results(pow_inst)[0])
                         }
+                        BinOp::Rem => Err(ForgeError::codegen("Modulo (%) is only supported for integer types")),
                         _ => Err(ForgeError::codegen(format!("Unsupported float op: {:?}", op))),
                     }
                 } else {
@@ -1092,6 +1112,7 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                         BinOp::Sub => Ok(self.builder.ins().isub(l, r)),
                         BinOp::Mul => Ok(self.builder.ins().imul(l, r)),
                         BinOp::Div => Ok(self.builder.ins().sdiv(l, r)),
+                        BinOp::Rem => Ok(self.builder.ins().srem(l, r)),
                         BinOp::Pow => {
                             let l_f = self.builder.ins().fcvt_from_sint(types::F64, l);
                             let r_f = self.builder.ins().fcvt_from_sint(types::F64, r);
@@ -1395,6 +1416,7 @@ fn expand_function_calls(
                 expanded.push(Statement::For(node));
             }
             Statement::Stop => expanded.push(Statement::Stop),
+            Statement::Skip => expanded.push(Statement::Skip),
             _ => expanded.push(statement.clone()),
         }
     }

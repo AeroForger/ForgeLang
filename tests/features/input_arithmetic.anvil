@@ -1,0 +1,7 @@
+Open Nunction Main()
+{
+    Number Int x = Input(Int) + 5;
+    Number Float y = Input(Float) * 2.5;
+    Print(x);
+    Print(y);
+}

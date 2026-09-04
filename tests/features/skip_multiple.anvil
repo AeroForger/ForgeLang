@@ -1,0 +1,26 @@
+Open Nunction Main()
+{
+    Number Int x = 0;
+
+    While (x < 6)
+    {
+        x = x + 1;
+
+        If (x == 2)
+        {
+            Skip;
+        }
+
+        If (x == 4)
+        {
+            Skip;
+        }
+
+        If (x == 5)
+        {
+            Skip;
+        }
+
+        Print(x);
+    }
+}

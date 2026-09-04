@@ -1,0 +1,7 @@
+Open Nunction Main()
+{
+    Number Int x = 10;
+    Number Float y = 3.0;
+
+    Print(x % y);
+}

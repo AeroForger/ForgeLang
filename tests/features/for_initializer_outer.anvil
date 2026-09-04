@@ -1,0 +1,8 @@
+Open Nunction Main()
+{
+    Number Int i = 5;
+    For (Number Int i = i + 1; i < 8; i++)
+    {
+        Print(i);
+    }
+}

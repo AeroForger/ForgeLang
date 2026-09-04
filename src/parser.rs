@@ -43,6 +43,7 @@ fn build_statement(pair: Pair<Rule>) -> ForgeResult<Statement> {
             Statement::Return(expr)
         }
         Rule::stop_stmt      => Statement::Stop,
+        Rule::skip_stmt      => Statement::Skip,
         Rule::input_stmt     => Statement::Input(build_input(inner)?),
         Rule::function_decl  => Statement::FunctionDecl(build_function_decl(inner)?),
         Rule::if_stmt        => Statement::If(build_if_stmt(inner)?),
@@ -50,7 +51,7 @@ fn build_statement(pair: Pair<Rule>) -> ForgeResult<Statement> {
          Rule::for_stmt       => Statement::For(build_for_stmt(inner)?),
          Rule::data_decl      => Statement::DataDecl(build_data_decl(inner)?),
         Rule::object_decl    => Statement::ObjectDecl(build_object_decl(inner)?),
-        Rule::use_stmt       => Statement::Use(UseNode { path: vec![], item: None }),
+        Rule::use_stmt       => Statement::Use(build_use_stmt(inner)?),
         r => return Err(ForgeError::parse(format!("unexpected rule: {:?}", r))),
     })
 }
@@ -300,6 +301,34 @@ fn build_input(pair: Pair<Rule>) -> ForgeResult<InputNode> {
     Ok(InputNode { subtype })
 }
 
+fn build_use_stmt(pair: Pair<Rule>) -> ForgeResult<UseNode> {
+    let mut path = Vec::new();
+    let mut item = None;
+
+    for inner in pair.into_inner() {
+        match inner.as_rule() {
+            Rule::qualified_name => {
+                path = inner.into_inner()
+                    .filter(|part| part.as_rule() == Rule::ident)
+                    .map(|part| part.as_str().to_string())
+                    .collect();
+            }
+            Rule::using_item => {
+                item = inner.into_inner()
+                    .find(|part| part.as_rule() == Rule::ident)
+                    .map(|part| part.as_str().to_string());
+            }
+            _ => {}
+        }
+    }
+
+    if path.is_empty() {
+        return Err(ForgeError::parse("import path cannot be empty"));
+    }
+
+    Ok(UseNode { path, item })
+}
+
 fn build_assignment(pair: Pair<Rule>) -> ForgeResult<AssignmentNode> {
     let mut it = pair.into_inner();
     let first = it.next().unwrap();
@@ -476,7 +505,7 @@ fn build_multiplicative(pair: Pair<Rule>) -> ForgeResult<Expr> {
     let mut it = pair.into_inner();
     let mut acc = build_expr(it.next().unwrap())?;
     while let Some(op_pair) = it.next() {
-        let op = match op_pair.as_str() { "*" => BinOp::Mul, "/" => BinOp::Div, _ => unreachable!() };
+        let op = match op_pair.as_str() { "*" => BinOp::Mul, "/" => BinOp::Div, "%" => BinOp::Rem, _ => unreachable!() };
         let rhs = build_expr(it.next().unwrap())?;
         acc = Expr::BinaryOp { op, lhs: Box::new(acc), rhs: Box::new(rhs) };
     }
@@ -585,5 +614,28 @@ fn parse_subtype(s: &str) -> Subtype {
         "Generic" => Subtype::Generic,
         "Weld" => Subtype::Weld,
         _ => unreachable!(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_program;
+    use crate::ast::{Statement, UseNode};
+
+    #[test]
+    fn preserves_use_path() {
+        let program = parse_program("Use System.Math;").unwrap();
+        let Statement::Use(import) = &program.statements[0] else { panic!("expected Use"); };
+        assert_eq!(import, &UseNode { path: vec!["System".into(), "Math".into()], item: None });
+    }
+
+    #[test]
+    fn preserves_using_path_and_item() {
+        let program = parse_program("Using System.Sort: MergeSort();").unwrap();
+        let Statement::Use(import) = &program.statements[0] else { panic!("expected Using"); };
+        assert_eq!(import, &UseNode {
+            path: vec!["System".into(), "Sort".into()],
+            item: Some("MergeSort".into()),
+        });
     }
 }

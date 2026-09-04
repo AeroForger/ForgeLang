@@ -1,0 +1,24 @@
+Open Nunction Main()
+{
+    Number Int outer = 0;
+
+    While (outer < 3)
+    {
+        Number Int inner = 0;
+
+        While (inner < 3)
+        {
+            inner = inner + 1;
+
+            If (inner == 2)
+            {
+                Skip;
+            }
+
+            Print(inner);
+        }
+
+        outer = outer + 1;
+        Print(\V"outer {outer}");
+    }
+}

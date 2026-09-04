@@ -1,0 +1,6 @@
+Open Nunction Main()
+{
+    Print(20 % 6);
+    Print(20 / 6);
+    Print(20 / 6 * 6 + 20 % 6);
+}

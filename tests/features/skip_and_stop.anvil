@@ -1,0 +1,28 @@
+Nunction RunWithStop()
+{
+    Number Int x = 0;
+
+    While (x < 5)
+    {
+        x = x + 1;
+
+        If (x == 2)
+        {
+            Skip;
+        }
+
+        If (x >= 4)
+        {
+            Stop;
+        }
+
+        Print(x);
+    }
+
+    Print("after loop");
+}
+
+Open Nunction Main()
+{
+    RunWithStop();
+}

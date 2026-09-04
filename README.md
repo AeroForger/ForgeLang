@@ -80,7 +80,7 @@ Alpha 3.4 currently supports:
 * **Tuples:** Named-field `Ore` tuples
 * **Lists:** `Materials`
 * **Input:** `Input(Int)`, `Input(Float)`, `Input(Weld)`
-* **Arithmetic:** `+`, `-`, `*`, `/`, `**`
+* **Arithmetic:** `+`, `-`, `*`, `/`, `%`, `**`
 * **Unary operators:** `+`, `-`
 * **Comparisons:** `<`, `>`, `<=`, `>=`, `==`, `!=`
 * **Bitwise operators:** `And`, `Or`, `Xor`

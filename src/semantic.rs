@@ -1,15 +1,17 @@
 use rayon::prelude::*;
 use std::collections::HashMap;
 
-use crate::ast::{AssignmentTarget, Expr, FunctionDecl, ForNode, Param, Program, Statement, Subtype, TypeDecl};
+use crate::ast::{AssignmentTarget, Expr, FunctionDecl, ForNode, Param, Program, Statement, Subtype, TypeDecl, BinOp};
 use crate::errors::{ForgeError, ForgeResult};
 
 #[derive(Debug, Clone, Copy)]
 struct ValidationContext<'a> {
 	current_function: Option<&'a str>,
 	in_loop_or_if: bool,
+	in_loop: bool,
 }
 
+#[derive(Clone)]
 struct Scope {
 	var_types: HashMap<String, TypeDecl>,
 }
@@ -53,7 +55,6 @@ fn collect_var_types(statements: &[Statement], scope: &mut Scope) {
 				collect_var_types(&node.body, scope);
 			}
 			Statement::For(node) => {
-				scope.var_types.insert(node.init.name.clone(), node.init.type_decl.clone());
 				collect_var_types(&node.body, scope);
 			}
 			Statement::FunctionDecl(func) => {
@@ -86,11 +87,67 @@ fn expr_type_name(expr: &Expr) -> &'static str {
 	}
 }
 
+fn resolved_expr_type_name(expr: &Expr, scope: &Scope) -> &'static str {
+	match expr {
+		Expr::Identifier(name) => match scope.get(name) {
+			Some(TypeDecl::Bool) => "Bool",
+			Some(TypeDecl::Number(Subtype::Int)) => "Int",
+			Some(TypeDecl::Number(Subtype::Float)) => "Float",
+			Some(TypeDecl::Weld) => "Weld",
+			_ => expr_type_name(expr),
+		},
+		_ => expr_type_name(expr),
+	}
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum NumericType {
+    Int,
+    Float,
+}
+
+fn numeric_type(expr: &Expr, scope: &Scope) -> Option<NumericType> {
+	match expr {
+		Expr::Number(n) => Some(if n.is_float { NumericType::Float } else { NumericType::Int }),
+		Expr::Identifier(name) => match scope.get(name) {
+			Some(TypeDecl::Number(Subtype::Int)) => Some(NumericType::Int),
+			Some(TypeDecl::Number(Subtype::Float)) => Some(NumericType::Float),
+			_ => None,
+		},
+		Expr::Input(input) => match input.subtype {
+			Some(Subtype::Int) => Some(NumericType::Int),
+			Some(Subtype::Float) => Some(NumericType::Float),
+			_ => None,
+		},
+		Expr::BinaryOp { op, lhs, rhs } if matches!(op, BinOp::Add | BinOp::Sub | BinOp::Mul | BinOp::Div | BinOp::Pow) => {
+			let lhs_type = numeric_type(lhs, scope)?;
+			let rhs_type = numeric_type(rhs, scope)?;
+			Some(if lhs_type == NumericType::Float || rhs_type == NumericType::Float {
+				NumericType::Float
+			} else {
+				NumericType::Int
+			})
+		}
+		Expr::BinaryOp { op: BinOp::Rem, lhs, rhs } => {
+			if numeric_type(lhs, scope) == Some(NumericType::Int)
+				&& numeric_type(rhs, scope) == Some(NumericType::Int)
+			{
+				Some(NumericType::Int)
+			} else {
+				None
+			}
+		}
+		Expr::UnaryOp { operand, .. } => numeric_type(operand, scope),
+		_ => None,
+	}
+}
+
 pub fn analyze(program: &Program) -> ForgeResult<()> {
 	// Validate loose top-level statements
 	let top_level_ctx = ValidationContext {
 		current_function: None,
 		in_loop_or_if: false,
+		in_loop: false,
 	};
 	let empty_scope = Scope::new();
 	for statement in &program.statements {
@@ -117,6 +174,7 @@ fn validate_function(function: &FunctionDecl, program: &Program) -> ForgeResult<
 	let context = ValidationContext {
 		current_function: Some(function.name.as_str()),
 		in_loop_or_if: false,
+		in_loop: false,
 	};
 	validate_statements(&function.body, &scope, program, context)
 }
@@ -164,6 +222,7 @@ fn validate_statement(
 		Statement::While(node) => {
 			let loop_ctx = ValidationContext {
 				in_loop_or_if: true,
+				in_loop: true,
 				..context
 			};
 			validate_expr(&node.condition, scope, program, context)?;
@@ -179,6 +238,16 @@ fn validate_statement(
 			if !context.in_loop_or_if {
 				return Err(ForgeError::parse("Stop can only be used inside a loop or If statement"));
 			}
+		}
+        Statement::Skip => {
+			if !context.in_loop {
+				return Err(ForgeError::parse("Skip can only be used inside a loop"));
+			}
+		}
+		Statement::Use(import) => {
+			let path = import.path.join(".");
+			let target = import.item.as_deref().map_or(path.clone(), |item| format!("{}: {}", path, item));
+			return Err(ForgeError::parse(format!("imports are not implemented: {}", target)));
 		}
 		Statement::Print(print) => validate_expr(&print.expr, scope, program, context)?,
 		Statement::Return(value) => {
@@ -198,12 +267,25 @@ fn validate_for_stmt(
 	program: &Program,
 	context: ValidationContext,
 ) -> ForgeResult<()> {
-	let loop_ctx = ValidationContext { in_loop_or_if: true, ..context };
+	let loop_ctx = ValidationContext { in_loop_or_if: true, in_loop: true, ..context };
+	let init_scope = scope.clone();
 	if let Some(init_value) = &node.init.initializer {
-		validate_expr(init_value, scope, program, context)?;
+		validate_expr(init_value, &init_scope, program, context)?;
 	}
-	validate_expr(&node.condition, scope, program, context)?;
-	validate_statements(&node.body, scope, program, loop_ctx)
+
+	let mut loop_scope = init_scope;
+	loop_scope.var_types.insert(node.init.name.clone(), node.init.type_decl.clone());
+	validate_expr(&node.condition, &loop_scope, program, context)?;
+	validate_statements(&node.body, &loop_scope, program, loop_ctx)?;
+
+	match loop_scope.get(&node.increment_var) {
+		None => Err(ForgeError::parse(format!("Undefined variable: {}", node.increment_var))),
+		Some(TypeDecl::Number(Subtype::Int | Subtype::Float)) => Ok(()),
+		Some(_) => Err(ForgeError::parse(format!(
+			"For loop increment variable '{}' must be numeric",
+			node.increment_var
+		))),
+	}
 }
 
 fn validate_var_decl(
@@ -384,11 +466,38 @@ fn validate_expr(
 				validate_expr(elem, scope, program, context)?;
 			}
 		}
-		Expr::BinaryOp { lhs, rhs, .. } => {
+		Expr::BinaryOp { lhs, rhs, op } => {
 			validate_expr(lhs, scope, program, context)?;
 			validate_expr(rhs, scope, program, context)?;
+
+			if matches!(op, BinOp::Add | BinOp::Sub | BinOp::Mul | BinOp::Div | BinOp::Rem | BinOp::Pow)
+				&& numeric_type(expr, scope).is_none()
+			{
+				let invalid_operand = if numeric_type(lhs, scope).is_none() { lhs } else { rhs };
+				if matches!(op, BinOp::Rem) {
+					if resolved_expr_type_name(invalid_operand, scope) == "Float" {
+						return Err(ForgeError::parse("Modulo (%) is only supported for integer types"));
+					}
+					return Err(ForgeError::parse(format!(
+						"Modulo operator (%) requires integer operands, got {}",
+						resolved_expr_type_name(invalid_operand, scope)
+					)));
+				}
+				return Err(ForgeError::parse(format!(
+					"Invalid operand type for arithmetic operation: expected Int or Float, got {}",
+					resolved_expr_type_name(invalid_operand, scope)
+				)));
+			}
 		}
-		Expr::UnaryOp { operand, .. } => validate_expr(operand, scope, program, context)?,
+		Expr::UnaryOp { operand, .. } => {
+			validate_expr(operand, scope, program, context)?;
+			if numeric_type(operand, scope).is_none() {
+				return Err(ForgeError::parse(format!(
+					"Invalid operand type for unary operation: expected Int or Float, got {}",
+					expr_type_name(operand)
+				)));
+			}
+		}
 		Expr::MemberAccess { object, .. } => validate_expr(object, scope, program, context)?,
 		Expr::Identifier(name) if name.contains('.') && !scope.contains_key(name) => {
 			return Err(ForgeError::parse(format!("shared member access is not allowed: {}", name)));

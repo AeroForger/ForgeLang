@@ -1,6 +1,6 @@
 # Input
 
-ForgeLang provides typed input through `Input`.
+ForgeLang provides input through `Input`.
 
 ## Integer Input
 
@@ -8,7 +8,7 @@ ForgeLang provides typed input through `Input`.
 Number Int Value = Input(Int);
 ```
 
-This reads an integer from standard input.
+This reads input as a string and parses it as an integer. An input that cannot be parsed as an integer produces an input error.
 
 ## Floating-Point Input
 
@@ -16,12 +16,12 @@ This reads an integer from standard input.
 Number Float Value = Input(Float);
 ```
 
-This reads a floating-point value.
+This reads input as a string and parses it as a floating-point value. An input that cannot be parsed as a floating-point value produces an input error.
 
 ## String Input
 
 ```forge
-Weld Value = Input(Weld);
+Weld Value = Input();
 ```
 
 This reads a string from standard input.

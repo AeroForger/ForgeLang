@@ -1,0 +1,6 @@
+Open Nunction Main()
+{
+    Weld text = "hello";
+    Number Int x = 10;
+    Print(x + text);
+}

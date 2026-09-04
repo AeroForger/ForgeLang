@@ -37,6 +37,10 @@ For (Number Int I = 10; I > 0; I--)
 }
 ```
 
+The increment variable must be a numeric variable. The loop variable is not in scope while its initializer is being evaluated.
+
+`Skip` continues with the next iteration of the loop. `Stop` exits the current loop. `Skip` can only be used inside a loop.
+
 A `For` loop without braces produces an error.
 
 ---

@@ -1,0 +1,7 @@
+Open Nunction Main()
+{
+    Print(10 + 8 % 3);
+    Print(2 * 3 % 4);
+    Print(100 / 7 % 3);
+    Print(17 % 5 % 3);
+}

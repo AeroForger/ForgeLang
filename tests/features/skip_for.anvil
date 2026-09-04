@@ -1,0 +1,12 @@
+Open Nunction Main()
+{
+    For (Number Int i = 0; i < 6; i++)
+    {
+        If (i == 3)
+        {
+            Skip;
+        }
+
+        Print(\V"i={i}");
+    }
+}

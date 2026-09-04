@@ -1,0 +1,14 @@
+Nunction Loop()
+{
+    Number Float i = 0.0;
+    For (Number Int j = 0; j < 2; i++)
+    {
+        Print(i);
+        Stop;
+    }
+}
+
+Open Nunction Main()
+{
+    Loop();
+}

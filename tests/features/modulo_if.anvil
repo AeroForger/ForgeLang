@@ -1,0 +1,19 @@
+Open Nunction Main()
+{
+    Number Int x = 10;
+
+    If (x % 2 == 0)
+    {
+        Print("Even");
+    }
+
+    If (x % 3 == 0)
+    {
+        Print("Divisible by 3");
+    }
+
+    If (x % 7 == 0)
+    {
+        Print("Divisible by 7");
+    }
+}

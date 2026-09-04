@@ -5,7 +5,7 @@ ForgeLang provides `Use` and `Using` syntax for imports.
 ## `Use`
 
 ```forge
-Use std.io;
+Use System.Math;
 ```
 
 `Use` specifies a module path.
@@ -13,7 +13,7 @@ Use std.io;
 ## `Using`
 
 ```forge
-Using std.io: Print;
+Using System.Math: Sqrt();
 ```
 
 `Using` specifies an item from a module.

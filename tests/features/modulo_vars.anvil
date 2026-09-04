@@ -1,0 +1,12 @@
+Open Nunction Main()
+{
+    Number Int x = 10;
+    Number Int y = 3;
+
+    Number Int result = x % y;
+    Print(result);
+
+    Number Int a = 17;
+    Number Int b = 5;
+    Print(a % b);
+}

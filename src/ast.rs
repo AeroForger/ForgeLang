@@ -36,6 +36,7 @@ pub enum Statement {
     For(ForNode),
     Return(Option<Expr>),
     Stop,
+    Skip,
     Assignment(AssignmentNode),
     Use(UseNode),
     ExprStmt(Expr),
@@ -127,7 +128,7 @@ pub struct AssignmentNode {
     pub value: Expr,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct UseNode {
     pub path: Vec<String>,
     pub item: Option<String>,
@@ -161,7 +162,7 @@ pub struct NumberLiteral {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum BinOp {
-    Add, Sub, Mul, Div, Pow,
+    Add, Sub, Mul, Div, Rem, Pow,
     Eq, Ne, Lt, Gt, Le, Ge,
     And, Or, Xor,
 }

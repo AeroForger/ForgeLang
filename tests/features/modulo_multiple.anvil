@@ -1,0 +1,10 @@
+Open Nunction Main()
+{
+    Number Int a = 10;
+    Number Int b = 3;
+    Number Int c = 2;
+
+    Print(a % b % c);
+    Print(a % b + b % c);
+    Print(a * b % c);
+}
