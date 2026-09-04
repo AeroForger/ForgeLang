@@ -1,9 +1,11 @@
 <p align="center">
     <img src="ForgeLangLogo128.png">
     <br>
-  <strong>ForgeLang, a statically typed systems programming language built in Rust.</strong>
-  <br>
-  Source files use the <code>.anvil</code> extension. The compiler is <code>Furnace</code>.
+    <strong>ForgeLang, a statically typed systems programming language built in Rust.</strong>
+    <br>
+    Source files use the <code>.anvil</code> extension. The compiler is <code>Furnace</code>.
+    <br><br>
+    <a href="https://aeroforger.github.io/ForgeLang/">Read The ForgeLang Programming Language Book</a>
 </p>
 
 ---
@@ -12,7 +14,7 @@
 
 ForgeLang is a statically typed, C-style systems programming language designed for native execution and explicit control.
 
-**Alpha 3.4** uses a compiler written in **Rust**. The compiler uses **pest** for parsing and **Cranelift** for native code generation.
+**Alpha 3.4** uses a compiler written in **Rust**. Furnace uses **pest** for parsing and **Cranelift** for native code generation.
 
 ### The Stack
 
@@ -29,9 +31,6 @@ ForgeLang is a statically typed, C-style systems programming language designed f
 ### Native Code Generation
 
 ForgeLang programs are compiled to native object code. Furnace does not use an interpreter or virtual machine for compiled programs.
-
-* **Benchmark:** A triple-nested `While` loop executing **1 trillion iterations** completes in approximately 312 seconds, or about 3.2 billion iterations per second.
-* **Compile Time:** A 100-million iteration stress test compiles in approximately **3.5 milliseconds**.
 
 ### The Language
 
@@ -108,15 +107,15 @@ Open Nunction Main()
 }
 ```
 
-A `Bool` variable can only be assigned `true`, `false`, or another `Bool` variable. The compiler rejects assignments of integers, floats, or strings to `Bool` variables.
+A `Bool` variable can only be assigned `true`, `false`, or another compatible Boolean value. The compiler rejects assignments of integers, floats, or strings to `Bool` variables.
 
 Printing a Boolean value outputs `true` or `false`.
 
 ### Parallel Semantic Analysis
 
-Furnace contains a semantic-analysis stage using **Rayon**.
+Furnace contains a semantic analysis stage using **Rayon**.
 
-The semantic stage checks the parsed program before code generation. It can analyze independent function declarations concurrently.
+The semantic stage checks the parsed program before code generation. Independent parts of the AST can be analyzed concurrently.
 
 It currently checks things including:
 
@@ -129,7 +128,7 @@ It currently checks things including:
 * Array size mismatches
 * Tuple field counts
 * List element types
-* Boolean type compatibility for `Bool` / `Boolean` variables
+* Boolean type compatibility
 * Invalid `Stop` usage
 * Invalid `Program.Stop()` usage
 
@@ -139,7 +138,7 @@ It currently checks things including:
 
 ### Prerequisites
 
-1. **Rust** through `rustup`
+1. **Rust** installed through `rustup`
 2. **A C linker**, such as `gcc`, `clang`, or `cc`
 3. **The math library**, normally provided by the system C toolchain
 
@@ -202,6 +201,30 @@ The overall pipeline runs in this order:
 
 ---
 
+## Current Limitations
+
+Alpha 3.4 is still under development.
+
+The following features are not yet fully implemented in the backend:
+
+* Parameterized function calls
+* Function return values
+* Full lexical scope and shadowing
+* `Data` code generation
+* Object instantiation code generation
+* `Switch` / `Deal` / `Base` pattern matching
+* `Do` / `Fail` / `Final` error handling
+* `Use` / `Using` module system
+* Garbage collection
+* Multicore program execution
+* Self-hosting Furnace
+
+Some language constructs are already parsed and checked by Furnace but are not yet converted into executable native code.
+
+For the complete language reference and current implementation details, see **[The ForgeLang Programming Language Book](https://aeroforger.github.io/ForgeLang/)**.
+
+---
+
 ## Roadmap
 
 ### Short Term
@@ -226,6 +249,14 @@ The overall pipeline runs in this order:
 * **Scrap:** Optional garbage collector
 * **Ironwork:** ForgeLang package manager
 * **Self-hosting:** Rewrite Furnace in ForgeLang for the 2.0 generation
+
+---
+
+## Documentation
+
+The complete ForgeLang language reference is available in **The ForgeLang Programming Language Book**.
+
+**[Read the book](https://aeroforger.github.io/ForgeLang/)**
 
 ---
 
