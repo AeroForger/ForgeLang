@@ -6,17 +6,17 @@ on:
       - "Docs/**"
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 env:
   MDBOOK_VERSION: 0.4.52
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
 
     steps:
       - name: Checkout repository
