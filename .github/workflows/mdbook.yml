@@ -1,26 +1,45 @@
-build:
-  runs-on: ubuntu-latest
-  env:
-    MDBOOK_VERSION: 0.4.52
+name: Build Docs
 
-  steps:
-    - uses: actions/checkout@v4
+on:
+  push:
+    paths:
+      - "Docs/**"
+  workflow_dispatch:
 
-    - name: Install mdBook
-      run: |
-        curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh -s -- -y
-        source "$HOME/.cargo/env"
-        cargo install --version ${MDBOOK_VERSION} mdbook
+env:
+  MDBOOK_VERSION: 0.4.52
 
-    - name: Setup Pages
-      uses: actions/configure-pages@v5
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-    - name: Build ForgeLang Book
-      run: |
-        cd Docs/docs
-        mdbook build
+    steps:
+      - uses: actions/checkout@v4
 
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: ./Docs/docs/book
+      - name: Install mdBook
+        run: |
+          curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh -s -- -y
+          source "$HOME/.cargo/env"
+          cargo install --version ${MDBOOK_VERSION} mdbook
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Build ForgeLang Book
+        run: |
+          cd Docs/docs
+          mdbook build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./Docs/docs/book
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: github_pages
+
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
