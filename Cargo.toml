@@ -1,6 +1,6 @@
 [package]
 name = "furnace"
-version = "0.2.2-input"
+version = "0.3.4"
 edition = "2021"
 description = "Compiler for the ForgeLang systems programming language"
 license = "GPL-3.0-only"

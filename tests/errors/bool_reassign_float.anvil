@@ -1,0 +1,5 @@
+Open Nunction Main()
+{
+    Bool IsOpen = true;
+    IsOpen = 3.14;
+}

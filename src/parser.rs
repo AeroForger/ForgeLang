@@ -247,6 +247,7 @@ fn build_type_decl(pair: Pair<Rule>) -> ForgeResult<TypeDecl> {
             Ok(TypeDecl::Number(parse_subtype(st)))
         }
         Rule::weld_type => Ok(TypeDecl::Weld),
+        Rule::bool_type => Ok(TypeDecl::Bool),
         Rule::ore_type => {
             let mut it = inner.into_inner().filter(|p| p.as_rule() != Rule::kw_ore);
             let first = it.next().unwrap();
@@ -395,6 +396,11 @@ fn build_expr(pair: Pair<Rule>) -> ForgeResult<Expr> {
             Ok(Expr::Input(InputNode { subtype: st.map(parse_subtype) }))
         }
         Rule::number           => build_number(pair),
+        Rule::bool_literal     => match pair.as_str() {
+            "true" => Ok(Expr::Bool(true)),
+            "false" => Ok(Expr::Bool(false)),
+            _ => unreachable!(),
+        },
         Rule::string           => {
             let parts = build_string_parts(pair)?;
             Ok(Expr::Str(parts))

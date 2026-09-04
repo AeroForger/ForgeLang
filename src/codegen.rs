@@ -33,6 +33,8 @@ pub struct RuntimeSymbols {
     pub float_scanf_id: DataId,
     pub str_scanf_id: DataId,
     pub oob_fmt_id: DataId,
+    pub true_str_id: DataId,
+    pub false_str_id: DataId,
 }
 
 /// Function-local Cranelift handles (GlobalValues and FuncRefs) bound to a specific function's IR context.
@@ -56,6 +58,8 @@ pub struct RuntimeRefs {
     pub float_scanf: GlobalValue,
     pub str_scanf: GlobalValue,
     pub oob_fmt: GlobalValue,
+    pub true_str: GlobalValue,
+    pub false_str: GlobalValue,
 }
 
 /// Owns module-level compilation state and external dependencies.
@@ -170,6 +174,8 @@ impl CodeGenContext {
         let float_scanf_id = Self::define_string_in_module(&mut module, "float_scanf", b"%lf\0")?;
         let str_scanf_id = Self::define_string_in_module(&mut module, "str_scanf", b"%255s\0")?;
         let oob_fmt_id = Self::define_string_in_module(&mut module, "oob_fmt", b"Index out of bounds\0")?;
+        let true_str_id = Self::define_string_in_module(&mut module, "true_str", b"true\0")?;
+        let false_str_id = Self::define_string_in_module(&mut module, "false_str", b"false\0")?;
 
         let runtime_symbols = RuntimeSymbols {
             printf_id,
@@ -191,6 +197,8 @@ impl CodeGenContext {
             float_scanf_id,
             str_scanf_id,
             oob_fmt_id,
+            true_str_id,
+            false_str_id,
         };
 
         Ok(Self {
@@ -226,6 +234,8 @@ impl CodeGenContext {
         let float_scanf = self.module.declare_data_in_func(self.runtime_symbols.float_scanf_id, func);
         let str_scanf = self.module.declare_data_in_func(self.runtime_symbols.str_scanf_id, func);
         let oob_fmt = self.module.declare_data_in_func(self.runtime_symbols.oob_fmt_id, func);
+        let true_str = self.module.declare_data_in_func(self.runtime_symbols.true_str_id, func);
+        let false_str = self.module.declare_data_in_func(self.runtime_symbols.false_str_id, func);
         let printf = self.module.declare_func_in_func(self.runtime_symbols.printf_id, func);
         let puts = self.module.declare_func_in_func(self.runtime_symbols.puts_id, func);
         let fputs = self.module.declare_func_in_func(self.runtime_symbols.fputs_id, func);
@@ -258,8 +268,10 @@ impl CodeGenContext {
             float_scanf,
             str_scanf,
             oob_fmt,
+            true_str,
+            false_str,
         }
-    }
+}
 }
 
 #[derive(Debug, Clone)]
@@ -280,6 +292,7 @@ pub struct FunctionCompiler<'a, 'ctx> {
     pub var_info: HashMap<String, VarInfo>,
     pub float_vars: HashSet<String>,
     pub string_vars: HashSet<String>,
+    pub bool_vars: HashSet<String>,
     pub break_targets: Vec<cranelift_codegen::ir::Block>,
 }
 
@@ -299,6 +312,7 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
             var_info: HashMap::new(),
             float_vars: HashSet::new(),
             string_vars: HashSet::new(),
+            bool_vars: HashSet::new(),
             break_targets: Vec::new(),
         }
     }
@@ -360,6 +374,14 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                 }
                 false
             }
+            _ => false,
+        }
+    }
+
+    fn is_bool_expr(&self, expr: &Expr) -> bool {
+        match expr {
+            Expr::Bool(_) => true,
+            Expr::Identifier(name) => self.bool_vars.contains(name),
             _ => false,
         }
     }
@@ -511,6 +533,7 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                     TypeDecl::Number(Subtype::Float) => (types::F64, VarInfo::Primitive(types::F64)),
                     TypeDecl::Number(_) => (types::I32, VarInfo::Primitive(types::I32)),
                     TypeDecl::Weld => (self.ctx.ptr_type, VarInfo::Primitive(self.ctx.ptr_type)),
+                    TypeDecl::Bool => (types::I32, VarInfo::Primitive(types::I32)),
                     TypeDecl::Ore(size_opt) => {
                         let size = size_opt.unwrap_or(0) as usize;
                         (self.ctx.ptr_type, VarInfo::Array { element_type: Subtype::Int, size })
@@ -530,6 +553,9 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                 }
                 if ty == self.ctx.ptr_type {
                     self.string_vars.insert(v.name.clone());
+                }
+                if matches!(&v.type_decl, TypeDecl::Bool) {
+                    self.bool_vars.insert(v.name.clone());
                 }
 
                 if let Some(init) = &v.initializer {
@@ -595,9 +621,33 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                 let val = self.compile_expr(&p.expr)?;
                 let is_string = self.is_string_expr(&p.expr);
                 let is_float = self.is_float_expr(&p.expr);
+                let is_bool = self.is_bool_expr(&p.expr);
 
                 if is_string {
                     self.builder.ins().call(self.runtime.puts, &[val]);
+                } else if is_bool {
+                    let is_true = self.builder.ins().icmp_imm_u(IntCC::NotEqual, val, 0);
+                    let true_str_val = self.builder.ins().symbol_value(self.ctx.ptr_type, self.runtime.true_str);
+                    let false_str_val = self.builder.ins().symbol_value(self.ctx.ptr_type, self.runtime.false_str);
+
+                    let merge_block = self.builder.create_block();
+                    let true_block = self.builder.create_block();
+                    let false_block = self.builder.create_block();
+
+                    self.builder.ins().brif(is_true, true_block, &[], false_block, &[]);
+
+                    self.builder.switch_to_block(true_block);
+                    self.builder.seal_block(true_block);
+                    self.builder.ins().call(self.runtime.puts, &[true_str_val]);
+                    self.builder.ins().jump(merge_block, &[]);
+
+                    self.builder.switch_to_block(false_block);
+                    self.builder.seal_block(false_block);
+                    self.builder.ins().call(self.runtime.puts, &[false_str_val]);
+                    self.builder.ins().jump(merge_block, &[]);
+
+                    self.builder.switch_to_block(merge_block);
+                    self.builder.seal_block(merge_block);
                 } else {
                     let fmt_gv = if is_float {
                         self.runtime.float_fmt
@@ -785,6 +835,7 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
 
     pub fn compile_expr(&mut self, expr: &Expr) -> ForgeResult<Value> {
         match expr {
+            Expr::Bool(b) => Ok(self.builder.ins().iconst(types::I32, if *b { 1 } else { 0 })),
             Expr::Number(n) => {
                 if n.is_float {
                     Ok(self.builder.ins().f64const(n.float_val))

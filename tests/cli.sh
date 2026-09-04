@@ -19,11 +19,11 @@ fi
 
 # version output
 actual="$($BIN -version 2>&1)"
-[ "$actual" = "Furnace Alpha 3" ] || fail "-version output mismatch: '$actual'"
+[ "$actual" = "Furnace Alpha 3.4" ] || fail "-version output mismatch: '$actual'"
 
 # help output
 help_actual="$($BIN -help 2>&1)"
-printf '%s\n' "$help_actual" | grep -q "Furnace Alpha 3" || fail "-help is missing banner"
+printf '%s\n' "$help_actual" | grep -q "Furnace Alpha 3.4" || fail "-help is missing banner"
 printf '%s\n' "$help_actual" | grep -q "Furnace compile <file>.anvil <platform>" || fail "-help is missing compile usage"
 printf '%s\n' "$help_actual" | grep -q "Furnace run <file>.anvil" || fail "-help is missing run usage"
 
@@ -37,7 +37,7 @@ Open Nunction Main()
 EOF
 
 OUT="$TMPDIR/ok"
-compile_out="$($BIN compile "$SRC" linux 2>&1)"
+compile_out="$(cd "$TMPDIR" && "$BIN" compile "$SRC" linux 2>&1)"
 printf '%s\n' "$compile_out" | grep -q "Compiling" || fail "compile output missing compile notice"
 printf '%s\n' "$compile_out" | grep -q "Linking" || fail "compile output missing linking notice"
 printf '%s\n' "$compile_out" | grep -q "Build successful!" || fail "compile output missing success"

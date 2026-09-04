@@ -1,0 +1,9 @@
+Open Nunction Main()
+{
+    Bool IsOpen = true;
+    Print(IsOpen);
+    Bool IsClosed = false;
+    Print(IsClosed);
+    Boolean Maybe = true;
+    Print(Maybe);
+}

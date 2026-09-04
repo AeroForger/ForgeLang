@@ -1,15 +1,13 @@
 # Rust build output
 /target/
 
-# Generated object files and executables
 *.o
 /test
 
-# Local editor and OS files
 .vscode/
 .idea/
 .DS_Store
-/FutureIdeas/*.blower
+/FutureIdeas/
 /testing
 /testing.anvil
 r.md

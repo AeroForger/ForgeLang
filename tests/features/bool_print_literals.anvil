@@ -1,0 +1,5 @@
+Open Nunction Main()
+{
+    Print(true);
+    Print(false);
+}

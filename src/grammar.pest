@@ -34,10 +34,11 @@ qualified_name  = { ident ~ ("." ~ ident)* }
 // --- Modifiers & types ---
 modifier        = { kw_open | kw_closed | kw_showcase }
 subtype         = { kw_int | kw_float | kw_weld | kw_generic }
-type_decl       = { number_type | weld_type | ore_type | materials_type }
+type_decl       = { number_type | weld_type | bool_type | ore_type | materials_type }
 
 number_type     = { kw_number ~ subtype }
 weld_type       = { kw_weld }
+bool_type       = { kw_bool | kw_boolean }
 ore_type        = { (kw_ore ~ "[" ~ (integer | kw_empty) ~ "]") | (kw_ore ~ "(" ~ tuple_field ~ ("," ~ tuple_field)* ~ ","? ~ ")") }
 tuple_field     = { subtype ~ ident }
 materials_type  = { kw_materials ~ subtype ~ kw_new? }
@@ -107,6 +108,7 @@ primary           = {
   | interpolated_string
   | string
   | number
+  | bool_literal
   | input_expr
   | ident
   | array_init
@@ -156,6 +158,10 @@ kw_input      = ${ "Input" ~ !ident_char }
 kw_stop       = ${ "Stop" ~ !ident_char }
 kw_empty      = ${ "EMPTY" ~ !ident_char }
 kw_for        = ${ "For" ~ !ident_char }
+kw_bool       = ${ "Bool" ~ !ident_char }
+kw_boolean    = ${ "Boolean" ~ !ident_char }
+kw_true       = ${ "true" ~ !ident_char }
+kw_false      = ${ "false" ~ !ident_char }
 
 // --- Lexical Tokens ---
 ident              = ${ !keyword ~ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
@@ -166,12 +172,14 @@ keyword            = _{
     | kw_nunction | kw_return | kw_if | kw_while | kw_else | kw_switch | kw_deal
     | kw_base | kw_do | kw_fail | kw_final | kw_and | kw_or | kw_xor
     | kw_use | kw_using | kw_new | kw_print | kw_input | kw_stop | kw_empty
-    | kw_for
+    | kw_for | kw_bool | kw_boolean | kw_true | kw_false
 }
 
 number             = { float | integer }
 integer            = ${ ASCII_DIGIT+ }
 float              = ${ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ }
+
+bool_literal       = ${ kw_true | kw_false }
 
 string             = ${ "\"" ~ (escape | string_char)* ~ "\"" }
 interpolated_string = ${ "\\V\"" ~ (escape | interpolation | interp_char)* ~ "\"" }

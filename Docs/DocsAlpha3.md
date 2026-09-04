@@ -1,4 +1,4 @@
-# ForgeLang Alpha 3.2 Language Documentation
+# ForgeLang Alpha 3.4 Language Documentation
 
 **ForgeLang** is a statically typed systems programming language that compiles to native machine code.
 
@@ -6,7 +6,7 @@ ForgeLang source files use the `.anvil` extension. If you drop one on the floor,
 
 The compiler is **Furnace**.
 
-> **Status:** Alpha 3.2
+> **Status:** Alpha 3.4
 > **Compiler:** Furnace
 > **Implementation:** Rust
 > **Parser:** pest
@@ -21,20 +21,33 @@ The compiler is **Furnace**.
 2. [Hello World](#2-hello-world)
 3. [Program Structure](#3-program-structure)
 4. [Functions](#4-functions)
+
    4.1. [`Nunction`](#41-nunction)
+
    4.2. [`function`](#42-function)
+
    4.3. [Function Parameters](#43-function-parameters)
+   
    4.4. [Zero-Argument Call Inlining](#44-zero-argument-call-inlining)
 5. [The Main Function](#5-the-main-function)
 6. [Variables](#6-variables)
+
    6.1. [Declaration](#61-declaration)
+
    6.2. [Assignment](#62-assignment)
 7. [Types](#7-types)
+
    7.1. [Primitive Types](#71-primitive-types)
+
    7.2. [Arrays](#72-arrays)
+
    7.3. [Tuples](#73-tuples)
+
    7.4. [Lists](#74-lists)
+
    7.5. [Generic Types](#75-generic-types)
+
+   7.6. [Booleans](#76-booleans)
 8. [Integers](#8-integers)
 9. [Floating-Point Numbers](#9-floating-point-numbers)
 10. [Strings](#10-strings)
@@ -67,7 +80,7 @@ The compiler is **Furnace**.
 32. [Compilation](#32-compilation)
 33. [Complete Example](#33-complete-example)
 34. [Current Limitations](#34-current-limitations)
-35. [Alpha 3.2 Roadmap](#35-alpha-32-roadmap)
+35. [Alpha 3.4 Roadmap](#35-alpha-34-roadmap)
 
 ---
 
@@ -79,13 +92,13 @@ Compiled ForgeLang programs do not require a virtual machine or interpreter at r
 
 The compiler pipeline is:
 
-```text
+```
 ForgeLang source -> pest -> AST -> Semantic Analysis -> Cranelift -> Native Object -> System Linker -> Executable
 ```
 
 Furnace is written in Rust.
 
-Alpha 3.2 uses:
+Alpha 3.4 uses:
 
 * **Rust** for the compiler
 * **pest** for parsing
@@ -306,7 +319,7 @@ I = I + 5;
 
 General form:
 
-```text
+```
 Type Name = Value;
 ```
 
@@ -324,7 +337,7 @@ Materials Int List = (1, 2, 3,);
 
 General form:
 
-```text
+```
 Name = Value;
 ```
 
@@ -340,7 +353,7 @@ The assigned value must be compatible with the variable's type.
 
 # 7. Types
 
-Alpha 3.2 currently includes primitive types, arrays, tuples, lists, and a limited generic type.
+Alpha 3.4 currently includes primitive types, arrays, tuples, lists, and a limited generic type.
 
 ## 7.1 Primitive Types
 
@@ -351,6 +364,10 @@ The primary primitive types are:
 | `Number Int`   | Integer values        |
 | `Number Float` | Floating-point values |
 | `Weld`         | String values         |
+| `Bool`         | Boolean values        |
+| `Boolean`      | Boolean values        |
+
+`Bool` and `Boolean` refer to the same type and can be used interchangeably.
 
 ForgeLang uses static type checking.
 
@@ -501,6 +518,82 @@ Print(Items[1]);
 The current implementation stores generic list elements as integers internally.
 
 Mixed-type generic storage is not currently implemented as a type-checked feature.
+
+## 7.6 Booleans
+
+Booleans are declared with `Bool` or `Boolean`. The two keywords are identical.
+
+```forge
+Bool IsOpen = true;
+Boolean IsClosed = false;
+```
+
+A `Bool` variable holds exactly one of two values: `true` or `false`. These are recognized as Boolean literals by the lexer and parser, and are represented internally as Boolean values.
+
+A `Bool` variable can be reassigned:
+
+```forge
+Bool Flag = true;
+Flag = false;
+Flag = true;
+```
+
+A `Bool` variable may only contain `true`, `false`, or another `Bool` variable. The compiler rejects assignments of integers, floats, or strings to `Bool` variables.
+
+```forge
+Bool Value = 1;
+```
+
+produces:
+
+```
+error: Type error: cannot assign Int to Bool variable 'Value'
+```
+
+Similarly:
+
+```forge
+Bool IsOpen = true;
+IsOpen = "true";
+```
+
+produces:
+
+```
+error: Type error: cannot assign Weld to Bool variable 'IsOpen'
+```
+
+`Print` outputs `true` or `false` for Boolean values.
+
+```forge
+Open Nunction Main()
+{
+    Bool Flag = true;
+    Print(Flag);
+    Flag = false;
+    Print(Flag);
+}
+```
+
+This program outputs:
+
+```
+true
+false
+```
+
+Boolean variables can be used directly in conditions:
+
+```forge
+Bool Running = true;
+
+If (Running)
+{
+    Print("running");
+}
+```
+
+The value `true` is treated as a true condition and `false` is treated as a false condition.
 
 ---
 
@@ -673,7 +766,7 @@ The current implementation uses standard C input facilities internally.
 
 # 13. Operators
 
-Alpha 3.2 supports arithmetic, comparison, bitwise, unary, and loop increment operators.
+Alpha 3.4 supports arithmetic, comparison, bitwise, unary, and loop increment operators.
 
 ## 13.1 Arithmetic
 
@@ -709,13 +802,13 @@ Power expressions are right-associative.
 
 For example:
 
-```text
+```
 A ** B ** C
 ```
 
 is interpreted as:
 
-```text
+```
 A ** (B ** C)
 ```
 
@@ -747,7 +840,7 @@ For (Number Int I = 10; I > 0; I--)
 
 # 14. Unary Operators
 
-Alpha 3.2 supports unary negation and unary plus.
+Alpha 3.4 supports unary negation and unary plus.
 
 Example:
 
@@ -807,7 +900,7 @@ ForgeLang currently provides `And`, `Or`, and `Xor` as bitwise operators for int
 
 Precedence is:
 
-```text
+```
 And > Or > Xor
 ```
 
@@ -1297,6 +1390,7 @@ It currently handles checks including:
 * Tuple field count mismatches
 * List element type mismatches
 * Invalid empty-list declarations
+* Boolean type compatibility for `Bool` and `Boolean` variables
 * Other language-level errors
 
 Semantic analysis happens before Cranelift code generation.
@@ -1340,7 +1434,7 @@ The grammar uses explicit precedence rules rather than left-recursive expression
 
 Operator precedence, from highest to lowest, is:
 
-```text
+```
 primary -> postfix -> power -> unary -> multiplicative -> additive -> comparison -> and -> or -> xor
 ```
 
@@ -1354,13 +1448,13 @@ Therefore:
 
 is interpreted as:
 
-```text
+```
 -(2 ** 2)
 ```
 
 which produces:
 
-```text
+```
 -4
 ```
 
@@ -1478,7 +1572,7 @@ cargo build --release
 
 The release compiler is located at:
 
-```text
+```
 target/release/furnace
 ```
 
@@ -1504,7 +1598,7 @@ The compile process:
 
 Example output:
 
-```text
+```
 Compiling main.anvil...
 Linking...
 Build successful!
@@ -1515,7 +1609,7 @@ The CLI uses the `Platform` enum in `Cli/platform.rs`.
 
 The currently supported target is:
 
-```text
+```
 linux
 ```
 
@@ -1544,7 +1638,7 @@ Furnace exposes its version through centralized compiler metadata.
 The current version is:
 
 ```rust
-pub const VERSION: &str = "Alpha 3.2";
+pub const VERSION: &str = "Alpha 3.4";
 ```
 
 Version information can be requested with:
@@ -1561,13 +1655,13 @@ Help can be requested with:
 
 Example version output:
 
-```text
-Furnace Alpha 3.2
+```
+Furnace Alpha 3.4
 ```
 
 Usage:
 
-```text
+```
 Usage:
     Furnace compile <file>.anvil <platform>
     Furnace run <file>.anvil
@@ -1597,7 +1691,7 @@ The resulting executable can be started normally:
 
 # 33. Complete Example
 
-The following program demonstrates several features available in Alpha 3.2:
+The following program demonstrates several features available in Alpha 3.4:
 
 * `Nunction`
 * Variables
@@ -1613,6 +1707,7 @@ The following program demonstrates several features available in Alpha 3.2:
 * `Stop`
 * Bitwise operations
 * Zero-argument function calls
+* Boolean values
 
 ```forge
 Nunction Tick()
@@ -1671,6 +1766,12 @@ Open Nunction Main()
         Print(\V"J = {J}");
     }
 
+    // Boolean
+    Bool Flag = true;
+    Print(Flag);
+    Flag = false;
+    Print(Flag);
+
     // Stop inside a loop
     Number Int K = 0;
 
@@ -1702,7 +1803,7 @@ Open Nunction Main()
 
 # 34. Current Limitations
 
-Alpha 3.2 is an early development release.
+Alpha 3.4 is an early development release.
 
 The following features are not currently fully implemented in the backend:
 
@@ -1738,9 +1839,9 @@ This distinction saves everyone from discovering that the compiler supports some
 
 ---
 
-# 35. Alpha 3.2 Roadmap
+# 35. Alpha 3.4 Roadmap
 
-Alpha 3.2 continues development of the Rust-based Furnace compiler.
+Alpha 3.4 continues development of the Rust-based Furnace compiler.
 
 ## Short Term
 
@@ -1748,7 +1849,7 @@ Alpha 3.2 continues development of the Rust-based Furnace compiler.
 
 Planned constructs include:
 
-```text
+```
 Switch
 Deal
 Base
@@ -1760,7 +1861,7 @@ These are intended to provide pattern matching.
 
 Planned constructs include:
 
-```text
+```
 Do
 Fail
 Final
@@ -1780,14 +1881,14 @@ Future versions are planned to support generic data types and generic function p
 
 ForgeLang will gain a working module system based around:
 
-```text
+```
 Use
 Using
 ```
 
 The module system will interact with:
 
-```text
+```
 Open
 Closed
 Showcase
@@ -1809,13 +1910,13 @@ Future versions will introduce native function calls with:
 
 ### Multicore Runtime
 
-Alpha 3.2 uses Rayon for compiler-side parallel analysis.
+Alpha 3.4 uses Rayon for compiler-side parallel analysis.
 
 Future versions are planned to provide mechanisms for ForgeLang programs to execute work on multiple CPU cores.
 
 Possible constructs include:
 
-```text
+```
 Spawn
 Join
 ```
@@ -1858,21 +1959,23 @@ The compiler will need sufficient language features, standard library support, a
 
 ---
 
-# Alpha 3.2 Implementation Notes
+# Alpha 3.4 Implementation Notes
 
-Alpha 3.2 uses a different compiler implementation from the earlier experimental versions of ForgeLang.
+Alpha 3.4 uses a different compiler implementation from the earlier experimental versions of ForgeLang.
 
 Earlier versions used:
 
-```text
+Alpha 1.x and 2.x used:
+
+```
 Python
 ANTLR
 LLVM
 ```
 
-Alpha 3.2 uses:
+Alpha 3.4 uses:
 
-```text
+```
 Rust
 pest
 Cranelift
@@ -1880,13 +1983,13 @@ Cranelift
 
 The current compiler pipeline is:
 
-```text
+```
 ForgeLang source -> pest -> AST -> Semantic Analysis -> Cranelift -> Native Object Code
 ```
 
 The change to Rust also makes the compiler itself part of the ForgeLang project's systems-level development work.
 
-Alpha 3.2 should not be treated as a finished language specification.
+Alpha 3.4 should not be treated as a finished language specification.
 
 Some syntax exists before its backend implementation.
 
@@ -1896,8 +1999,4 @@ Some planned language features are already represented in the parser even though
 
 That is normal for a compiler under active development.
 
-<<<<<<< HEAD
 For now, Furnace can compile a growing subset of ForgeLang to native code while the rest of the language catches up.
-=======
-For now, Furnace can compile a growing subset of ForgeLang to native code while the rest of the language catches up.
->>>>>>> 42d5220 (Alpha 3.2 Docs and Readme Update)

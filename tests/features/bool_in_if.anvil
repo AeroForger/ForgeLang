@@ -1,0 +1,13 @@
+Open Nunction Main()
+{
+    Bool Flag = true;
+    If (Flag)
+    {
+        Print("inside if");
+    }
+    Flag = false;
+    If (Flag)
+    {
+        Print("should not print");
+    }
+}

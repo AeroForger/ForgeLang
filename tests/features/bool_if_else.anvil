@@ -1,0 +1,23 @@
+Open Nunction Main()
+{
+    Bool Flag = true;
+    Number Int Counter = 0;
+
+    If (Flag)
+    {
+        Print("flag is true");
+    }
+
+    Flag = false;
+
+    If (Flag)
+    {
+        Print("should not print");
+    }
+    Else
+    {
+        Print("flag is false");
+    }
+
+    Print(Counter);
+}

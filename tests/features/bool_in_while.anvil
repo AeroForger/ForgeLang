@@ -1,0 +1,16 @@
+Open Nunction Main()
+{
+    Bool Running = true;
+    Number Int Count = 0;
+
+    While (Running)
+    {
+        Count = Count + 1;
+        If (Count >= 3)
+        {
+            Running = false;
+        }
+    }
+
+    Print(Count);
+}

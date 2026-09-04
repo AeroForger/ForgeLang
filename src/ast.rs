@@ -10,6 +10,7 @@ pub enum Subtype { Int, Float, Generic, Weld }
 pub enum TypeDecl {
     Number(Subtype),
     Weld,
+    Bool,
     Ore(Option<i64>),
     OreTuple(Vec<(Subtype, String)>),
     Materials(Subtype, bool /* New */),
@@ -136,6 +137,7 @@ pub struct UseNode {
 pub enum Expr {
     Number(NumberLiteral),
     Str(Vec<StringPart>),
+    Bool(bool),
     Identifier(String),
     MemberAccess { object: Box<Expr>, member: String },
     IndexAccess { object: Box<Expr>, index: Box<Expr> },

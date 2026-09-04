@@ -12,7 +12,7 @@
 
 ForgeLang is a statically typed, C-style systems programming language designed for native execution and explicit control.
 
-**Alpha 3.2** uses a compiler written in **Rust**. The compiler uses **pest** for parsing and **Cranelift** for native code generation.
+**Alpha 3.4** uses a compiler written in **Rust**. The compiler uses **pest** for parsing and **Cranelift** for native code generation.
 
 ### The Stack
 
@@ -24,7 +24,7 @@ ForgeLang is a statically typed, C-style systems programming language designed f
 
 ---
 
-## Alpha 3.2 Features
+## Alpha 3.4 Features
 
 ### Native Code Generation
 
@@ -71,9 +71,9 @@ Open Nunction Main()
 }
 ```
 
-Alpha 3.2 currently supports:
+Alpha 3.4 currently supports:
 
-* **Types:** `Number Int`, `Number Float`, `Weld`
+* **Types:** `Number Int`, `Number Float`, `Weld`, `Bool` / `Boolean`
 * **Control flow:** `If`, `Else If`, `Else`, `While`, `For`
 * **Functions:** `Nunction`, `function`, zero-argument calls and call inlining
 * **Strings:** Plain strings and `\V` interpolation
@@ -87,6 +87,30 @@ Alpha 3.2 currently supports:
 * **Bitwise operators:** `And`, `Or`, `Xor`
 * **Loop control:** `Stop`
 * **Runtime exit:** `Program.Stop()`
+
+### Boolean Type
+
+ForgeLang provides a Boolean type with two values: `true` and `false`.
+
+The keywords `Bool` and `Boolean` refer to the same type and can be used interchangeably.
+
+```forge
+Open Nunction Main()
+{
+    Bool IsOpen = true;
+    Print(IsOpen);
+
+    Boolean IsClosed = false;
+    Print(IsClosed);
+
+    IsOpen = false;
+    Print(IsOpen);
+}
+```
+
+A `Bool` variable can only be assigned `true`, `false`, or another `Bool` variable. The compiler rejects assignments of integers, floats, or strings to `Bool` variables.
+
+Printing a Boolean value outputs `true` or `false`.
 
 ### Parallel Semantic Analysis
 
@@ -105,6 +129,7 @@ It currently checks things including:
 * Array size mismatches
 * Tuple field counts
 * List element types
+* Boolean type compatibility for `Bool` / `Boolean` variables
 * Invalid `Stop` usage
 * Invalid `Program.Stop()` usage
 
@@ -171,23 +196,9 @@ The compiler is divided into several stages:
 5. **Linking**
    The system C compiler links the object file and required libraries into an executable.
 
-The overall pipeline is:
+The overall pipeline runs in this order:
 
-ForgeLang source
-        ->
-       pest
-        ->
-       AST
-        ->
-Semantic Analysis
-        ->
-    Cranelift
-        ->
-Native Object
-        ->
-    System cc
-        ->
-    Executable
+`ForgeLang source` -> `pest parser` -> `AST` -> `Semantic analysis` -> `Cranelift IR` -> `Native object` -> `System cc` -> `Executable`
 
 ---
 

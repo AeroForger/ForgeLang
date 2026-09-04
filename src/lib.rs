@@ -1,4 +1,4 @@
-pub const VERSION: &str = "Alpha 3";
+pub const VERSION: &str = "Alpha 3.4";
 
 pub mod ast;
 pub mod codegen;

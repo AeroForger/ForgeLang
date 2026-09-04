@@ -1,0 +1,12 @@
+Open Nunction Main()
+{
+    Bool Flag = true;
+    Boolean Other = Flag;
+    Print(Flag);
+    Print(Other);
+
+    Flag = false;
+    Other = Flag;
+    Print(Flag);
+    Print(Other);
+}

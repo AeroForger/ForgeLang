@@ -1,0 +1,9 @@
+Open Nunction Main()
+{
+    Bool A = true;
+    Boolean B = A;
+    Print(B);
+    Boolean C = false;
+    Bool D = C;
+    Print(D);
+}

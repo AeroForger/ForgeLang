@@ -1,6 +1,7 @@
 use rayon::prelude::*;
+use std::collections::HashMap;
 
-use crate::ast::{AssignmentTarget, Expr, FunctionDecl, ForNode, Program, Statement, Subtype, TypeDecl};
+use crate::ast::{AssignmentTarget, Expr, FunctionDecl, ForNode, Param, Program, Statement, Subtype, TypeDecl};
 use crate::errors::{ForgeError, ForgeResult};
 
 #[derive(Debug, Clone, Copy)]
@@ -9,16 +10,92 @@ struct ValidationContext<'a> {
 	in_loop_or_if: bool,
 }
 
+struct Scope {
+	var_types: HashMap<String, TypeDecl>,
+}
+
+impl Scope {
+	fn new() -> Self {
+		Self { var_types: HashMap::new() }
+	}
+
+	fn from_params(params: &[Param]) -> Self {
+		let var_types = params.iter()
+			.map(|p| (p.name.clone(), p.type_decl.clone()))
+			.collect();
+		Self { var_types }
+	}
+
+	fn get(&self, name: &str) -> Option<&TypeDecl> {
+		self.var_types.get(name)
+	}
+
+	fn contains_key(&self, name: &str) -> bool {
+		self.var_types.contains_key(name)
+	}
+}
+
+fn collect_var_types(statements: &[Statement], scope: &mut Scope) {
+	for stmt in statements {
+		match stmt {
+			Statement::VarDecl(decl) => {
+				scope.var_types.insert(decl.name.clone(), decl.type_decl.clone());
+			}
+			Statement::If(node) => {
+				for (_, body) in &node.branches {
+					collect_var_types(body, scope);
+				}
+				if let Some(else_body) = &node.else_body {
+					collect_var_types(else_body, scope);
+				}
+			}
+			Statement::While(node) => {
+				collect_var_types(&node.body, scope);
+			}
+			Statement::For(node) => {
+				scope.var_types.insert(node.init.name.clone(), node.init.type_decl.clone());
+				collect_var_types(&node.body, scope);
+			}
+			Statement::FunctionDecl(func) => {
+				collect_var_types(&func.body, scope);
+			}
+			_ => {}
+		}
+	}
+}
+
+fn expr_is_bool(expr: &Expr, scope: &Scope) -> bool {
+	match expr {
+		Expr::Bool(_) => true,
+		Expr::Identifier(name) => matches!(scope.get(name), Some(TypeDecl::Bool)),
+		_ => false,
+	}
+}
+
+fn expr_type_name(expr: &Expr) -> &'static str {
+	match expr {
+		Expr::Bool(_) => "Bool",
+		Expr::Number(n) if n.is_float => "Float",
+		Expr::Number(_) => "Int",
+		Expr::Str(_) => "Weld",
+		Expr::ArrayLiteral(_) => "Array",
+		Expr::TupleLiteral(_) => "Tuple",
+		Expr::ListLiteral(_) => "List",
+		Expr::Input(_) => "Input",
+		_ => "value",
+	}
+}
+
 pub fn analyze(program: &Program) -> ForgeResult<()> {
 	// Validate loose top-level statements
 	let top_level_ctx = ValidationContext {
 		current_function: None,
 		in_loop_or_if: false,
 	};
-	let empty_params = std::collections::HashSet::new();
+	let empty_scope = Scope::new();
 	for statement in &program.statements {
 		if !matches!(statement, Statement::FunctionDecl(_)) {
-			validate_statement(statement, &empty_params, program, top_level_ctx)?;
+			validate_statement(statement, &empty_scope, program, top_level_ctx)?;
 		}
 	}
 
@@ -34,39 +111,42 @@ fn validate_function(function: &FunctionDecl, program: &Program) -> ForgeResult<
 		return Err(ForgeError::parse("Main cannot have parameters"));
 	}
 
-	let names: std::collections::HashSet<&str> = function.params.iter().map(|param| param.name.as_str()).collect();
+	let mut scope = Scope::from_params(&function.params);
+	collect_var_types(&function.body, &mut scope);
+
 	let context = ValidationContext {
 		current_function: Some(function.name.as_str()),
 		in_loop_or_if: false,
 	};
-	validate_statements(&function.body, &names, program, context)
+	validate_statements(&function.body, &scope, program, context)
 }
 
 fn validate_statements(
 	statements: &[Statement],
-	parameters: &std::collections::HashSet<&str>,
+	scope: &Scope,
 	program: &Program,
 	context: ValidationContext,
 ) -> ForgeResult<()> {
 	for statement in statements {
-		validate_statement(statement, parameters, program, context)?;
+		validate_statement(statement, scope, program, context)?;
 	}
 	Ok(())
 }
 
 fn validate_statement(
 	statement: &Statement,
-	parameters: &std::collections::HashSet<&str>,
+	scope: &Scope,
 	program: &Program,
 	context: ValidationContext,
 ) -> ForgeResult<()> {
 	match statement {
 		Statement::VarDecl(decl) => {
-			validate_var_decl(decl, parameters, program, context)?;
+			validate_var_decl(decl, scope, program, context)?;
 		}
 		Statement::Assignment(assignment) => {
-			validate_assignment_target(&assignment.target, parameters, program, context)?;
-			validate_expr(&assignment.value, parameters, program, context)?;
+			validate_assignment_target(&assignment.target, scope, program, context)?;
+			validate_expr(&assignment.value, scope, program, context)?;
+			validate_assignment_type(&assignment, scope)?;
 		}
 		Statement::If(node) => {
 			let branch_ctx = ValidationContext {
@@ -74,11 +154,11 @@ fn validate_statement(
 				..context
 			};
 			for (condition, body) in &node.branches {
-				validate_expr(condition, parameters, program, context)?;
-				validate_statements(body, parameters, program, branch_ctx)?;
+				validate_expr(condition, scope, program, context)?;
+				validate_statements(body, scope, program, branch_ctx)?;
 			}
 			if let Some(body) = &node.else_body {
-				validate_statements(body, parameters, program, branch_ctx)?;
+				validate_statements(body, scope, program, branch_ctx)?;
 			}
 		}
 		Statement::While(node) => {
@@ -86,11 +166,11 @@ fn validate_statement(
 				in_loop_or_if: true,
 				..context
 			};
-			validate_expr(&node.condition, parameters, program, context)?;
-			validate_statements(&node.body, parameters, program, loop_ctx)?;
+			validate_expr(&node.condition, scope, program, context)?;
+			validate_statements(&node.body, scope, program, loop_ctx)?;
 		}
         Statement::For(node) => {
-            validate_for_stmt(node, parameters, program, context)?;
+            validate_for_stmt(node, scope, program, context)?;
         }
         Statement::Stop => {
 			if context.current_function == Some("Main") {
@@ -100,13 +180,13 @@ fn validate_statement(
 				return Err(ForgeError::parse("Stop can only be used inside a loop or If statement"));
 			}
 		}
-		Statement::Print(print) => validate_expr(&print.expr, parameters, program, context)?,
+		Statement::Print(print) => validate_expr(&print.expr, scope, program, context)?,
 		Statement::Return(value) => {
 			if let Some(value) = value {
-				validate_expr(value, parameters, program, context)?;
+				validate_expr(value, scope, program, context)?;
 			}
 		}
-		Statement::ExprStmt(expr) => validate_expr(expr, parameters, program, context)?,
+		Statement::ExprStmt(expr) => validate_expr(expr, scope, program, context)?,
 		_ => {}
 	}
 	Ok(())
@@ -114,25 +194,35 @@ fn validate_statement(
 
 fn validate_for_stmt(
 	node: &ForNode,
-	parameters: &std::collections::HashSet<&str>,
+	scope: &Scope,
 	program: &Program,
 	context: ValidationContext,
 ) -> ForgeResult<()> {
 	let loop_ctx = ValidationContext { in_loop_or_if: true, ..context };
 	if let Some(init_value) = &node.init.initializer {
-		validate_expr(init_value, parameters, program, context)?;
+		validate_expr(init_value, scope, program, context)?;
 	}
-	validate_expr(&node.condition, parameters, program, context)?;
-	validate_statements(&node.body, parameters, program, loop_ctx)
+	validate_expr(&node.condition, scope, program, context)?;
+	validate_statements(&node.body, scope, program, loop_ctx)
 }
 
 fn validate_var_decl(
 	decl: &crate::ast::VarDecl,
-	parameters: &std::collections::HashSet<&str>,
+	scope: &Scope,
 	program: &Program,
 	context: ValidationContext,
 ) -> ForgeResult<()> {
 	match &decl.type_decl {
+		TypeDecl::Bool => {
+			if let Some(init) = &decl.initializer {
+				if !expr_is_bool(init, scope) {
+					return Err(ForgeError::parse(format!(
+						"Type error: cannot assign {} to Bool variable '{}'",
+						expr_type_name(init), decl.name
+					)));
+				}
+			}
+		}
 		TypeDecl::Ore(Some(expected_size)) => {
 			if let Some(init) = &decl.initializer {
 				if let Expr::ArrayLiteral(elements) = init {
@@ -188,7 +278,7 @@ fn validate_var_decl(
 	}
 
 	if let Some(initializer) = &decl.initializer {
-		validate_expr(initializer, parameters, program, context)?;
+		validate_expr(initializer, scope, program, context)?;
 	}
 	Ok(())
 }
@@ -204,25 +294,42 @@ fn expr_matches_subtype(expr: &Expr, expected: &Subtype) -> bool {
 
 fn validate_assignment_target(
 	target: &AssignmentTarget,
-	parameters: &std::collections::HashSet<&str>,
+	scope: &Scope,
 	program: &Program,
 	context: ValidationContext,
 ) -> ForgeResult<()> {
 	match target {
 		AssignmentTarget::Var(_) => Ok(()),
 		AssignmentTarget::Member { object, .. } => {
-			validate_assignment_target(object, parameters, program, context)
+			validate_assignment_target(object, scope, program, context)
 		}
 		AssignmentTarget::Index { object, index } => {
-			validate_assignment_target(object, parameters, program, context)?;
-			validate_expr(index, parameters, program, context)
+			validate_assignment_target(object, scope, program, context)?;
+			validate_expr(index, scope, program, context)
 		}
 	}
 }
 
+fn validate_assignment_type(
+	assignment: &crate::ast::AssignmentNode,
+	scope: &Scope,
+) -> ForgeResult<()> {
+	if let AssignmentTarget::Var(name) = &assignment.target {
+		if let Some(TypeDecl::Bool) = scope.get(name) {
+			if !expr_is_bool(&assignment.value, scope) {
+				return Err(ForgeError::parse(format!(
+					"Type error: cannot assign {} to Bool variable '{}'",
+					expr_type_name(&assignment.value), name
+				)));
+			}
+		}
+	}
+	Ok(())
+}
+
 fn validate_expr(
 	expr: &Expr,
-	parameters: &std::collections::HashSet<&str>,
+	scope: &Scope,
 	program: &Program,
 	context: ValidationContext,
 ) -> ForgeResult<()> {
@@ -236,7 +343,7 @@ fn validate_expr(
 				return Err(ForgeError::parse(format!("Function {} expects {} arguments, got {}", callee, function.params.len(), args.len())));
 			}
 			for arg in args {
-				validate_expr(arg, parameters, program, context)?;
+				validate_expr(arg, scope, program, context)?;
 			}
 		}
 		Expr::NamespaceCall { namespace, method, args } => {
@@ -255,13 +362,13 @@ fn validate_expr(
 				return Err(ForgeError::parse(format!("Unknown namespace: {}", namespace)));
 			}
 			for arg in args {
-				validate_expr(arg, parameters, program, context)?;
+				validate_expr(arg, scope, program, context)?;
 			}
 		}
 		Expr::MethodCall { object, method, args } => {
-			validate_expr(object, parameters, program, context)?;
+			validate_expr(object, scope, program, context)?;
 			for arg in args {
-				validate_expr(arg, parameters, program, context)?;
+				validate_expr(arg, scope, program, context)?;
 			}
 			match method.as_str() {
 				"Add" | "Remove" | "RemoveAt" | "Length" | "Len" => Ok(()),
@@ -269,21 +376,21 @@ fn validate_expr(
 			}?;
 		}
 		Expr::IndexAccess { object, index } => {
-			validate_expr(object, parameters, program, context)?;
-			validate_expr(index, parameters, program, context)?;
+			validate_expr(object, scope, program, context)?;
+			validate_expr(index, scope, program, context)?;
 		}
 		Expr::ArrayLiteral(elements) | Expr::TupleLiteral(elements) | Expr::ListLiteral(elements) => {
 			for elem in elements {
-				validate_expr(elem, parameters, program, context)?;
+				validate_expr(elem, scope, program, context)?;
 			}
 		}
 		Expr::BinaryOp { lhs, rhs, .. } => {
-			validate_expr(lhs, parameters, program, context)?;
-			validate_expr(rhs, parameters, program, context)?;
+			validate_expr(lhs, scope, program, context)?;
+			validate_expr(rhs, scope, program, context)?;
 		}
-		Expr::UnaryOp { operand, .. } => validate_expr(operand, parameters, program, context)?,
-		Expr::MemberAccess { object, .. } => validate_expr(object, parameters, program, context)?,
-		Expr::Identifier(name) if name.contains('.') && !parameters.contains(name.as_str()) => {
+		Expr::UnaryOp { operand, .. } => validate_expr(operand, scope, program, context)?,
+		Expr::MemberAccess { object, .. } => validate_expr(object, scope, program, context)?,
+		Expr::Identifier(name) if name.contains('.') && !scope.contains_key(name) => {
 			return Err(ForgeError::parse(format!("shared member access is not allowed: {}", name)));
 		}
 		_ => {}
