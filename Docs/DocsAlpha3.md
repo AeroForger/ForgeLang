@@ -51,12 +51,16 @@ The compiler is **Furnace**.
 8. [Integers](#8-integers)
 9. [Floating-Point Numbers](#9-floating-point-numbers)
 10. [Strings](#10-strings)
+
     10.1. [String Escapes](#101-string-escapes)
 11. [String Interpolation](#11-string-interpolation)
 12. [Input](#12-input)
 13. [Operators](#13-operators)
+
     13.1. [Arithmetic](#131-arithmetic)
+
     13.2. [Power](#132-power)
+
     13.3. [Increment and Decrement](#133-increment-and-decrement)
 14. [Unary Operators](#14-unary-operators)
 15. [Comparisons](#15-comparisons)
@@ -1352,7 +1356,7 @@ ForgeLang provides `Use` and `Using` syntax for imports.
 ## 29.1 Use
 
 ```forge
-Use std.io;
+Use System.Sort;
 ```
 
 `Use` specifies a module path.
@@ -1360,7 +1364,7 @@ Use std.io;
 ## 29.2 Using
 
 ```forge
-Using std.io: Print;
+Using System.Math: Sqrt();
 ```
 
 `Using` specifies an item from a module.
