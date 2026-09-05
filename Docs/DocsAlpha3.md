@@ -6,12 +6,12 @@ ForgeLang source files use the `.anvil` extension. If you drop one on the floor,
 
 The compiler is **Furnace**.
 
-> **Status:** Alpha 3.4
-> **Compiler:** Furnace
-> **Implementation:** Rust
-> **Parser:** pest
-> **Backend:** Cranelift
-> **Output:** Native object code
+> **Status:** Alpha 3.4 \
+> **Compiler:** Furnace \
+> **Implementation:** Rust \
+> **Parser:** pest \
+> **Backend:** Cranelift \
+> **Output:** Native object code 
 
 ---
 
@@ -75,6 +75,7 @@ The compiler is **Furnace**.
 24. [Scope](#24-scope)
 25. [Comments](#25-comments)
 26. [Visibility](#26-visibility)
+
     26.1. [`Showcase`](#261-showcase)
 27. [Data Declarations](#27-data-declarations)
 28. [Object Instantiation](#28-object-instantiation)
@@ -1576,11 +1577,35 @@ Furnace is built using Cargo:
 cargo build --release
 ```
 
-The release compiler is located at:
+The resulting release compiler is located at:
 
-```
+```text
 target/release/furnace
 ```
+
+You can also install Furnace using Cargo:
+
+```fish
+cd ForgeLang
+cargo install --path .
+```
+
+After installation, Cargo places `furnace` in its executable path, allowing you to invoke it directly without specifying `target/release/furnace`.
+
+For example:
+
+```fish
+furnace compile main.anvil linux
+furnace run main.anvil
+furnace -help
+furnace --help
+furnace -version
+furnace --version
+```
+
+This means you can use `furnace` directly from any directory, provided Cargo's binary directory is available in your `PATH`.
+
+Documentation will use `cargo build --release` instead of `cargo install --path .`
 
 ## 32.2 Compile a ForgeLang Program
 
@@ -1646,6 +1671,7 @@ The current version is:
 ```rust
 pub const VERSION: &str = "Alpha 3.4";
 ```
+> Fancy way of saying Alpha 3.4
 
 Version information can be requested with:
 
@@ -1979,7 +2005,7 @@ ANTLR
 LLVM
 ```
 
-Alpha 3.4 uses:
+Alpha 3.x+ uses:
 
 ```
 Rust

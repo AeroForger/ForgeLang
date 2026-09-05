@@ -16,6 +16,30 @@ The release compiler is located at:
 target/release/furnace
 ```
 
+You can also install Furnace using Cargo:
+
+```fish
+cd ForgeLang
+cargo install --path .
+```
+
+After installation, Cargo places `furnace` in its executable path, allowing you to invoke it directly without specifying `target/release/furnace`.
+
+For example:
+
+```fish
+furnace compile main.anvil linux
+furnace run main.anvil
+furnace -help
+furnace --help
+furnace -version
+furnace --version
+```
+
+This means you can use `furnace` directly from any directory, provided Cargo's binary directory is available in your `PATH`.
+
+Documentation will use `cargo build --release` instead of `cargo install --path .` 
+
 ## Compile a ForgeLang Program
 
 The current CLI command is:
