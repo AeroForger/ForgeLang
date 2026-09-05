@@ -17,12 +17,12 @@ And > Or > Xor
 Example:
 
 ```forge
-Number Int A = 12;
-Number Int B = 10;
+Int A = 12;
+Int B = 10;
 
-Number Int C = A And B;
-Number Int D = A Or B;
-Number Int E = A Xor B;
+Int C = A And B;
+Int D = A Or B;
+Int E = A Xor B;
 ```
 
 These operators currently operate on integer operands. They are not yet a general-purpose boolean logic system for non-integer values.

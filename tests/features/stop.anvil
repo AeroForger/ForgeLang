@@ -1,6 +1,6 @@
 Nunction TestWhileStop()
 {
-    Number Int x = 0;
+    Int x = 0;
     While (x < 10)
     {
         If (x == 3)
@@ -15,7 +15,7 @@ Nunction TestWhileStop()
 
 Nunction TestIfStop()
 {
-    Number Int y = 5;
+    Int y = 5;
     If (y == 5)
     {
         Print("in if");

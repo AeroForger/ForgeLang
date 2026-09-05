@@ -7,7 +7,7 @@ Example:
 ```forge
 // This is a comment
 
-Number Int I = 0;
+Int I = 0;
 ```
 
 Comments are ignored by the compiler.

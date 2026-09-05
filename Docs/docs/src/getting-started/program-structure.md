@@ -7,7 +7,7 @@ A simple program looks like:
 ```forge
 Open Nunction Main()
 {
-    Number Int I = 0;
+    Int I = 0;
 
     While (I < 10)
     {

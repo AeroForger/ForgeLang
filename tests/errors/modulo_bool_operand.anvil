@@ -1,6 +1,6 @@
 Open Nunction Main()
 {
     Bool flag = true;
-    Number Int x = 10;
+    Int x = 10;
     Print(x % flag);
 }

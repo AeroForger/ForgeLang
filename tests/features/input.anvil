@@ -1,7 +1,7 @@
 Open Nunction Main()
 {
-    Number Int age = Input(Int);
-    Number Float rate = Input(Float);
+    Int age = Input(Int);
+    Float rate = Input(Float);
     Weld name = Input();
     Print(name);
     Print(age);

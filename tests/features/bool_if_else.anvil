@@ -1,7 +1,7 @@
 Open Nunction Main()
 {
     Bool Flag = true;
-    Number Int Counter = 0;
+    Int Counter = 0;
 
     If (Flag)
     {

@@ -8,13 +8,19 @@ The primary primitive types are:
 
 | Type           | Purpose               |
 | -------------- | --------------------- |
-| `Number Int`   | Integer values        |
-| `Number Float` | Floating-point values |
-| `Weld`         | String values         |
+| `Number`       | Numeric type category |
+| `Int`   | Integer values        |
+| `Float` | Floating-point values |
+| `Weld`         | Canonical string type |
+| `String`       | Alias of `Weld`       |
 | `Bool`         | Boolean values        |
 | `Boolean`      | Boolean values        |
 
 `Bool` and `Boolean` refer to the same type and can be used interchangeably.
+
+`Int` and `Float` are distinct concrete types in the `Number` category. Variable
+declarations use the concrete type directly, such as `Int Count = 0;` or
+`Float Ratio = 1.5;`.
 
 ForgeLang uses static type checking.
 

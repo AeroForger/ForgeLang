@@ -1,6 +1,6 @@
 Open Nunction Main()
 {
-    For (Number Int i = 0; i < 6; i++)
+    For (Int i = 0; i < 6; i++)
     {
         If (i == 3)
         {

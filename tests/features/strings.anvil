@@ -11,7 +11,7 @@ Player John
 Open Nunction Main()
 {
     Print("Line 1\nLine 2");
-    Number Int Z = 5;
+    Int Z = 5;
     Print(\V"Tabbed:\t{Z}");
     Print("100% ForgeLang");
     Print(\V"Hello {John.name}!");

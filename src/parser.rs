@@ -78,7 +78,7 @@ fn build_function_decl(pair: Pair<Rule>) -> ForgeResult<FunctionDecl> {
         "Int" => RetKind::Int,
         "Float" => RetKind::Float,
         "Generic" => RetKind::Generic,
-        "Weld" => RetKind::Weld,
+        "Weld" | "String" => RetKind::Weld,
         "Ore" => RetKind::Ore,
         "Materials" => RetKind::Materials,
         "function" => RetKind::Function,
@@ -242,7 +242,7 @@ fn build_type_decl(pair: Pair<Rule>) -> ForgeResult<TypeDecl> {
     match inner.as_rule() {
         Rule::number_type => {
             let st = inner.clone().into_inner()
-                .find(|p| p.as_rule() == Rule::subtype)
+                .find(|p| p.as_rule() == Rule::numeric_subtype)
                 .unwrap()
                 .as_str();
             Ok(TypeDecl::Number(parse_subtype(st)))
@@ -251,7 +251,9 @@ fn build_type_decl(pair: Pair<Rule>) -> ForgeResult<TypeDecl> {
         Rule::bool_type => Ok(TypeDecl::Bool),
         Rule::ore_type => {
             let mut it = inner.into_inner().filter(|p| p.as_rule() != Rule::kw_ore);
-            let first = it.next().unwrap();
+            let Some(first) = it.next() else {
+                return Ok(TypeDecl::Ore(None));
+            };
             match first.as_rule() {
                 Rule::integer => {
                     let size: i64 = first.as_str().parse().map_err(|e| ForgeError::parse(format!("invalid integer: {}", e)))?;
@@ -612,7 +614,7 @@ fn parse_subtype(s: &str) -> Subtype {
         "Int" => Subtype::Int,
         "Float" => Subtype::Float,
         "Generic" => Subtype::Generic,
-        "Weld" => Subtype::Weld,
+        "Weld" | "String" => Subtype::Weld,
         _ => unreachable!(),
     }
 }
@@ -620,7 +622,7 @@ fn parse_subtype(s: &str) -> Subtype {
 #[cfg(test)]
 mod tests {
     use super::parse_program;
-    use crate::ast::{Statement, UseNode};
+    use crate::ast::{Statement, Subtype, TypeCategory, TypeDecl, UseNode};
 
     #[test]
     fn preserves_use_path() {
@@ -637,5 +639,44 @@ mod tests {
             path: vec!["System".into(), "Sort".into()],
             item: Some("MergeSort".into()),
         });
+    }
+
+    #[test]
+    fn parses_numeric_subtypes_without_number_prefix() {
+        let program = parse_program("Int x = 1; Float y = 1.5;").unwrap();
+
+        let Statement::VarDecl(int_decl) = &program.statements[0] else { panic!("expected Int declaration"); };
+        assert_eq!(int_decl.type_decl, TypeDecl::Number(Subtype::Int));
+        assert_eq!(int_decl.type_decl.category(), Some(TypeCategory::Number));
+
+        let Statement::VarDecl(float_decl) = &program.statements[1] else { panic!("expected Float declaration"); };
+        assert_eq!(float_decl.type_decl, TypeDecl::Number(Subtype::Float));
+        assert_eq!(float_decl.type_decl.category(), Some(TypeCategory::Number));
+        assert_ne!(int_decl.type_decl, float_decl.type_decl);
+    }
+
+    #[test]
+    fn empty_ore_alias_matches_empty_keyword_form() {
+        let keyword_form = parse_program("Ore[EMPTY] items = [100, 200, 300, 400,];").unwrap();
+        let alias_form = parse_program("Ore[] items = [100, 200, 300, 400,];").unwrap();
+
+        let Statement::VarDecl(keyword_decl) = &keyword_form.statements[0] else {
+            panic!("expected variable declaration");
+        };
+        let Statement::VarDecl(alias_decl) = &alias_form.statements[0] else {
+            panic!("expected variable declaration");
+        };
+
+        assert_eq!(keyword_decl.type_decl, alias_decl.type_decl);
+    }
+
+    #[test]
+    fn resolves_string_alias_to_weld() {
+        let program = parse_program("String name = \"Astrix\"; Weld other = name;").unwrap();
+
+        let Statement::VarDecl(string_decl) = &program.statements[0] else { panic!("expected String declaration"); };
+        let Statement::VarDecl(weld_decl) = &program.statements[1] else { panic!("expected Weld declaration"); };
+        assert_eq!(string_decl.type_decl, TypeDecl::Weld);
+        assert_eq!(weld_decl.type_decl, TypeDecl::Weld);
     }
 }

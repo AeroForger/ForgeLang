@@ -14,7 +14,7 @@ While (Condition)
 Example:
 
 ```forge
-Number Int I = 0;
+Int I = 0;
 
 While (I < 10)
 {
@@ -29,8 +29,8 @@ The condition is evaluated before every iteration.
 `While` loops can be nested:
 
 ```forge
-Number Int I = 0;
-Number Int V = 0;
+Int I = 0;
+Int V = 0;
 
 While (I < 100)
 {

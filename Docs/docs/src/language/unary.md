@@ -5,19 +5,19 @@ Alpha 3.4 supports unary negation and unary plus.
 Example:
 
 ```forge
-Number Int Value = -10;
+Int Value = -10;
 ```
 
 Unary negation can also be applied to an expression:
 
 ```forge
-Number Int Result = -(A + B);
+Int Result = -(A + B);
 ```
 
 Unary plus is a no-op:
 
 ```forge
-Number Int Value = +42;
+Int Value = +42;
 ```
 
 It exists because sometimes a language designer looks at unary minus and thinks, "why should minus get all the attention?"

@@ -1,11 +1,11 @@
 Open Nunction Main()
 {
-    Number Int total = 0;
-    Number Int i = 0;
+    Int total = 0;
+    Int i = 0;
 
     While (i < 4)
     {
-        Number Int j = 0;
+        Int j = 0;
         While (j < 5)
         {
             total = total + i * 10 + j;

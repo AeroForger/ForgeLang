@@ -42,9 +42,9 @@ Nunction Tick()
 
 Open Nunction Main()
 {
-    Number Int I = 0;
-    Number Int A = 0;
-    Number Int B = 0;
+    Int I = 0;
+    Int A = 0;
+    Int B = 0;
 
     While (I < 100000)
     {
@@ -72,7 +72,7 @@ Open Nunction Main()
 
 Alpha 3.4 currently supports:
 
-* **Types:** `Number Int`, `Number Float`, `Weld`, `Bool` / `Boolean`
+* **Types:** `Number`, `Int`, `Float`, `Weld`, `String`, `Bool` / `Boolean`
 * **Control flow:** `If`, `Else If`, `Else`, `While`, `For`
 * **Functions:** `Nunction`, `function`, zero-argument calls and call inlining
 * **Strings:** Plain strings and `\V` interpolation

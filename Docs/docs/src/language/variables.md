@@ -5,7 +5,7 @@ Variables are declared using a type, a name, and optionally an initial value.
 Example:
 
 ```forge
-Number Int I = 0;
+Int I = 0;
 ```
 
 A variable can later be assigned:
@@ -32,8 +32,8 @@ Type Name = Value;
 Examples:
 
 ```forge
-Number Int Age = 14;
-Number Float Height = 181.0;
+Int Age = 14;
+Float Height = 181.0;
 Weld Name = "ForgeLang";
 Ore[3] Numbers = [10, 20, 30,];
 Materials Int List = (1, 2, 3,);

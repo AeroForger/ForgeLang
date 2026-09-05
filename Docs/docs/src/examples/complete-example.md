@@ -61,7 +61,7 @@ Open Nunction Main()
     Print(Numbers[0]);
 
     // While loop
-    Number Int I = 0;
+    Int I = 0;
 
     While (I < 5)
     {
@@ -70,7 +70,7 @@ Open Nunction Main()
     }
 
     // For loop
-    For (Number Int J = 0; J < 3; J++)
+    For (Int J = 0; J < 3; J++)
     {
         Print(\V"J = {J}");
     }
@@ -82,7 +82,7 @@ Open Nunction Main()
     Print(Flag);
 
     // Stop inside a loop
-    Number Int K = 0;
+    Int K = 0;
 
     While (K < 10)
     {
@@ -99,8 +99,8 @@ Open Nunction Main()
     Tick();
 
     // Bitwise operations
-    Number Int A = 12;
-    Number Int B = 10;
+    Int A = 12;
+    Int B = 10;
 
     Print(A And B);
     Print(A Or B);

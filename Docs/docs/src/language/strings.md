@@ -1,11 +1,13 @@
 # Strings
 
-Strings use the `Weld` type.
+`Weld` is the canonical string type. `String` is an alias for `Weld`; both
+names resolve to the same internal type.
 
 Example:
 
 ```forge
 Weld Name = "ForgeLang";
+String Alias = Name;
 ```
 
 String literals use double quotes:

@@ -1,0 +1,9 @@
+Open Nunction Main()
+{
+    Weld name = "Astrix";
+    String alias = name;
+    Weld round_trip = alias;
+    Print(alias);
+    Print(round_trip);
+    Print(\V"{alias}:{round_trip}");
+}

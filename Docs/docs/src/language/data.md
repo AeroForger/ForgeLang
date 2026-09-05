@@ -7,7 +7,7 @@ Example:
 ```forge
 Data Person
 {
-    Number Int Age;
+    Int Age;
     Weld Name;
 }
 ```
@@ -19,8 +19,8 @@ The `Data` declaration can use a visibility modifier:
 ```forge
 Open Data Point
 {
-    Number Int X;
-    Number Int Y;
+    Int X;
+    Int Y;
 }
 ```
 

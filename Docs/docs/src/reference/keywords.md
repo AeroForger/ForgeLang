@@ -9,10 +9,11 @@ This page summarizes the keywords and reserved terms that appear in the current 
 | `Open` | Visibility modifier |
 | `Closed` | Visibility modifier |
 | `Showcase` | Visibility modifier currently parsed but not code-generated |
-| `Number` | Type prefix for numeric values |
-| `Int` | Integer type suffix |
-| `Float` | Floating-point suffix |
+| `Number` | Internal category for numeric types |
+| `Int` | Integer type |
+| `Float` | Floating-point type |
 | `Weld` | String type |
+| `String` | Alias of the canonical `Weld` type |
 | `Bool` / `Boolean` | Boolean type |
 | `Ore` | Array or tuple type indicator |
 | `Materials` | List type |

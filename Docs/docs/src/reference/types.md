@@ -4,9 +4,11 @@ This page collects the core ForgeLang types and points to the detailed language 
 
 | Type | Description | Details |
 | ---- | ----------- | ------- |
-| `Number Int` | Integer value | See [Integers](../language/integers.md) |
-| `Number Float` | Floating-point value | See [Floating-Point Numbers](../language/floating-point.md) |
+| `Number` | Numeric type category | See [Types](../language/types.md) |
+| `Int` | Integer value | See [Integers](../language/integers.md) |
+| `Float` | Floating-point value | See [Floating-Point Numbers](../language/floating-point.md) |
 | `Weld` | String value | See [Strings](../language/strings.md) |
+| `String` | Alias of `Weld` | See [Strings](../language/strings.md) |
 | `Bool` / `Boolean` | Boolean value | See [Types](../language/types.md) |
 | `Ore[...]` | Fixed-size array | See [Types](../language/types.md) |
 | `Ore(...)` | Tuple with named fields | See [Types](../language/types.md) |

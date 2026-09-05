@@ -1,10 +1,10 @@
 Open Nunction Main()
 {
-    Number Float FX = 20.0;
-    Number Float FY = 2.5;
-    Number Float FSum = FX / FY;
+    Float FX = 20.0;
+    Float FY = 2.5;
+    Float FSum = FX / FY;
     Print(FSum);
-    Number Int x = 10;
-    Number Float mixed = x + FY;
+    Int x = 10;
+    Float mixed = x + FY;
     Print(mixed);
 }

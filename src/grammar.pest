@@ -35,13 +35,14 @@ using_item      = { ident ~ ("(" ~ ")")? }
 
 // --- Modifiers & types ---
 modifier        = { kw_open | kw_closed | kw_showcase }
-subtype         = { kw_int | kw_float | kw_weld | kw_generic }
+subtype         = { kw_int | kw_float | kw_weld | kw_string | kw_generic }
 type_decl       = { number_type | weld_type | bool_type | ore_type | materials_type }
 
-number_type     = { kw_number ~ subtype }
-weld_type       = { kw_weld }
+number_type     = { kw_number? ~ numeric_subtype }
+numeric_subtype = { kw_int | kw_float }
+weld_type       = { kw_weld | kw_string }
 bool_type       = { kw_bool | kw_boolean }
-ore_type        = { (kw_ore ~ "[" ~ (integer | kw_empty) ~ "]") | (kw_ore ~ "(" ~ tuple_field ~ ("," ~ tuple_field)* ~ ","? ~ ")") }
+ore_type        = { (kw_ore ~ "[" ~ (integer | kw_empty)? ~ "]") | (kw_ore ~ "(" ~ tuple_field ~ ("," ~ tuple_field)* ~ ","? ~ ")") }
 tuple_field     = { subtype ~ ident }
 materials_type  = { kw_materials ~ subtype ~ kw_new? }
 
@@ -62,7 +63,7 @@ member_init     = { ident ~ ("." ~ ident)* ~ "=" ~ expr ~ (";" | ",")? }
 
 // --- Functions ---
 function_decl   = { modifier? ~ ret_kind ~ ident ~ "(" ~ param_list? ~ ")" ~ block }
-ret_kind        = { kw_int | kw_float | kw_generic | kw_weld | kw_ore | kw_materials | kw_function | kw_nunction }
+ret_kind        = { kw_int | kw_float | kw_generic | kw_weld | kw_string | kw_ore | kw_materials | kw_function | kw_nunction }
 
 param_list      = { param ~ ("," ~ param)* }
 param           = { type_decl ~ ident }
@@ -132,6 +133,7 @@ kw_closed     = ${ "Closed" ~ !ident_char }
 kw_showcase   = ${ "Showcase" ~ !ident_char }
 kw_number     = ${ "Number" ~ !ident_char }
 kw_weld       = ${ "Weld" ~ !ident_char }
+kw_string     = ${ "String" ~ !ident_char }
 kw_ore        = ${ "Ore" ~ !ident_char }
 kw_materials  = ${ "Materials" ~ !ident_char }
 kw_data       = ${ "Data" ~ !ident_char }
@@ -171,7 +173,7 @@ kw_false      = ${ "false" ~ !ident_char }
 ident              = ${ !keyword ~ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
 ident_char         = _{ ASCII_ALPHANUMERIC | "_" }
 keyword            = _{ 
-    kw_open | kw_closed | kw_showcase | kw_number | kw_weld | kw_ore
+    kw_open | kw_closed | kw_showcase | kw_number | kw_weld | kw_string | kw_ore
     | kw_materials | kw_data | kw_int | kw_float | kw_generic | kw_function
     | kw_nunction | kw_return | kw_if | kw_while | kw_else | kw_switch | kw_deal
     | kw_base | kw_do | kw_fail | kw_final | kw_and | kw_or | kw_xor

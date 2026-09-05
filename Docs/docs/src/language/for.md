@@ -14,7 +14,7 @@ For (Init; Condition; Increment)
 Example:
 
 ```forge
-For (Number Int I = 0; I < 10; I++)
+For (Int I = 0; I < 10; I++)
 {
     Print(\V"{I}");
 }
@@ -31,7 +31,7 @@ The increment expression currently uses `++` or `--`.
 Example:
 
 ```forge
-For (Number Int I = 10; I > 0; I--)
+For (Int I = 10; I > 0; I--)
 {
     Print(\V"{I}");
 }

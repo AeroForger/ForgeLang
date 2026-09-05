@@ -9,9 +9,11 @@ Open Nunction Main()
     Print(FixedNums[1]);
     Print(FixedNums.Length);
 
-    Ore[EMPTY] InferredNums = [100, 200, 300, 400,];
+    Ore[] InferredNums = [100, 200, 300, 400,];
+    Ore[EMPTY] InferredNums2 = [500, 600, 700, 800,];
     Print(InferredNums[0]);
     Print(InferredNums[3]);
+    Print(InferredNums2[0]);
     Print(InferredNums.Length);
 }
 

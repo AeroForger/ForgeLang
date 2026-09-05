@@ -1,7 +1,7 @@
 Open Nunction Main()
 {
     Bool Running = true;
-    Number Int Count = 0;
+    Int Count = 0;
 
     While (Running)
     {

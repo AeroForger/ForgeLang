@@ -3,25 +3,25 @@
 Integer values use:
 
 ```forge
-Number Int
+Int
 ```
 
 Example:
 
 ```forge
-Number Int Counter = 0;
+Int Counter = 0;
 ```
 
 Integer arithmetic supports:
 
 ```forge
-Number Int A = 10;
-Number Int B = 5;
+Int A = 10;
+Int B = 5;
 
-Number Int Add = A + B;
-Number Int Subtract = A - B;
-Number Int Multiply = A * B;
-Number Int Divide = A / B;
+Int Add = A + B;
+Int Subtract = A - B;
+Int Multiply = A * B;
+Int Divide = A / B;
 ```
 
 Integer variables can be modified:

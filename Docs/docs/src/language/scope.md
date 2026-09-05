@@ -7,11 +7,11 @@ Example:
 ```forge
 Open Nunction Main()
 {
-    Number Int I = 10;
+    Int I = 10;
 
     If (I > 0)
     {
-        Number Int V = 20;
+        Int V = 20;
     }
 }
 ```

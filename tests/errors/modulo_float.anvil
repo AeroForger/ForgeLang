@@ -1,7 +1,7 @@
 Open Nunction Main()
 {
-    Number Float x = 5.5;
-    Number Float y = 2.0;
+    Float x = 5.5;
+    Float y = 2.0;
 
     Print(x % y);
 }

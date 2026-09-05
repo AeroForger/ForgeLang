@@ -1,8 +1,8 @@
 Open Nunction Main()
 {
-    Number Int x = 10;
-    Number Int y = 3;
-    Number Int result = x % y;
+    Int x = 10;
+    Int y = 3;
+    Int result = x % y;
     Print(result);
     Print(result * 10);
     Print(result + 100);

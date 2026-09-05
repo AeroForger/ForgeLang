@@ -35,7 +35,7 @@ Zero-argument `Nunction` calls can currently be expanded directly into the calle
 Example syntax:
 
 ```forge
-function Add(Number Int A, Number Int B)
+function Add(Int A, Int B)
 {
     return A + B;
 }
@@ -44,7 +44,7 @@ function Add(Number Int A, Number Int B)
 A returned value can be used like this:
 
 ```forge
-Number Int Result = Add(10, 20);
+Int Result = Add(10, 20);
 ```
 
 Return-value code generation is not currently implemented.
@@ -56,7 +56,7 @@ The syntax exists because eventually the compiler will have to deal with functio
 The grammar accepts parameter declarations:
 
 ```forge
-Nunction PrintNumber(Number Int Value)
+Nunction PrintNumber(Int Value)
 {
     Print(\V"{Value}");
 }

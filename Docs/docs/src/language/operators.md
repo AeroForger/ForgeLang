@@ -16,14 +16,14 @@ Alpha 3.4 supports arithmetic, comparison, bitwise, unary, and loop increment op
 Example:
 
 ```forge
-Number Int A = 10;
-Number Int B = 5;
+Int A = 10;
+Int B = 5;
 
-Number Int C = A + B;
-Number Int D = A - B;
-Number Int E = A * B;
-Number Int F = A / B;
-Number Int G = A % B;
+Int C = A + B;
+Int D = A - B;
+Int E = A * B;
+Int F = A / B;
+Int G = A % B;
 ```
 
 `%` requires integer operands and returns the integer remainder.
@@ -33,7 +33,7 @@ Number Int G = A % B;
 The `**` operator performs exponentiation.
 
 ```forge
-Number Int Result = 2 ** 8;
+Int Result = 2 ** 8;
 ```
 
 Power expressions are right-associative.
@@ -59,7 +59,7 @@ The current implementation lowers power operations through the C `pow` function.
 Example:
 
 ```forge
-For (Number Int I = 0; I < 10; I++)
+For (Int I = 0; I < 10; I++)
 {
     Print(\V"{I}");
 }
@@ -68,7 +68,7 @@ For (Number Int I = 0; I < 10; I++)
 Decrementing is also supported:
 
 ```forge
-For (Number Int I = 10; I > 0; I--)
+For (Int I = 10; I > 0; I--)
 {
     Print(\V"{I}");
 }

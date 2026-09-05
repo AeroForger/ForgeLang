@@ -1,10 +1,10 @@
 Open Nunction Main()
 {
-    Number Int outer = 0;
+    Int outer = 0;
 
     While (outer < 3)
     {
-        Number Int inner = 0;
+        Int inner = 0;
 
         While (inner < 3)
         {

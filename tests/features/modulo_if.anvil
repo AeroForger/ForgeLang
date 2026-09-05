@@ -1,6 +1,6 @@
 Open Nunction Main()
 {
-    Number Int x = 10;
+    Int x = 10;
 
     If (x % 2 == 0)
     {

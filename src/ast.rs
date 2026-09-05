@@ -16,6 +16,24 @@ pub enum TypeDecl {
     Materials(Subtype, bool /* New */),
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TypeCategory {
+    Number,
+}
+
+impl TypeDecl {
+    pub fn category(&self) -> Option<TypeCategory> {
+        match self {
+            TypeDecl::Number(_) => Some(TypeCategory::Number),
+            _ => None,
+        }
+    }
+
+    pub fn is_number(&self) -> bool {
+        self.category() == Some(TypeCategory::Number)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum RetKind {
     Int, Float, Generic, Weld, Ore, Materials,

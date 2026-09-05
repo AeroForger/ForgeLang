@@ -5,7 +5,7 @@ The grammar can represent recursive functions.
 Example:
 
 ```forge
-function Countdown(Number Int I)
+function Countdown(Int I)
 {
     If (I > 0)
     {

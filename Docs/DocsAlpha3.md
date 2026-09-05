@@ -139,7 +139,7 @@ A simple program looks like:
 ```forge
 Open Nunction Main()
 {
-    Number Int I = 0;
+    Int I = 0;
 
     While (I < 10)
     {
@@ -201,7 +201,7 @@ Zero-argument `Nunction` calls can currently be expanded directly into the calle
 Example syntax:
 
 ```forge
-function Add(Number Int A, Number Int B)
+function Add(Int A, Int B)
 {
     return A + B;
 }
@@ -210,7 +210,7 @@ function Add(Number Int A, Number Int B)
 A returned value can be used like this:
 
 ```forge
-Number Int Result = Add(10, 20);
+Int Result = Add(10, 20);
 ```
 
 Return-value code generation is not currently implemented.
@@ -222,7 +222,7 @@ The syntax exists because eventually the compiler will have to deal with functio
 The grammar accepts parameter declarations:
 
 ```forge
-Nunction PrintNumber(Number Int Value)
+Nunction PrintNumber(Int Value)
 {
     Print(\V"{Value}");
 }
@@ -304,7 +304,7 @@ Variables are declared using a type, a name, and optionally an initial value.
 Example:
 
 ```forge
-Number Int I = 0;
+Int I = 0;
 ```
 
 A variable can later be assigned:
@@ -331,8 +331,8 @@ Type Name = Value;
 Examples:
 
 ```forge
-Number Int Age = 14;
-Number Float Height = 181.0;
+Int Age = 14;
+Float Height = 181.0;
 Weld Name = "ForgeLang";
 Ore[3] Numbers = [10, 20, 30,];
 Materials Int List = (1, 2, 3,);
@@ -366,13 +366,19 @@ The primary primitive types are:
 
 | Type           | Purpose               |
 | -------------- | --------------------- |
-| `Number Int`   | Integer values        |
-| `Number Float` | Floating-point values |
-| `Weld`         | String values         |
+| `Number`       | Numeric type category |
+| `Int`   | Integer values        |
+| `Float` | Floating-point values |
+| `Weld`         | Canonical string type |
+| `String`       | Alias of `Weld`       |
 | `Bool`         | Boolean values        |
 | `Boolean`      | Boolean values        |
 
 `Bool` and `Boolean` refer to the same type and can be used interchangeably.
+
+`Int` and `Float` are distinct concrete types in the `Number` category. Variable
+declarations use the concrete type directly, such as `Int Count = 0;` or
+`Float Ratio = 1.5;`.
 
 ForgeLang uses static type checking.
 
@@ -607,25 +613,25 @@ The value `true` is treated as a true condition and `false` is treated as a fals
 Integer values use:
 
 ```forge
-Number Int
+Int
 ```
 
 Example:
 
 ```forge
-Number Int Counter = 0;
+Int Counter = 0;
 ```
 
 Integer arithmetic supports:
 
 ```forge
-Number Int A = 10;
-Number Int B = 5;
+Int A = 10;
+Int B = 5;
 
-Number Int Add = A + B;
-Number Int Subtract = A - B;
-Number Int Multiply = A * B;
-Number Int Divide = A / B;
+Int Add = A + B;
+Int Subtract = A - B;
+Int Multiply = A * B;
+Int Divide = A / B;
 ```
 
 Integer variables can be modified:
@@ -641,34 +647,36 @@ Counter = Counter + 1;
 Floating-point values use:
 
 ```forge
-Number Float
+Float
 ```
 
 Example:
 
 ```forge
-Number Float Temperature = 21.5;
+Float Temperature = 21.5;
 ```
 
 Floating-point arithmetic supports the standard arithmetic operators:
 
 ```forge
-Number Float A = 10.5;
-Number Float B = 2.0;
+Float A = 10.5;
+Float B = 2.0;
 
-Number Float Result = A + B;
+Float Result = A + B;
 ```
 
 ---
 
 # 10. Strings
 
-Strings use the `Weld` type.
+`Weld` is the canonical string type. `String` is an alias for `Weld`; both
+names resolve to the same internal type.
 
 Example:
 
 ```forge
 Weld Name = "ForgeLang";
+String Alias = Name;
 ```
 
 String literals use double quotes:
@@ -711,7 +719,7 @@ ForgeLang supports interpolation using the `\V` string form.
 Example:
 
 ```forge
-Number Int I = 42;
+Int I = 42;
 
 Print(\V"{I}");
 ```
@@ -721,8 +729,8 @@ The value of `I` is inserted into the string.
 Multiple values can be used:
 
 ```forge
-Number Int A = 10;
-Number Int B = 20;
+Int A = 10;
+Int B = 20;
 
 Print(\V"A = {A}, B = {B}");
 ```
@@ -744,7 +752,7 @@ ForgeLang provides typed input through `Input`.
 ## 12.1 Integer Input
 
 ```forge
-Number Int Value = Input(Int);
+Int Value = Input(Int);
 ```
 
 This reads an integer from standard input.
@@ -752,7 +760,7 @@ This reads an integer from standard input.
 ## 12.2 Floating-Point Input
 
 ```forge
-Number Float Value = Input(Float);
+Float Value = Input(Float);
 ```
 
 This reads a floating-point value.
@@ -787,14 +795,14 @@ Alpha 3.4 supports arithmetic, comparison, bitwise, unary, and loop increment op
 Example:
 
 ```forge
-Number Int A = 10;
-Number Int B = 5;
+Int A = 10;
+Int B = 5;
 
-Number Int C = A + B;
-Number Int D = A - B;
-Number Int E = A * B;
-Number Int F = A / B;
-Number Int G = A % B;
+Int C = A + B;
+Int D = A - B;
+Int E = A * B;
+Int F = A / B;
+Int G = A % B;
 ```
 
 ## 13.2 Power
@@ -802,7 +810,7 @@ Number Int G = A % B;
 The `**` operator performs exponentiation.
 
 ```forge
-Number Int Result = 2 ** 8;
+Int Result = 2 ** 8;
 ```
 
 Power expressions are right-associative.
@@ -828,7 +836,7 @@ The current implementation lowers power operations through the C `pow` function.
 Example:
 
 ```forge
-For (Number Int I = 0; I < 10; I++)
+For (Int I = 0; I < 10; I++)
 {
     Print(\V"{I}");
 }
@@ -837,7 +845,7 @@ For (Number Int I = 0; I < 10; I++)
 Decrementing is also supported:
 
 ```forge
-For (Number Int I = 10; I > 0; I--)
+For (Int I = 10; I > 0; I--)
 {
     Print(\V"{I}");
 }
@@ -852,19 +860,19 @@ Alpha 3.4 supports unary negation and unary plus.
 Example:
 
 ```forge
-Number Int Value = -10;
+Int Value = -10;
 ```
 
 Unary negation can also be applied to an expression:
 
 ```forge
-Number Int Result = -(A + B);
+Int Result = -(A + B);
 ```
 
 Unary plus is a no-op:
 
 ```forge
-Number Int Value = +42;
+Int Value = +42;
 ```
 
 It exists because sometimes a language designer looks at unary minus and thinks, "why should minus get all the attention?"
@@ -914,12 +922,12 @@ And > Or > Xor
 Example:
 
 ```forge
-Number Int A = 12;
-Number Int B = 10;
+Int A = 12;
+Int B = 10;
 
-Number Int C = A And B;
-Number Int D = A Or B;
-Number Int E = A Xor B;
+Int C = A And B;
+Int D = A Or B;
+Int E = A Xor B;
 ```
 
 These operators currently operate on integer operands.
@@ -993,7 +1001,7 @@ While (Condition)
 Example:
 
 ```forge
-Number Int I = 0;
+Int I = 0;
 
 While (I < 10)
 {
@@ -1008,8 +1016,8 @@ The condition is evaluated before every iteration.
 `While` loops can be nested:
 
 ```forge
-Number Int I = 0;
-Number Int V = 0;
+Int I = 0;
+Int V = 0;
 
 While (I < 100)
 {
@@ -1048,7 +1056,7 @@ For (Init; Condition; Increment)
 Example:
 
 ```forge
-For (Number Int I = 0; I < 10; I++)
+For (Int I = 0; I < 10; I++)
 {
     Print(\V"{I}");
 }
@@ -1070,7 +1078,7 @@ The increment expression currently uses `++` or `--`.
 Example:
 
 ```forge
-For (Number Int I = 10; I > 0; I--)
+For (Int I = 10; I > 0; I--)
 {
     Print(\V"{I}");
 }
@@ -1185,7 +1193,7 @@ The grammar can represent recursive functions.
 Example:
 
 ```forge
-function Countdown(Number Int I)
+function Countdown(Int I)
 {
     If (I > 0)
     {
@@ -1212,11 +1220,11 @@ Example:
 ```forge
 Open Nunction Main()
 {
-    Number Int I = 10;
+    Int I = 10;
 
     If (I > 0)
     {
-        Number Int V = 20;
+        Int V = 20;
     }
 }
 ```
@@ -1238,7 +1246,7 @@ Example:
 ```forge
 // This is a comment
 
-Number Int I = 0;
+Int I = 0;
 ```
 
 Comments are ignored by the compiler.
@@ -1293,7 +1301,7 @@ Example:
 ```forge
 Data Person
 {
-    Number Int Age;
+    Int Age;
     Weld Name;
 }
 ```
@@ -1305,8 +1313,8 @@ The `Data` declaration can use a visibility modifier:
 ```forge
 Open Data Point
 {
-    Number Int X;
-    Number Int Y;
+    Int X;
+    Int Y;
 }
 ```
 
@@ -1784,7 +1792,7 @@ Open Nunction Main()
     Print(Numbers[0]);
 
     // While loop
-    Number Int I = 0;
+    Int I = 0;
 
     While (I < 5)
     {
@@ -1793,7 +1801,7 @@ Open Nunction Main()
     }
 
     // For loop
-    For (Number Int J = 0; J < 3; J++)
+    For (Int J = 0; J < 3; J++)
     {
         Print(\V"J = {J}");
     }
@@ -1805,7 +1813,7 @@ Open Nunction Main()
     Print(Flag);
 
     // Stop inside a loop
-    Number Int K = 0;
+    Int K = 0;
 
     While (K < 10)
     {
@@ -1822,8 +1830,8 @@ Open Nunction Main()
     Tick();
 
     // Bitwise operations
-    Number Int A = 12;
-    Number Int B = 10;
+    Int A = 12;
+    Int B = 10;
 
     Print(A And B);
     Print(A Or B);

@@ -5,7 +5,7 @@ ForgeLang supports interpolation using the `\V` string form.
 Example:
 
 ```forge
-Number Int I = 42;
+Int I = 42;
 
 Print(\V"{I}");
 ```
@@ -15,8 +15,8 @@ The value of `I` is inserted into the string.
 Multiple values can be used:
 
 ```forge
-Number Int A = 10;
-Number Int B = 20;
+Int A = 10;
+Int B = 20;
 
 Print(\V"A = {A}, B = {B}");
 ```
