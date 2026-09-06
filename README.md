@@ -14,7 +14,7 @@
 
 ForgeLang is a statically typed, C-style systems programming language designed for native execution and explicit control.
 
-**Alpha 3.4** uses a compiler written in **Rust**. Furnace uses **pest** for parsing and **Cranelift** for native code generation.
+**Alpha 4** uses a compiler written in **Rust**. Furnace uses **pest** for parsing and **Cranelift** for native code generation.
 
 ### The Stack
 
@@ -26,7 +26,7 @@ ForgeLang is a statically typed, C-style systems programming language designed f
 
 ---
 
-## Alpha 3.4 Features
+## Alpha 4 Features
 
 ### Native Code Generation
 
@@ -70,11 +70,11 @@ Open Nunction Main()
 }
 ```
 
-Alpha 3.4 currently supports:
+Alpha 4 currently supports:
 
 * **Types:** `Number`, `Int`, `Float`, `Weld`, `String`, `Bool` / `Boolean`
 * **Control flow:** `If`, `Else If`, `Else`, `While`, `For`
-* **Functions:** `Nunction`, `function`, zero-argument calls and call inlining
+* **Functions:** `Nunction`, `function`, parameters, return values, and native function calls
 * **Strings:** Plain strings and `\V` interpolation
 * **Arrays:** Fixed-size `Ore` arrays
 * **Tuples:** Named-field `Ore` tuples
@@ -174,6 +174,23 @@ Furnace parses the source, performs semantic analysis, generates a native object
 ./target/release/furnace run main.anvil
 ```
 
+### Creating a Project
+
+Create a console project with:
+
+```fish
+./target/release/furnace new console -n Project
+```
+
+This creates:
+
+```text
+Project/
+└── Project.anvil
+```
+
+The generated source contains a minimal `Open Nunction Main()` program.
+
 ---
 
 ## Architecture
@@ -203,12 +220,10 @@ The overall pipeline runs in this order:
 
 ## Current Limitations
 
-Alpha 3.4 is still under development.
+Alpha 4 is still under development.
 
 The following features are not yet fully implemented in the backend:
 
-* Parameterized function calls
-* Function return values
 * Full lexical scope and shadowing
 * `Data` code generation
 * Object instantiation code generation
@@ -231,8 +246,6 @@ For the complete language reference and current implementation details, see **[T
 
 * `Switch` / `Deal` / `Base` pattern matching
 * `Do` / `Fail` / `Final` error handling
-* Parameterized function code generation
-* Function return values
 * Improved scope handling
 * More standard library functionality
 

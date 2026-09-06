@@ -5,13 +5,9 @@ use crate::platform::Platform;
 
 #[derive(Debug)]
 pub enum Command {
-    Compile {
-        input: PathBuf,
-        platform: Platform,
-    },
-    Run {
-        input: PathBuf,
-    },
+    Compile { input: PathBuf, platform: Platform },
+    Run { input: PathBuf },
+    New { app_type: String, name: String },
     Version,
     Help,
 }
@@ -23,6 +19,7 @@ pub fn parse_args(args: &[String]) -> Result<Command, ExitCode> {
         eprintln!("Usage:");
         eprintln!("    Furnace compile <file>.anvil <platform>");
         eprintln!("    Furnace run <file>.anvil");
+        eprintln!("    Furnace new <APP_TYPE> -n <NAME>");
         eprintln!("    Furnace -version");
         eprintln!("    Furnace -help");
         return Err(ExitCode::from(2));
@@ -71,8 +68,27 @@ pub fn parse_args(args: &[String]) -> Result<Command, ExitCode> {
             let input_path = PathBuf::from(&args[1]);
             validate_anvil_extension(&input_path)?;
 
-            Ok(Command::Run {
-                input: input_path,
+            Ok(Command::Run { input: input_path })
+        }
+        "new" | "New" => {
+            if args.len() < 2 {
+                eprintln!("error: 'new' requires an application type and a project name");
+                eprintln!("usage: Furnace new <APP_TYPE> -n <NAME>");
+                return Err(ExitCode::from(2));
+            }
+            if args.len() != 4 || args[2] != "-n" {
+                eprintln!("error: 'new' requires -n <NAME>");
+                eprintln!("usage: Furnace new <APP_TYPE> -n <NAME>");
+                return Err(ExitCode::from(2));
+            }
+            if args[3].is_empty() {
+                eprintln!("error: project name cannot be empty");
+                return Err(ExitCode::from(2));
+            }
+
+            Ok(Command::New {
+                app_type: args[1].clone(),
+                name: args[3].clone(),
             })
         }
         unknown => {
@@ -81,6 +97,7 @@ pub fn parse_args(args: &[String]) -> Result<Command, ExitCode> {
             eprintln!("Usage:");
             eprintln!("    Furnace compile <file>.anvil <platform>");
             eprintln!("    Furnace run <file>.anvil");
+            eprintln!("    Furnace new <APP_TYPE> -n <NAME>");
             eprintln!("    Furnace -version");
             eprintln!("    Furnace -help");
             Err(ExitCode::from(2))
@@ -92,7 +109,10 @@ fn validate_anvil_extension(path: &PathBuf) -> Result<(), ExitCode> {
     match path.extension().and_then(|ext| ext.to_str()) {
         Some("anvil") => Ok(()),
         _ => {
-            eprintln!("error: input file '{}' must have a .anvil extension", path.display());
+            eprintln!(
+                "error: input file '{}' must have a .anvil extension",
+                path.display()
+            );
             Err(ExitCode::from(2))
         }
     }

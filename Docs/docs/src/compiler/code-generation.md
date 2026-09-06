@@ -23,22 +23,19 @@ Currently supported code generation includes the subset of the language that the
 - variables and assignments
 - primitive arithmetic
 - loops and conditionals
-- zero-argument `Nunction` call expansion
+- native calls to user-defined functions
 - collection access for supported layouts
 
 ## Unsupported and Planned Constructs
 
 The backend does not currently generate executable code for:
 
-- parameterized function calls
-- return-value functions
-- `Return` statements
 - `Data` declarations
 - object instantiation
 - module imports
 - full lexical scope handling
 
-This distinction matters: being parsed or semantically checked does not mean it is fully executable.
+Parsed constructs that are not listed above may still be rejected during semantic analysis or code generation.
 
 See [Current Limitations](../limitations.md) for the full status matrix.
 

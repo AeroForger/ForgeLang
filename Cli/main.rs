@@ -12,17 +12,10 @@ fn main() -> ExitCode {
     };
 
     match command {
-        args::Command::Compile { input, platform } => {
-            commands::compile::execute(&input, platform)
-        }
-        args::Command::Run { input } => {
-            commands::run::execute(&input)
-        }
-        args::Command::Version => {
-            commands::version::execute()
-        }
-        args::Command::Help => {
-            commands::help::execute()
-        }
+        args::Command::Compile { input, platform } => commands::compile::execute(&input, platform),
+        args::Command::Run { input } => commands::run::execute(&input),
+        args::Command::New { app_type, name } => commands::new::execute(&app_type, &name),
+        args::Command::Version => commands::version::execute(),
+        args::Command::Help => commands::help::execute(),
     }
 }

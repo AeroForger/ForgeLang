@@ -12,7 +12,7 @@ cc main.o -o main -lm
 
 The linker produces the final executable.
 
-This is the last stage of the current Alpha 3.4 pipeline. Once the object file is generated, the program becomes a native binary like any other C or Rust program built for the target platform.
+This is the last stage of the current Alpha 4 pipeline. Once the object file is generated, the program becomes a native binary like any other C or Rust program built for the target platform.
 
 The currently supported target is `linux`.
 

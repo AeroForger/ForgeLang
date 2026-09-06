@@ -1,4 +1,4 @@
-# ForgeLang Alpha 3.4 Language Documentation
+# ForgeLang Alpha 4 Language Documentation
 
 **ForgeLang** is a statically typed systems programming language that compiles to native machine code.
 
@@ -6,7 +6,7 @@ ForgeLang source files use the `.anvil` extension. If you drop one on the floor,
 
 The compiler is **Furnace**.
 
-> **Status:** Alpha 3.4 \
+> **Status:** Alpha 4 \
 > **Compiler:** Furnace \
 > **Implementation:** Rust \
 > **Parser:** pest \
@@ -85,7 +85,7 @@ The compiler is **Furnace**.
 32. [Compilation](#32-compilation)
 33. [Complete Example](#33-complete-example)
 34. [Current Limitations](#34-current-limitations)
-35. [Alpha 3.4 Roadmap](#35-alpha-34-roadmap)
+35. [Alpha 4 Roadmap](#35-alpha-34-roadmap)
 
 ---
 
@@ -103,7 +103,7 @@ ForgeLang source -> pest -> AST -> Semantic Analysis -> Cranelift -> Native Obje
 
 Furnace is written in Rust.
 
-Alpha 3.4 uses:
+Alpha 4 uses:
 
 * **Rust** for the compiler
 * **pest** for parsing
@@ -171,9 +171,8 @@ ForgeLang currently has two function forms:
 * `Nunction`
 * `function`
 
-The current backend can inline zero-argument `Nunction` calls.
-
-Parameterized functions and return-value functions are accepted by parts of the frontend but are not yet generated as native function calls.
+Furnace compiles each user-defined function as an independent native function.
+Calls use the function's declared parameter and return types.
 
 ## 4.1 `Nunction`
 
@@ -192,7 +191,7 @@ It can be called with:
 Tick();
 ```
 
-Zero-argument `Nunction` calls can currently be expanded directly into the caller during code generation.
+`Nunction` calls do not return a value. They can take parameters and call other functions.
 
 ## 4.2 `function`
 
@@ -213,9 +212,7 @@ A returned value can be used like this:
 Int Result = Add(10, 20);
 ```
 
-Return-value code generation is not currently implemented.
-
-The syntax exists because eventually the compiler will have to deal with functions that actually return things. Otherwise `function` would be a rather optimistic keyword.
+The returned value can be used in an expression. The return expression must match the declared return type.
 
 ## 4.3 Function Parameters
 
@@ -234,17 +231,9 @@ A call can be written as:
 PrintNumber(42);
 ```
 
-Furnace checks the number of supplied arguments during semantic analysis.
+Furnace checks argument count and argument types during semantic analysis.
 
-Parameterized calls are currently rejected before native code generation.
-
-The parser is currently ahead of the backend in this area. The parser has seen the future. The backend has not.
-
-## 4.4 Zero-Argument Call Inlining
-
-The current backend does not yet use a native calling convention for user-defined functions.
-
-Instead, zero-argument `Nunction` calls are expanded before code generation.
+## 4.4 Native Function Calls
 
 For example:
 
@@ -260,19 +249,9 @@ Open Nunction Main()
 }
 ```
 
-The compiler can replace the `Tick()` call with the statements inside `Tick`.
+The compiler compiles `Tick` as an independent native function and emits a call from `Main`.
 
-The `expand_function_calls` pass in `src/codegen.rs` handles this transformation.
-
-The pass can also process calls inside:
-
-* `If`
-* `While`
-* `For`
-
-Recursive inlining is not supported.
-
-The callee must be a zero-argument `Nunction`.
+The same call path supports parameters, return values, calls inside `If`, `While`, and `For`, and recursive calls.
 
 ---
 
@@ -358,7 +337,7 @@ The assigned value must be compatible with the variable's type.
 
 # 7. Types
 
-Alpha 3.4 currently includes primitive types, arrays, tuples, lists, and a limited generic type.
+Alpha 4 currently includes primitive types, arrays, tuples, lists, and a limited generic type.
 
 ## 7.1 Primitive Types
 
@@ -779,7 +758,7 @@ The current implementation uses standard C input facilities internally.
 
 # 13. Operators
 
-Alpha 3.4 supports arithmetic, comparison, bitwise, unary, and loop increment operators.
+Alpha 4 supports arithmetic, comparison, bitwise, unary, and loop increment operators.
 
 ## 13.1 Arithmetic
 
@@ -855,7 +834,7 @@ For (Int I = 10; I > 0; I--)
 
 # 14. Unary Operators
 
-Alpha 3.4 supports unary negation and unary plus.
+Alpha 4 supports unary negation and unary plus.
 
 Example:
 
@@ -1178,11 +1157,9 @@ A call with multiple arguments:
 Add(10, 20);
 ```
 
-Currently, only zero-argument `Nunction` calls can be expanded into executable code by the backend.
+Furnace compiles calls as native calls to independently compiled ForgeLang functions.
 
-Calls with arguments can be parsed and checked by the frontend, but are not yet lowered to native function calls.
-
-Furnace checks function argument counts during semantic analysis.
+Semantic analysis checks the function name, argument count, and argument types before code generation.
 
 ---
 
@@ -1509,23 +1486,11 @@ Cranelift handles:
 
 Furnace produces a native object file from the generated code.
 
-### 31.4.1 Function Call Expansion
+### 31.4.1 Native Function Calls
 
-Before generating code for `Main`, Furnace runs `expand_function_calls`.
+Furnace compiles each ForgeLang function as an independent Cranelift function and emits calls from the caller.
 
-The pass is located in `src/codegen.rs`.
-
-It replaces eligible zero-argument `Nunction` calls with the statements contained in the called function.
-
-The pass also searches inside:
-
-* `If`
-* `While`
-* `For`
-
-blocks.
-
-Parameterized calls and `Return` statements are not handled by this pass.
+This supports parameters, return values, calls inside `If`, `While`, and `For`, and recursive calls.
 
 ### 31.4.2 Collection Layout
 
@@ -1630,7 +1595,7 @@ The compile process:
 3. Parses the source.
 4. Builds the AST.
 5. Performs semantic analysis.
-6. Expands eligible zero-argument `Nunction` calls.
+6. Generates native functions and function calls.
 7. Generates a native object file.
 8. Invokes the platform linker.
 9. Produces the executable.
@@ -1670,16 +1635,33 @@ This command:
 4. Forwards the program's standard output and standard error.
 5. Returns the child process exit code.
 
-## 32.4 Version and Help
+## 32.4 Create a Project
+
+Create a console project with:
+
+```fish
+./target/debug/furnace new console -n Project
+```
+
+The command creates:
+
+```text
+Project/
+└── Project.anvil
+```
+
+The generated file contains a minimal `Open Nunction Main()` program. The supported application type is `console`. Furnace rejects unknown types, empty names, and existing project directories.
+
+## 32.5 Version and Help
 
 Furnace exposes its version through centralized compiler metadata.
 
 The current version is:
 
 ```rust
-pub const VERSION: &str = "Alpha 3.4";
+pub const VERSION: &str = "Alpha 4";
 ```
-> Fancy way of saying Alpha 3.4
+> Fancy way of saying Alpha 4
 
 Version information can be requested with:
 
@@ -1696,7 +1678,7 @@ Help can be requested with:
 Example version output:
 
 ```
-Furnace Alpha 3.4
+Furnace Alpha 4
 ```
 
 Usage:
@@ -1705,6 +1687,7 @@ Usage:
 Usage:
     Furnace compile <file>.anvil <platform>
     Furnace run <file>.anvil
+    Furnace new <APP_TYPE> -n <NAME>
     Furnace -version
     Furnace -help
 ```
@@ -1731,7 +1714,7 @@ The resulting executable can be started normally:
 
 # 33. Complete Example
 
-The following program demonstrates several features available in Alpha 3.4:
+The following program demonstrates several features available in Alpha 4:
 
 * `Nunction`
 * Variables
@@ -1843,14 +1826,10 @@ Open Nunction Main()
 
 # 34. Current Limitations
 
-Alpha 3.4 is an early development release.
+Alpha 4 is an early development release.
 
 The following features are not currently fully implemented in the backend:
 
-* Parameterized function code generation
-* Native calls to parameterized user-defined functions
-* Function return-value code generation
-* `Return` statements
 * `Data` declaration code generation
 * Object instantiation code generation
 * `Switch` / `Deal` / `Base` pattern matching
@@ -1879,9 +1858,9 @@ This distinction saves everyone from discovering that the compiler supports some
 
 ---
 
-# 35. Alpha 3.4 Roadmap
+# 35. Alpha 4 Roadmap
 
-Alpha 3.4 continues development of the Rust-based Furnace compiler.
+Alpha 4 continues development of the Rust-based Furnace compiler.
 
 ## Short Term
 
@@ -1936,21 +1915,15 @@ Showcase
 
 visibility rules.
 
-### Parameterized Functions
+### Additional Function Features
 
-The current backend handles zero-argument `Nunction` calls through inlining.
+Parameterized functions and return-value functions are supported by the current native function call path.
 
-Future versions will introduce native function calls with:
-
-* Parameter passing
-* Return values
-* Stack management
-* Function frames
-* A defined calling convention
+Future work includes clearer diagnostics for control-flow paths that do not return and broader support for generic function types.
 
 ### Multicore Runtime
 
-Alpha 3.4 uses Rayon for compiler-side parallel analysis.
+Alpha 4 uses Rayon for compiler-side parallel analysis.
 
 Future versions are planned to provide mechanisms for ForgeLang programs to execute work on multiple CPU cores.
 
@@ -1999,9 +1972,9 @@ The compiler will need sufficient language features, standard library support, a
 
 ---
 
-# Alpha 3.4 Implementation Notes
+# Alpha 4 Implementation Notes
 
-Alpha 3.4 uses a different compiler implementation from the earlier experimental versions of ForgeLang.
+Alpha 4 uses a different compiler implementation from the earlier experimental versions of ForgeLang.
 
 Earlier versions used:
 
@@ -2029,7 +2002,7 @@ ForgeLang source -> pest -> AST -> Semantic Analysis -> Cranelift -> Native Obje
 
 The change to Rust also makes the compiler itself part of the ForgeLang project's systems-level development work.
 
-Alpha 3.4 should not be treated as a finished language specification.
+Alpha 4 should not be treated as a finished language specification.
 
 Some syntax exists before its backend implementation.
 

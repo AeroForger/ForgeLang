@@ -1,0 +1,8 @@
+Nunction Join(Weld A, Bool B) {
+    Print(A);
+    Print(B);
+}
+
+Nunction Main() {
+    Join(42, 7);
+}

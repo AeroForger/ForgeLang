@@ -1,6 +1,6 @@
 # Unary Operators
 
-Alpha 3.4 supports unary negation and unary plus.
+Alpha 4 supports unary negation and unary plus.
 
 Example:
 

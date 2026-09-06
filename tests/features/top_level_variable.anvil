@@ -1,0 +1,6 @@
+Int Outside = 42;
+
+Open Nunction Main()
+{
+    Print(1);
+}

@@ -1,0 +1,8 @@
+Nunction Show(Weld Name, Boolean Ready) {
+    Print(Name);
+    Print(Ready);
+}
+
+Nunction Main() {
+    Show("forge", true);
+}

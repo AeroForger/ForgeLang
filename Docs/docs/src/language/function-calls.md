@@ -20,11 +20,9 @@ A call with multiple arguments:
 Add(10, 20);
 ```
 
-Currently, only zero-argument `Nunction` calls can be expanded into executable code by the backend.
+Furnace compiles calls as native calls to independently compiled ForgeLang functions.
 
-Calls with arguments can be parsed and checked by the frontend, but are not yet lowered to native function calls.
-
-Furnace checks function argument counts during semantic analysis.
+Semantic analysis checks the function name, argument count, and argument types before code generation.
 
 See [Functions](functions.md) and [Recursion](recursion.md) for the current implementation status.
 

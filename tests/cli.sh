@@ -19,13 +19,58 @@ fi
 
 # version output
 actual="$($BIN -version 2>&1)"
-[ "$actual" = "Furnace Alpha 3.4" ] || fail "-version output mismatch: '$actual'"
+[ "$actual" = "Furnace Alpha 4" ] || fail "-version output mismatch: '$actual'"
 
 # help output
 help_actual="$($BIN -help 2>&1)"
-printf '%s\n' "$help_actual" | grep -q "Furnace Alpha 3.4" || fail "-help is missing banner"
+printf '%s\n' "$help_actual" | grep -q "Furnace Alpha 4" || fail "-help is missing banner"
 printf '%s\n' "$help_actual" | grep -q "Furnace compile <file>.anvil <platform>" || fail "-help is missing compile usage"
 printf '%s\n' "$help_actual" | grep -q "Furnace run <file>.anvil" || fail "-help is missing run usage"
+printf '%s\n' "$help_actual" | grep -q "Furnace new <APP_TYPE> -n <NAME>" || fail "-help is missing new usage"
+printf '%s\n' "$help_actual" | grep -q "console" || fail "-help is missing console application type"
+
+# new console project
+PROJECT_DIR="$TMPDIR/Project"
+new_out="$(cd "$TMPDIR" && "$BIN" new console -n Project 2>&1)" || fail "new console project failed"
+[ -d "$PROJECT_DIR" ] || fail "new did not create project directory"
+[ -f "$PROJECT_DIR/Project.anvil" ] || fail "new did not create project source"
+expected_source=$'Open Nunction Main()\n{\n}\n'
+actual_source="$(cat "$PROJECT_DIR/Project.anvil")"$'\n'
+[ "$actual_source" = "$expected_source" ] || fail "new generated unexpected source"
+
+generated_compile_out="$(cd "$TMPDIR" && "$BIN" compile Project/Project.anvil linux 2>&1)" || fail "generated project did not compile"
+printf '%s\n' "$generated_compile_out" | grep -q "Build successful!" || fail "generated project compile missing success"
+[ -x "$PROJECT_DIR/Project" ] || fail "generated project executable missing"
+
+# different project name
+OTHER_DIR="$TMPDIR/AnotherProject"
+(cd "$TMPDIR" && "$BIN" new console -n AnotherProject >/dev/null 2>&1) || fail "new rejected a second valid name"
+[ -f "$OTHER_DIR/AnotherProject.anvil" ] || fail "new hardcoded the project name"
+
+# existing directory must not be overwritten
+EXISTING_DIR="$TMPDIR/Existing"
+mkdir "$EXISTING_DIR"
+printf 'keep\n' > "$EXISTING_DIR/marker.txt"
+if (cd "$TMPDIR" && "$BIN" new console -n Existing >/dev/null 2>&1); then
+    fail "new overwrote an existing directory"
+fi
+[ -f "$EXISTING_DIR/marker.txt" ] || fail "new removed existing directory contents"
+[ ! -f "$EXISTING_DIR/Existing.anvil" ] || fail "new created a file in an existing directory"
+
+# invalid new usage
+if (cd "$TMPDIR" && "$BIN" new >/dev/null 2>&1); then
+    fail "new without an app type should fail"
+fi
+if (cd "$TMPDIR" && "$BIN" new console >/dev/null 2>&1); then
+    fail "new without a name should fail"
+fi
+if (cd "$TMPDIR" && "$BIN" new console -n "" >/dev/null 2>&1); then
+    fail "new with an empty name should fail"
+fi
+if (cd "$TMPDIR" && "$BIN" new unknown -n Unknown >/dev/null 2>&1); then
+    fail "new with an unknown app type should fail"
+fi
+[ ! -e "$TMPDIR/Unknown" ] || fail "unknown app type created a project"
 
 # compile success
 SRC="$TMPDIR/ok.anvil"

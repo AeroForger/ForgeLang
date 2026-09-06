@@ -1,0 +1,7 @@
+Nunction Test() {
+    Return 42;
+}
+
+Nunction Main() {
+    Test();
+}

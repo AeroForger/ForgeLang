@@ -27,8 +27,22 @@ pub fn execute(input: &Path) -> ExitCode {
 
     let pid = std::process::id();
     let temp_dir = std::env::temp_dir();
-    let obj_path = temp_dir.join(format!("furnace_run_{}_{}.o", pid, std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
-    let exe_path = temp_dir.join(format!("furnace_run_{}_{}.exe", pid, std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+    let obj_path = temp_dir.join(format!(
+        "furnace_run_{}_{}.o",
+        pid,
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+    let exe_path = temp_dir.join(format!(
+        "furnace_run_{}_{}.exe",
+        pid,
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
 
     if let Err(e) = furnace::codegen::compile(&program, &obj_path, true) {
         eprintln!("{}", e);
@@ -46,7 +60,11 @@ pub fn execute(input: &Path) -> ExitCode {
         Ok(status) => status,
         Err(e) => {
             let _ = std::fs::remove_file(&obj_path);
-            eprintln!("error: cannot invoke linker '{}': {}", platform.linker_name(), e);
+            eprintln!(
+                "error: cannot invoke linker '{}': {}",
+                platform.linker_name(),
+                e
+            );
             return ExitCode::from(1);
         }
     };

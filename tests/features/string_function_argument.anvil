@@ -1,0 +1,7 @@
+Nunction PrintName(Weld Name) {
+    Print(Name);
+}
+
+Nunction Main() {
+    PrintName("hello");
+}

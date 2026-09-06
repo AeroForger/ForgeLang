@@ -1,0 +1,11 @@
+Nunction ShowPerson(Ore(Int Age, Weld Name) Person)
+{
+    Print(Person.Age);
+    Print(Person.Name);
+}
+
+Open Nunction Main()
+{
+    Ore(Int Age, Weld Name) Person = {14, "Den"};
+    ShowPerson(Person);
+}

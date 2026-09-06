@@ -1,0 +1,12 @@
+Nunction ShowValues(Ore[] Values)
+{
+    Print(Values[0]);
+    Print(Values[2]);
+    Print(Values.Length);
+}
+
+Open Nunction Main()
+{
+    Ore[] Values = [7, 8, 9,];
+    ShowValues(Values);
+}

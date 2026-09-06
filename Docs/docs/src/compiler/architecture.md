@@ -72,21 +72,11 @@ Cranelift handles:
 
 Furnace produces a native object file from the generated code.
 
-### Function Call Expansion
+### Function Calls
 
-Before generating code for `Main`, Furnace runs `expand_function_calls`.
+Furnace declares each ForgeLang function as an independent Cranelift function and emits calls to those functions from the caller.
 
-The pass is located in `src/codegen.rs`.
-
-It replaces eligible zero-argument `Nunction` calls with the statements contained in the called function.
-
-The pass also searches inside:
-
-- `If`
-- `While`
-- `For`
-
-blocks.
+This preserves function-local compiler state and supports parameterized, return-value, recursive, and `Nunction` calls without source-level expansion.
 
 Parameterized calls and `Return` statements are not handled by this pass.
 

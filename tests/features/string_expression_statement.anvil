@@ -1,0 +1,8 @@
+Weld Echo(Weld Value) {
+    Return Value;
+}
+
+Nunction Main() {
+    Echo("expression");
+    Print("done");
+}

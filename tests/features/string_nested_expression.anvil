@@ -1,0 +1,7 @@
+Weld Identity(Weld Value) {
+    Return Value;
+}
+
+Nunction Main() {
+    Print(Identity(Identity("nested")));
+}

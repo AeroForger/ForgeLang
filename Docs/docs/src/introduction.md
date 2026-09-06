@@ -6,7 +6,7 @@ ForgeLang source files use the `.anvil` extension. If you drop one on the floor,
 
 The compiler is **Furnace**.
 
-> **Status:** Alpha 3.4
+> **Status:** Alpha 4
 > **Compiler:** Furnace
 > **Implementation:** Rust
 > **Parser:** pest
@@ -23,7 +23,7 @@ Furnace is the name of the ForgeLang compiler. The current generation is written
 
 ## Current Version
 
-This documentation describes **Alpha 3.4** of ForgeLang and the corresponding release of Furnace.
+This documentation describes **Alpha 4** of ForgeLang and the corresponding release of Furnace.
 
 ## Source Files
 
@@ -42,7 +42,7 @@ Furnace is divided into several stages:
 * **Cranelift** generates native object code from the validated AST.
 * **cc** (the system C compiler) links the object file into an executable.
 
-Alpha 3.4 uses:
+Alpha 4 uses:
 
 * **Rust** for the compiler
 * **pest** for parsing

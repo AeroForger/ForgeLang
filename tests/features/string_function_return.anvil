@@ -1,0 +1,7 @@
+Weld GetName() {
+    Return "hello";
+}
+
+Nunction Main() {
+    Print(GetName());
+}

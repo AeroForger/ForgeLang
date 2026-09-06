@@ -33,7 +33,16 @@ pub fn execute(input: &Path, platform: Platform) -> ExitCode {
     };
 
     let obj_path = PathBuf::from(format!("{}.o", stem));
-    let output_exe = PathBuf::from(format!("./{}", stem));
+    let output_exe = if input
+        .parent()
+        .and_then(|parent| parent.file_name())
+        .and_then(|name| name.to_str())
+        == Some(stem)
+    {
+        input.parent().unwrap().join(stem)
+    } else {
+        PathBuf::from(format!("./{}", stem))
+    };
 
     if let Err(e) = furnace::codegen::compile(&program, &obj_path, true) {
         eprintln!("{}", e);
@@ -62,7 +71,11 @@ pub fn execute(input: &Path, platform: Platform) -> ExitCode {
         }
         Err(e) => {
             let _ = std::fs::remove_file(&obj_path);
-            eprintln!("error: cannot invoke linker '{}': {}", platform.linker_name(), e);
+            eprintln!(
+                "error: cannot invoke linker '{}': {}",
+                platform.linker_name(),
+                e
+            );
             ExitCode::from(1)
         }
     }

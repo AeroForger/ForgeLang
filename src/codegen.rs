@@ -1,8 +1,8 @@
-use cranelift_codegen::ir::{
-    types, AbiParam, FuncRef, GlobalValue, InstBuilder, MachMemFlags,
-    StackSlotData, StackSlotKind, UserFuncName, Value,
-};
 use cranelift_codegen::ir::condcodes::IntCC;
+use cranelift_codegen::ir::{
+    types, AbiParam, FuncRef, GlobalValue, InstBuilder, MachMemFlags, StackSlotData, StackSlotKind,
+    UserFuncName, Value,
+};
 use cranelift_codegen::settings;
 use cranelift_frontend::{FunctionBuilder, FunctionBuilderContext, Variable};
 use cranelift_module::{DataDescription, DataId, FuncId, Linkage, Module};
@@ -10,7 +10,9 @@ use cranelift_object::{ObjectBuilder, ObjectModule};
 
 use crate::ast::*;
 use crate::errors::{ForgeError, ForgeResult};
+use std::collections::hash_map::DefaultHasher;
 use std::collections::{HashMap, HashSet};
+use std::hash::{Hash, Hasher};
 
 /// Module-level identifiers for external C libraries and global format strings.
 pub struct RuntimeSymbols {
@@ -79,8 +81,9 @@ impl CodeGenContext {
             .finish(settings::Flags::new(flag_builder))
             .map_err(|e| ForgeError::codegen(format!("ISA finish error: {}", e)))?;
 
-        let builder = ObjectBuilder::new(isa, "furnace.o", cranelift_module::default_libcall_names())
-            .map_err(|e| ForgeError::codegen(format!("ObjectBuilder error: {}", e)))?;
+        let builder =
+            ObjectBuilder::new(isa, "furnace.o", cranelift_module::default_libcall_names())
+                .map_err(|e| ForgeError::codegen(format!("ObjectBuilder error: {}", e)))?;
         let mut module = ObjectModule::new(builder);
 
         let ptr_type = module.target_config().pointer_type();
@@ -168,12 +171,15 @@ impl CodeGenContext {
         // Define global format strings
         let int_fmt_id = Self::define_string_in_module(&mut module, "int_fmt", b"%.0f\n\0")?;
         let float_fmt_id = Self::define_string_in_module(&mut module, "float_fmt", b"%f\n\0")?;
-        let int_inline_fmt_id = Self::define_string_in_module(&mut module, "int_inline_fmt", b"%.0f\0")?;
-        let float_inline_fmt_id = Self::define_string_in_module(&mut module, "float_inline_fmt", b"%f\0")?;
+        let int_inline_fmt_id =
+            Self::define_string_in_module(&mut module, "int_inline_fmt", b"%.0f\0")?;
+        let float_inline_fmt_id =
+            Self::define_string_in_module(&mut module, "float_inline_fmt", b"%f\0")?;
         let int_scanf_id = Self::define_string_in_module(&mut module, "int_scanf", b"%d\0")?;
         let float_scanf_id = Self::define_string_in_module(&mut module, "float_scanf", b"%lf\0")?;
         let str_scanf_id = Self::define_string_in_module(&mut module, "str_scanf", b"%255s\0")?;
-        let oob_fmt_id = Self::define_string_in_module(&mut module, "oob_fmt", b"Index out of bounds\0")?;
+        let oob_fmt_id =
+            Self::define_string_in_module(&mut module, "oob_fmt", b"Index out of bounds\0")?;
         let true_str_id = Self::define_string_in_module(&mut module, "true_str", b"true\0")?;
         let false_str_id = Self::define_string_in_module(&mut module, "false_str", b"false\0")?;
 
@@ -210,10 +216,20 @@ impl CodeGenContext {
     }
 
     pub fn define_string(&mut self, name: &str, bytes: &[u8]) -> ForgeResult<DataId> {
-        Self::define_string_in_module(&mut self.module, name, bytes)
+        if let Some(id) = self.string_pool.get(name) {
+            return Ok(*id);
+        }
+
+        let id = Self::define_string_in_module(&mut self.module, name, bytes)?;
+        self.string_pool.insert(name.to_string(), id);
+        Ok(id)
     }
 
-    fn define_string_in_module(module: &mut ObjectModule, name: &str, bytes: &[u8]) -> ForgeResult<DataId> {
+    fn define_string_in_module(
+        module: &mut ObjectModule,
+        name: &str,
+        bytes: &[u8],
+    ) -> ForgeResult<DataId> {
         let mut data_ctx = DataDescription::new();
         data_ctx.define(bytes.to_vec().into_boxed_slice());
         let id = module
@@ -225,28 +241,73 @@ impl CodeGenContext {
         Ok(id)
     }
 
-    pub fn declare_runtime_in_func(&mut self, func: &mut cranelift_codegen::ir::Function) -> RuntimeRefs {
-        let int_fmt = self.module.declare_data_in_func(self.runtime_symbols.int_fmt_id, func);
-        let float_fmt = self.module.declare_data_in_func(self.runtime_symbols.float_fmt_id, func);
-        let int_inline_fmt = self.module.declare_data_in_func(self.runtime_symbols.int_inline_fmt_id, func);
-        let float_inline_fmt = self.module.declare_data_in_func(self.runtime_symbols.float_inline_fmt_id, func);
-        let int_scanf = self.module.declare_data_in_func(self.runtime_symbols.int_scanf_id, func);
-        let float_scanf = self.module.declare_data_in_func(self.runtime_symbols.float_scanf_id, func);
-        let str_scanf = self.module.declare_data_in_func(self.runtime_symbols.str_scanf_id, func);
-        let oob_fmt = self.module.declare_data_in_func(self.runtime_symbols.oob_fmt_id, func);
-        let true_str = self.module.declare_data_in_func(self.runtime_symbols.true_str_id, func);
-        let false_str = self.module.declare_data_in_func(self.runtime_symbols.false_str_id, func);
-        let printf = self.module.declare_func_in_func(self.runtime_symbols.printf_id, func);
-        let puts = self.module.declare_func_in_func(self.runtime_symbols.puts_id, func);
-        let fputs = self.module.declare_func_in_func(self.runtime_symbols.fputs_id, func);
-        let stdout = self.module.declare_data_in_func(self.runtime_symbols.stdout_id, func);
-        let scanf = self.module.declare_func_in_func(self.runtime_symbols.scanf_id, func);
-        let pow = self.module.declare_func_in_func(self.runtime_symbols.pow_id, func);
-        let exit = self.module.declare_func_in_func(self.runtime_symbols.exit_id, func);
-        let malloc = self.module.declare_func_in_func(self.runtime_symbols.malloc_id, func);
-        let realloc = self.module.declare_func_in_func(self.runtime_symbols.realloc_id, func);
-        let free = self.module.declare_func_in_func(self.runtime_symbols.free_id, func);
-        let memmove = self.module.declare_func_in_func(self.runtime_symbols.memmove_id, func);
+    pub fn declare_runtime_in_func(
+        &mut self,
+        func: &mut cranelift_codegen::ir::Function,
+    ) -> RuntimeRefs {
+        let int_fmt = self
+            .module
+            .declare_data_in_func(self.runtime_symbols.int_fmt_id, func);
+        let float_fmt = self
+            .module
+            .declare_data_in_func(self.runtime_symbols.float_fmt_id, func);
+        let int_inline_fmt = self
+            .module
+            .declare_data_in_func(self.runtime_symbols.int_inline_fmt_id, func);
+        let float_inline_fmt = self
+            .module
+            .declare_data_in_func(self.runtime_symbols.float_inline_fmt_id, func);
+        let int_scanf = self
+            .module
+            .declare_data_in_func(self.runtime_symbols.int_scanf_id, func);
+        let float_scanf = self
+            .module
+            .declare_data_in_func(self.runtime_symbols.float_scanf_id, func);
+        let str_scanf = self
+            .module
+            .declare_data_in_func(self.runtime_symbols.str_scanf_id, func);
+        let oob_fmt = self
+            .module
+            .declare_data_in_func(self.runtime_symbols.oob_fmt_id, func);
+        let true_str = self
+            .module
+            .declare_data_in_func(self.runtime_symbols.true_str_id, func);
+        let false_str = self
+            .module
+            .declare_data_in_func(self.runtime_symbols.false_str_id, func);
+        let printf = self
+            .module
+            .declare_func_in_func(self.runtime_symbols.printf_id, func);
+        let puts = self
+            .module
+            .declare_func_in_func(self.runtime_symbols.puts_id, func);
+        let fputs = self
+            .module
+            .declare_func_in_func(self.runtime_symbols.fputs_id, func);
+        let stdout = self
+            .module
+            .declare_data_in_func(self.runtime_symbols.stdout_id, func);
+        let scanf = self
+            .module
+            .declare_func_in_func(self.runtime_symbols.scanf_id, func);
+        let pow = self
+            .module
+            .declare_func_in_func(self.runtime_symbols.pow_id, func);
+        let exit = self
+            .module
+            .declare_func_in_func(self.runtime_symbols.exit_id, func);
+        let malloc = self
+            .module
+            .declare_func_in_func(self.runtime_symbols.malloc_id, func);
+        let realloc = self
+            .module
+            .declare_func_in_func(self.runtime_symbols.realloc_id, func);
+        let free = self
+            .module
+            .declare_func_in_func(self.runtime_symbols.free_id, func);
+        let memmove = self
+            .module
+            .declare_func_in_func(self.runtime_symbols.memmove_id, func);
 
         RuntimeRefs {
             printf,
@@ -271,7 +332,7 @@ impl CodeGenContext {
             true_str,
             false_str,
         }
-}
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -288,6 +349,9 @@ pub struct FunctionCompiler<'a, 'ctx> {
     pub builder: FunctionBuilder<'ctx>,
     pub runtime: RuntimeRefs,
     pub string_map: HashMap<String, GlobalValue>,
+    pub func_ids: HashMap<String, FuncId>,
+    pub func_return_kinds: HashMap<String, RetKind>,
+    pub current_ret_kind: RetKind,
     pub var_map: HashMap<String, Variable>,
     pub var_info: HashMap<String, VarInfo>,
     pub float_vars: HashSet<String>,
@@ -295,6 +359,7 @@ pub struct FunctionCompiler<'a, 'ctx> {
     pub bool_vars: HashSet<String>,
     pub break_targets: Vec<cranelift_codegen::ir::Block>,
     pub continue_targets: Vec<cranelift_codegen::ir::Block>,
+    pub terminated: bool,
 }
 
 impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
@@ -303,12 +368,18 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
         builder: FunctionBuilder<'ctx>,
         runtime: RuntimeRefs,
         string_map: HashMap<String, GlobalValue>,
+        func_ids: HashMap<String, FuncId>,
+        func_return_kinds: HashMap<String, RetKind>,
+        current_ret_kind: RetKind,
     ) -> Self {
         Self {
             ctx,
             builder,
             runtime,
             string_map,
+            func_ids,
+            func_return_kinds,
+            current_ret_kind,
             var_map: HashMap::new(),
             var_info: HashMap::new(),
             float_vars: HashSet::new(),
@@ -316,7 +387,50 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
             bool_vars: HashSet::new(),
             break_targets: Vec::new(),
             continue_targets: Vec::new(),
+            terminated: false,
         }
+    }
+
+    fn compile_block(&mut self, body: &[Statement]) -> ForgeResult<bool> {
+        let previous = self.terminated;
+        self.terminated = false;
+        for stmt in body {
+            if self.terminated {
+                break;
+            }
+            self.compile_statement(stmt)?;
+        }
+        let terminated = self.terminated;
+        self.terminated = previous;
+        Ok(terminated)
+    }
+
+    fn jump_and_terminate(&mut self, target: cranelift_codegen::ir::Block) {
+        self.builder.ins().jump(target, &[]);
+        let dead_block = self.builder.create_block();
+        self.builder.switch_to_block(dead_block);
+        self.emit_default_return();
+        self.builder.seal_block(dead_block);
+        self.terminated = true;
+    }
+
+    fn emit_default_return(&mut self) {
+        if self.current_ret_kind.is_void() {
+            self.builder.ins().return_(&[]);
+            return;
+        }
+        let value = match &self.current_ret_kind {
+            RetKind::Float => self.builder.ins().f64const(0.0),
+            RetKind::Weld
+            | RetKind::Ore(_)
+            | RetKind::OreTuple(_)
+            | RetKind::Materials(_, _)
+            | RetKind::Generic
+            | RetKind::Function
+            | RetKind::Dynamic => self.builder.ins().iconst(self.ctx.ptr_type, 0),
+            _ => self.builder.ins().iconst(types::I32, 0),
+        };
+        self.builder.ins().return_(&[value]);
     }
 
     fn is_float_expr(&self, expr: &Expr) -> bool {
@@ -326,7 +440,9 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
             Expr::MemberAccess { object, member } => {
                 if let Expr::Identifier(name) = &**object {
                     if let Some(VarInfo::Tuple { fields }) = self.var_info.get(name) {
-                        if let Some((Subtype::Float, _)) = fields.iter().find(|(_, f_name)| f_name == member) {
+                        if let Some((Subtype::Float, _)) =
+                            fields.iter().find(|(_, f_name)| f_name == member)
+                        {
                             return true;
                         }
                     }
@@ -335,10 +451,18 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
             }
             Expr::IndexAccess { object, .. } => {
                 if let Expr::Identifier(name) = &**object {
-                    if let Some(VarInfo::Array { element_type: Subtype::Float, .. }) = self.var_info.get(name) {
+                    if let Some(VarInfo::Array {
+                        element_type: Subtype::Float,
+                        ..
+                    }) = self.var_info.get(name)
+                    {
                         return true;
                     }
-                    if let Some(VarInfo::List { element_type: Subtype::Float, .. }) = self.var_info.get(name) {
+                    if let Some(VarInfo::List {
+                        element_type: Subtype::Float,
+                        ..
+                    }) = self.var_info.get(name)
+                    {
                         return true;
                     }
                 }
@@ -346,7 +470,12 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
             }
             Expr::BinaryOp { lhs, rhs, .. } => self.is_float_expr(lhs) || self.is_float_expr(rhs),
             Expr::UnaryOp { operand, .. } => self.is_float_expr(operand),
-            Expr::Input(InputNode { subtype: Some(Subtype::Float) }) => true,
+            Expr::Input(InputNode {
+                subtype: Some(Subtype::Float),
+            }) => true,
+            Expr::Call { callee, .. } => {
+                matches!(self.func_return_kinds.get(callee), Some(RetKind::Float))
+            }
             _ => false,
         }
     }
@@ -358,7 +487,9 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
             Expr::MemberAccess { object, member } => {
                 if let Expr::Identifier(name) = &**object {
                     if let Some(VarInfo::Tuple { fields }) = self.var_info.get(name) {
-                        if let Some((Subtype::Weld, _)) = fields.iter().find(|(_, f_name)| f_name == member) {
+                        if let Some((Subtype::Weld, _)) =
+                            fields.iter().find(|(_, f_name)| f_name == member)
+                        {
                             return true;
                         }
                     }
@@ -367,14 +498,25 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
             }
             Expr::IndexAccess { object, .. } => {
                 if let Expr::Identifier(name) = &**object {
-                    if let Some(VarInfo::Array { element_type: Subtype::Weld, .. }) = self.var_info.get(name) {
+                    if let Some(VarInfo::Array {
+                        element_type: Subtype::Weld,
+                        ..
+                    }) = self.var_info.get(name)
+                    {
                         return true;
                     }
-                    if let Some(VarInfo::List { element_type: Subtype::Weld, .. }) = self.var_info.get(name) {
+                    if let Some(VarInfo::List {
+                        element_type: Subtype::Weld,
+                        ..
+                    }) = self.var_info.get(name)
+                    {
                         return true;
                     }
                 }
                 false
+            }
+            Expr::Call { callee, .. } => {
+                matches!(self.func_return_kinds.get(callee), Some(RetKind::Weld))
             }
             _ => false,
         }
@@ -384,23 +526,34 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
         match expr {
             Expr::Bool(_) => true,
             Expr::Identifier(name) => self.bool_vars.contains(name),
+            Expr::Call { callee, .. } => {
+                matches!(self.func_return_kinds.get(callee), Some(RetKind::Bool))
+            }
             _ => false,
         }
     }
 
     fn emit_bounds_check(&mut self, index_val: Value, len_val: Value) -> ForgeResult<()> {
-        let in_bounds = self.builder.ins().icmp(IntCC::UnsignedLessThan, index_val, len_val);
+        let in_bounds = self
+            .builder
+            .ins()
+            .icmp(IntCC::UnsignedLessThan, index_val, len_val);
         let ok_block = self.builder.create_block();
         let err_block = self.builder.create_block();
-        self.builder.ins().brif(in_bounds, ok_block, &[], err_block, &[]);
+        self.builder
+            .ins()
+            .brif(in_bounds, ok_block, &[], err_block, &[]);
 
         self.builder.switch_to_block(err_block);
         self.builder.seal_block(err_block);
-        let oob_msg = self.builder.ins().symbol_value(self.ctx.ptr_type, self.runtime.oob_fmt);
+        let oob_msg = self
+            .builder
+            .ins()
+            .symbol_value(self.ctx.ptr_type, self.runtime.oob_fmt);
         self.builder.ins().call(self.runtime.puts, &[oob_msg]);
         let one = self.builder.ins().iconst(types::I32, 1);
         self.builder.ins().call(self.runtime.exit, &[one]);
-        self.builder.ins().return_(&[one]);
+        self.emit_default_return();
 
         self.builder.switch_to_block(ok_block);
         self.builder.seal_block(ok_block);
@@ -408,7 +561,10 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
     }
 
     fn emit_increment(&mut self, var_name: &str, op: &IncrOp) -> ForgeResult<()> {
-        let var = self.var_map.get(var_name).copied()
+        let var = self
+            .var_map
+            .get(var_name)
+            .copied()
             .ok_or_else(|| ForgeError::codegen(format!("Undefined variable: {}", var_name)))?;
         let current = self.builder.use_var(var);
 
@@ -431,18 +587,32 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
         Ok(())
     }
 
-    fn compile_namespace_call(&mut self, namespace: &str, method: &str, _args: &[Expr]) -> ForgeResult<Value> {
+    fn compile_namespace_call(
+        &mut self,
+        namespace: &str,
+        method: &str,
+        _args: &[Expr],
+    ) -> ForgeResult<Value> {
         match (namespace, method) {
             ("Program", "Stop") => {
                 let zero = self.builder.ins().iconst(types::I32, 0);
                 self.builder.ins().call(self.runtime.exit, &[zero]);
-                self.builder.ins().return_(&[zero]);
+                if self.current_ret_kind.is_void() {
+                    self.builder.ins().return_(&[]);
+                } else {
+                    self.builder.ins().return_(&[zero]);
+                }
+                self.terminated = true;
                 let dead_block = self.builder.create_block();
                 self.builder.switch_to_block(dead_block);
+                self.emit_default_return();
                 self.builder.seal_block(dead_block);
                 Ok(zero)
             }
-            _ => Err(ForgeError::codegen(format!("Unsupported namespace call: {}.{}", namespace, method))),
+            _ => Err(ForgeError::codegen(format!(
+                "Unsupported namespace call: {}.{}",
+                namespace, method
+            ))),
         }
     }
 
@@ -458,9 +628,15 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
         let zero = self.builder.ins().iconst(self.ctx.ptr_type, 0);
         let four = self.builder.ins().iconst(self.ctx.ptr_type, 4);
 
-        self.builder.ins().store(MachMemFlags::new(), zero, list_ptr, 0);
-        self.builder.ins().store(MachMemFlags::new(), four, list_ptr, 8);
-        self.builder.ins().store(MachMemFlags::new(), buf_ptr, list_ptr, 16);
+        self.builder
+            .ins()
+            .store(MachMemFlags::new(), zero, list_ptr, 0);
+        self.builder
+            .ins()
+            .store(MachMemFlags::new(), four, list_ptr, 8);
+        self.builder
+            .ins()
+            .store(MachMemFlags::new(), buf_ptr, list_ptr, 16);
 
         Ok(list_ptr)
     }
@@ -478,14 +654,20 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                 let obj_ptr = self.compile_assignment_target_ptr(object)?;
                 let info = self.get_target_info(object)?;
                 if let VarInfo::Tuple { fields } = info {
-                    let idx = fields.iter().position(|(_, f_name)| f_name == member).ok_or_else(|| {
-                        ForgeError::codegen(format!("Unknown tuple field: {}", member))
-                    })?;
+                    let idx = fields
+                        .iter()
+                        .position(|(_, f_name)| f_name == member)
+                        .ok_or_else(|| {
+                            ForgeError::codegen(format!("Unknown tuple field: {}", member))
+                        })?;
                     let offset = (idx * 8) as i32;
                     let off_val = self.builder.ins().iconst(self.ctx.ptr_type, offset as i64);
                     Ok(self.builder.ins().iadd(obj_ptr, off_val))
                 } else {
-                    Err(ForgeError::codegen(format!("Member target not supported on {:?}", info)))
+                    Err(ForgeError::codegen(format!(
+                        "Member target not supported on {:?}",
+                        info
+                    )))
                 }
             }
             AssignmentTarget::Index { object, index } => {
@@ -495,7 +677,12 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                 let info = self.get_target_info(object)?;
                 match info {
                     VarInfo::Array { .. } => {
-                        let len = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_ptr, 0);
+                        let len = self.builder.ins().load(
+                            self.ctx.ptr_type,
+                            MachMemFlags::new(),
+                            obj_ptr,
+                            0,
+                        );
                         self.emit_bounds_check(idx_val_ptr, len)?;
                         let eight = self.builder.ins().iconst(self.ctx.ptr_type, 8);
                         let byte_offset = self.builder.ins().imul(idx_val_ptr, eight);
@@ -504,14 +691,26 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                         Ok(self.builder.ins().iadd(elem_addr, sixteen))
                     }
                     VarInfo::List { .. } => {
-                        let len = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_ptr, 0);
+                        let len = self.builder.ins().load(
+                            self.ctx.ptr_type,
+                            MachMemFlags::new(),
+                            obj_ptr,
+                            0,
+                        );
                         self.emit_bounds_check(idx_val_ptr, len)?;
-                        let buf_ptr = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_ptr, 16);
+                        let buf_ptr = self.builder.ins().load(
+                            self.ctx.ptr_type,
+                            MachMemFlags::new(),
+                            obj_ptr,
+                            16,
+                        );
                         let eight = self.builder.ins().iconst(self.ctx.ptr_type, 8);
                         let byte_offset = self.builder.ins().imul(idx_val_ptr, eight);
                         Ok(self.builder.ins().iadd(buf_ptr, byte_offset))
                     }
-                    _ => Err(ForgeError::codegen("Index assignment target must be Array or List")),
+                    _ => Err(ForgeError::codegen(
+                        "Index assignment target must be Array or List",
+                    )),
                 }
             }
         }
@@ -519,11 +718,9 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
 
     fn get_target_info(&self, target: &AssignmentTarget) -> ForgeResult<VarInfo> {
         match target {
-            AssignmentTarget::Var(name) => {
-                self.var_info.get(name).cloned().ok_or_else(|| {
-                    ForgeError::codegen(format!("Undefined variable info for: {}", name))
-                })
-            }
+            AssignmentTarget::Var(name) => self.var_info.get(name).cloned().ok_or_else(|| {
+                ForgeError::codegen(format!("Undefined variable info for: {}", name))
+            }),
             _ => Ok(VarInfo::Primitive(self.ctx.ptr_type)),
         }
     }
@@ -532,20 +729,34 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
         match stmt {
             Statement::VarDecl(v) => {
                 let (ty, info) = match &v.type_decl {
-                    TypeDecl::Number(Subtype::Float) => (types::F64, VarInfo::Primitive(types::F64)),
+                    TypeDecl::Number(Subtype::Float) => {
+                        (types::F64, VarInfo::Primitive(types::F64))
+                    }
                     TypeDecl::Number(_) => (types::I32, VarInfo::Primitive(types::I32)),
                     TypeDecl::Weld => (self.ctx.ptr_type, VarInfo::Primitive(self.ctx.ptr_type)),
                     TypeDecl::Bool => (types::I32, VarInfo::Primitive(types::I32)),
                     TypeDecl::Ore(size_opt) => {
                         let size = size_opt.unwrap_or(0) as usize;
-                        (self.ctx.ptr_type, VarInfo::Array { element_type: Subtype::Int, size })
+                        (
+                            self.ctx.ptr_type,
+                            VarInfo::Array {
+                                element_type: Subtype::Int,
+                                size,
+                            },
+                        )
                     }
-                    TypeDecl::OreTuple(fields) => {
-                        (self.ctx.ptr_type, VarInfo::Tuple { fields: fields.clone() })
-                    }
-                    TypeDecl::Materials(elem_type, _) => {
-                        (self.ctx.ptr_type, VarInfo::List { element_type: elem_type.clone() })
-                    }
+                    TypeDecl::OreTuple(fields) => (
+                        self.ctx.ptr_type,
+                        VarInfo::Tuple {
+                            fields: fields.clone(),
+                        },
+                    ),
+                    TypeDecl::Materials(elem_type, _) => (
+                        self.ctx.ptr_type,
+                        VarInfo::List {
+                            element_type: elem_type.clone(),
+                        },
+                    ),
                 };
                 let var = self.builder.declare_var(ty);
                 self.var_map.insert(v.name.clone(), var);
@@ -577,45 +788,96 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
             }
             Statement::Print(p) => {
                 if let Expr::Str(parts) = &p.expr {
-                    if parts.iter().any(|part| matches!(part, StringPart::Interp(_))) {
+                    if parts
+                        .iter()
+                        .any(|part| matches!(part, StringPart::Interp(_)))
+                    {
                         for part in parts {
                             match part {
                                 StringPart::Literal(text) => {
                                     if let Some(gv) = self.string_map.get(text) {
-                                        let value = self.builder.ins().symbol_value(self.ctx.ptr_type, *gv);
-                                        let stdout_ptr = self.builder.ins().symbol_value(self.ctx.ptr_type, self.runtime.stdout);
-                                        let stdout = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), stdout_ptr, 0);
-                                        self.builder.ins().call(self.runtime.fputs, &[value, stdout]);
+                                        let value =
+                                            self.builder.ins().symbol_value(self.ctx.ptr_type, *gv);
+                                        let stdout_ptr = self
+                                            .builder
+                                            .ins()
+                                            .symbol_value(self.ctx.ptr_type, self.runtime.stdout);
+                                        let stdout = self.builder.ins().load(
+                                            self.ctx.ptr_type,
+                                            MachMemFlags::new(),
+                                            stdout_ptr,
+                                            0,
+                                        );
+                                        self.builder
+                                            .ins()
+                                            .call(self.runtime.fputs, &[value, stdout]);
                                     }
                                 }
                                 StringPart::Interp(name) => {
-                                    let value = self.compile_expr(&Expr::Identifier(name.clone()))?;
-                                    if self.string_map.contains_key(name) || self.string_vars.contains(name) {
-                                        let stdout_ptr = self.builder.ins().symbol_value(self.ctx.ptr_type, self.runtime.stdout);
-                                        let stdout = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), stdout_ptr, 0);
-                                        self.builder.ins().call(self.runtime.fputs, &[value, stdout]);
+                                    let interp_expr = if name.contains('.') {
+                                        let mut parts = name.split('.');
+                                        let object_name = parts.next().unwrap().to_string();
+                                        let member = parts.collect::<Vec<_>>().join(".");
+                                        Expr::MemberAccess {
+                                            object: Box::new(Expr::Identifier(object_name)),
+                                            member,
+                                        }
+                                    } else {
+                                        Expr::Identifier(name.clone())
+                                    };
+                                    let value = self.compile_expr(&interp_expr)?;
+                                    if self.is_string_expr(&interp_expr) {
+                                        let stdout_ptr = self
+                                            .builder
+                                            .ins()
+                                            .symbol_value(self.ctx.ptr_type, self.runtime.stdout);
+                                        let stdout = self.builder.ins().load(
+                                            self.ctx.ptr_type,
+                                            MachMemFlags::new(),
+                                            stdout_ptr,
+                                            0,
+                                        );
+                                        self.builder
+                                            .ins()
+                                            .call(self.runtime.fputs, &[value, stdout]);
                                     } else {
                                         let fmt = if self.float_vars.contains(name) {
                                             self.runtime.float_inline_fmt
                                         } else {
                                             self.runtime.int_inline_fmt
                                         };
-                                        let fmt_value = self.builder.ins().symbol_value(self.ctx.ptr_type, fmt);
+                                        let fmt_value =
+                                            self.builder.ins().symbol_value(self.ctx.ptr_type, fmt);
                                         let numeric_value = if self.float_vars.contains(name) {
                                             value
                                         } else {
                                             self.builder.ins().fcvt_from_sint(types::F64, value)
                                         };
-                                        self.builder.ins().call(self.runtime.printf, &[fmt_value, numeric_value]);
+                                        self.builder
+                                            .ins()
+                                            .call(self.runtime.printf, &[fmt_value, numeric_value]);
                                     }
                                 }
                             }
                         }
-                        let newline = self.string_map.get("\n").map(|gv| self.builder.ins().symbol_value(self.ctx.ptr_type, *gv));
+                        let newline = self
+                            .string_map
+                            .get("\n")
+                            .map(|gv| self.builder.ins().symbol_value(self.ctx.ptr_type, *gv));
                         if let Some(value) = newline {
-                            let stdout_ptr = self.builder.ins().symbol_value(self.ctx.ptr_type, self.runtime.stdout);
-                            let stdout = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), stdout_ptr, 0);
-                            self.builder.ins().call(self.runtime.fputs, &[value, stdout]);
+                            let stdout_ptr = self
+                                .builder
+                                .ins()
+                                .symbol_value(self.ctx.ptr_type, self.runtime.stdout);
+                            let stdout = self.builder.ins().load(
+                                self.ctx.ptr_type,
+                                MachMemFlags::new(),
+                                stdout_ptr,
+                                0,
+                            );
+                            self.builder
+                                .ins()
+                                .call(self.runtime.fputs, &[value, stdout]);
                         }
                         return Ok(());
                     }
@@ -629,14 +891,22 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                     self.builder.ins().call(self.runtime.puts, &[val]);
                 } else if is_bool {
                     let is_true = self.builder.ins().icmp_imm_u(IntCC::NotEqual, val, 0);
-                    let true_str_val = self.builder.ins().symbol_value(self.ctx.ptr_type, self.runtime.true_str);
-                    let false_str_val = self.builder.ins().symbol_value(self.ctx.ptr_type, self.runtime.false_str);
+                    let true_str_val = self
+                        .builder
+                        .ins()
+                        .symbol_value(self.ctx.ptr_type, self.runtime.true_str);
+                    let false_str_val = self
+                        .builder
+                        .ins()
+                        .symbol_value(self.ctx.ptr_type, self.runtime.false_str);
 
                     let merge_block = self.builder.create_block();
                     let true_block = self.builder.create_block();
                     let false_block = self.builder.create_block();
 
-                    self.builder.ins().brif(is_true, true_block, &[], false_block, &[]);
+                    self.builder
+                        .ins()
+                        .brif(is_true, true_block, &[], false_block, &[]);
 
                     self.builder.switch_to_block(true_block);
                     self.builder.seal_block(true_block);
@@ -662,7 +932,9 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                     } else {
                         self.builder.ins().fcvt_from_sint(types::F64, val)
                     };
-                    self.builder.ins().call(self.runtime.printf, &[fmt_val, numeric_val]);
+                    self.builder
+                        .ins()
+                        .call(self.runtime.printf, &[fmt_val, numeric_val]);
                 }
             }
             Statement::Assignment(a) => {
@@ -672,20 +944,30 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                         if let Some(var) = self.var_map.get(name).copied() {
                             self.builder.def_var(var, val);
                         } else {
-                            return Err(ForgeError::codegen(format!("Undefined variable: {}", name)));
+                            return Err(ForgeError::codegen(format!(
+                                "Undefined variable: {}",
+                                name
+                            )));
                         }
                     }
                     AssignmentTarget::Member { object, member } => {
                         let target_ptr = self.compile_assignment_target_ptr(object)?;
                         let info = self.get_target_info(object)?;
                         if let VarInfo::Tuple { fields } = info {
-                            let idx = fields.iter().position(|(_, f_name)| f_name == member).ok_or_else(|| {
-                                ForgeError::codegen(format!("Unknown tuple field: {}", member))
-                            })?;
+                            let idx = fields
+                                .iter()
+                                .position(|(_, f_name)| f_name == member)
+                                .ok_or_else(|| {
+                                    ForgeError::codegen(format!("Unknown tuple field: {}", member))
+                                })?;
                             let offset = (idx * 8) as i32;
-                            self.builder.ins().store(MachMemFlags::new(), val, target_ptr, offset);
+                            self.builder
+                                .ins()
+                                .store(MachMemFlags::new(), val, target_ptr, offset);
                         } else {
-                            return Err(ForgeError::codegen("Member assignment not supported on non-tuple"));
+                            return Err(ForgeError::codegen(
+                                "Member assignment not supported on non-tuple",
+                            ));
                         }
                     }
                     AssignmentTarget::Index { object, index } => {
@@ -695,23 +977,46 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                         let info = self.get_target_info(object)?;
                         match info {
                             VarInfo::Array { .. } => {
-                                let len = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), target_ptr, 0);
+                                let len = self.builder.ins().load(
+                                    self.ctx.ptr_type,
+                                    MachMemFlags::new(),
+                                    target_ptr,
+                                    0,
+                                );
                                 self.emit_bounds_check(idx_val_ptr, len)?;
                                 let eight = self.builder.ins().iconst(self.ctx.ptr_type, 8);
                                 let byte_offset = self.builder.ins().imul(idx_val_ptr, eight);
                                 let elem_addr = self.builder.ins().iadd(target_ptr, byte_offset);
-                                self.builder.ins().store(MachMemFlags::new(), val, elem_addr, 16);
+                                self.builder
+                                    .ins()
+                                    .store(MachMemFlags::new(), val, elem_addr, 16);
                             }
                             VarInfo::List { .. } => {
-                                let len = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), target_ptr, 0);
+                                let len = self.builder.ins().load(
+                                    self.ctx.ptr_type,
+                                    MachMemFlags::new(),
+                                    target_ptr,
+                                    0,
+                                );
                                 self.emit_bounds_check(idx_val_ptr, len)?;
-                                let buf_ptr = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), target_ptr, 16);
+                                let buf_ptr = self.builder.ins().load(
+                                    self.ctx.ptr_type,
+                                    MachMemFlags::new(),
+                                    target_ptr,
+                                    16,
+                                );
                                 let eight = self.builder.ins().iconst(self.ctx.ptr_type, 8);
                                 let byte_offset = self.builder.ins().imul(idx_val_ptr, eight);
                                 let elem_addr = self.builder.ins().iadd(buf_ptr, byte_offset);
-                                self.builder.ins().store(MachMemFlags::new(), val, elem_addr, 0);
+                                self.builder
+                                    .ins()
+                                    .store(MachMemFlags::new(), val, elem_addr, 0);
                             }
-                            _ => return Err(ForgeError::codegen("Index assignment on non-collection")),
+                            _ => {
+                                return Err(ForgeError::codegen(
+                                    "Index assignment on non-collection",
+                                ))
+                            }
                         }
                     }
                 }
@@ -730,26 +1035,31 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                     let then_block = self.builder.create_block();
                     let next_cond_block = self.builder.create_block();
 
-                    self.builder.ins().brif(cond_bool, then_block, &[], next_cond_block, &[]);
+                    self.builder
+                        .ins()
+                        .brif(cond_bool, then_block, &[], next_cond_block, &[]);
 
                     self.builder.switch_to_block(then_block);
                     self.builder.seal_block(then_block);
 
-                    for s in body {
-                        self.compile_statement(s)?;
+                    let branch_terminated = self.compile_block(body)?;
+                    if !branch_terminated {
+                        self.builder.ins().jump(merge_block, &[]);
                     }
-                    self.builder.ins().jump(merge_block, &[]);
 
                     self.builder.switch_to_block(next_cond_block);
                     self.builder.seal_block(next_cond_block);
                 }
 
                 if let Some(else_body) = &if_node.else_body {
-                    for s in else_body {
-                        self.compile_statement(s)?;
+                    let else_terminated = self.compile_block(else_body)?;
+                    if !else_terminated {
+                        self.builder.ins().jump(merge_block, &[]);
                     }
                 }
-                self.builder.ins().jump(merge_block, &[]);
+                if if_node.else_body.is_none() {
+                    self.builder.ins().jump(merge_block, &[]);
+                }
 
                 if is_top_level_if {
                     self.break_targets.pop();
@@ -767,16 +1077,18 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                 self.builder.switch_to_block(header_block);
                 let condition = self.compile_expr(&while_node.condition)?;
                 let condition = self.builder.ins().icmp_imm_u(IntCC::NotEqual, condition, 0);
-                self.builder.ins().brif(condition, body_block, &[], exit_block, &[]);
+                self.builder
+                    .ins()
+                    .brif(condition, body_block, &[], exit_block, &[]);
 
                 self.break_targets.push(exit_block);
                 self.continue_targets.push(header_block);
 
                 self.builder.switch_to_block(body_block);
-                for s in &while_node.body {
-                    self.compile_statement(s)?;
+                let body_terminated = self.compile_block(&while_node.body)?;
+                if !body_terminated {
+                    self.builder.ins().jump(header_block, &[]);
                 }
-                self.builder.ins().jump(header_block, &[]);
                 self.builder.seal_block(body_block);
                 self.builder.seal_block(header_block);
 
@@ -798,22 +1110,26 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                 self.builder.switch_to_block(cond_block);
                 let cond_val = self.compile_expr(&for_node.condition)?;
                 let cond_bool = self.builder.ins().icmp_imm_u(IntCC::NotEqual, cond_val, 0);
-                self.builder.ins().brif(cond_bool, body_block, &[], exit_block, &[]);
+                self.builder
+                    .ins()
+                    .brif(cond_bool, body_block, &[], exit_block, &[]);
 
                 self.break_targets.push(exit_block);
                 self.continue_targets.push(incr_block);
 
                 self.builder.switch_to_block(body_block);
-                for s in &for_node.body {
-                    self.compile_statement(s)?;
+                let body_terminated = self.compile_block(&for_node.body)?;
+                if !body_terminated {
+                    self.builder.ins().jump(incr_block, &[]);
                 }
-                self.builder.ins().jump(incr_block, &[]);
                 self.builder.seal_block(body_block);
 
                 self.builder.switch_to_block(incr_block);
                 self.builder.seal_block(incr_block);
-                self.emit_increment(&for_node.increment_var, &for_node.increment_op)?;
-                self.builder.ins().jump(cond_block, &[]);
+                if !body_terminated {
+                    self.emit_increment(&for_node.increment_var, &for_node.increment_op)?;
+                    self.builder.ins().jump(cond_block, &[]);
+                }
 
                 self.builder.seal_block(cond_block);
 
@@ -824,37 +1140,107 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                 self.builder.seal_block(exit_block);
             }
             Statement::Stop => {
-                let target = self.break_targets.last().copied().ok_or_else(|| {
-                    ForgeError::codegen("Stop used outside of break target")
-                })?;
-                self.builder.ins().jump(target, &[]);
-                let dead_block = self.builder.create_block();
-                self.builder.switch_to_block(dead_block);
-                self.builder.seal_block(dead_block);
+                let target = self
+                    .break_targets
+                    .last()
+                    .copied()
+                    .ok_or_else(|| ForgeError::codegen("Stop used outside of break target"))?;
+                self.jump_and_terminate(target);
             }
             Statement::Skip => {
-                let target = self.continue_targets.last().copied().ok_or_else(|| {
-                    ForgeError::codegen("Skip used outside of loop")
-                })?;
-                self.builder.ins().jump(target, &[]);
-                let dead_block = self.builder.create_block();
-                self.builder.switch_to_block(dead_block);
-                self.builder.seal_block(dead_block);
+                let target = self
+                    .continue_targets
+                    .last()
+                    .copied()
+                    .ok_or_else(|| ForgeError::codegen("Skip used outside of loop"))?;
+                self.jump_and_terminate(target);
             }
             Statement::ExprStmt(e) => {
                 self.compile_expr(e)?;
             }
-            Statement::DataDecl(_) | Statement::ObjectDecl(_) | Statement::Use(_) => {
+            Statement::Return(value) => {
+                if let Some(expr) = value {
+                    let val = self.compile_expr(expr)?;
+                    self.builder.ins().return_(&[val]);
+                } else if self.current_ret_kind.is_void() {
+                    self.builder.ins().return_(&[]);
+                } else {
+                    return Err(ForgeError::codegen(
+                        "Missing return value for non-void function",
+                    ));
+                }
+                self.terminated = true;
+            }
+            Statement::DataDecl(_) | Statement::Use(_) => {
                 // Ignore for now, validly parsed but no codegen action needed
             }
-            _ => return Err(ForgeError::codegen(format!("Unsupported statement: {:?}", stmt))),
+            Statement::ObjectDecl(obj) => {
+                let mut fields = Vec::new();
+                for (_, value) in &obj.inits {
+                    let field_type = match value {
+                        Expr::Number(n) if n.is_float => Subtype::Float,
+                        Expr::Number(_) => Subtype::Int,
+                        Expr::Bool(_) => Subtype::Int,
+                        Expr::Str(_) => Subtype::Weld,
+                        _ => Subtype::Generic,
+                    };
+                    let field_name = obj
+                        .inits
+                        .first()
+                        .and_then(|(path, _)| path.last().cloned())
+                        .unwrap_or_default();
+                    if !fields.iter().any(|(_, name)| name == &field_name) {
+                        fields.push((field_type, field_name));
+                    }
+                }
+                if fields.is_empty() {
+                    return Ok(());
+                }
+                let var = self.builder.declare_var(self.ctx.ptr_type);
+                let alloc_size = self
+                    .builder
+                    .ins()
+                    .iconst(self.ctx.ptr_type, (fields.len() * 8) as i64);
+                let obj_ptr = self.builder.ins().call(self.runtime.malloc, &[alloc_size]);
+                let obj_ptr = self.builder.inst_results(obj_ptr)[0];
+                self.var_map.insert(obj.name.clone(), var);
+                self.var_info.insert(
+                    obj.name.clone(),
+                    VarInfo::Tuple {
+                        fields: fields.clone(),
+                    },
+                );
+                self.builder.def_var(var, obj_ptr);
+
+                for (path, value) in &obj.inits {
+                    let field_name = path.last().cloned().unwrap_or_default();
+                    let index = fields
+                        .iter()
+                        .position(|(_, name)| name == &field_name)
+                        .unwrap_or(0);
+                    let val = self.compile_expr(value)?;
+                    let offset = (index * 8) as i32;
+                    self.builder
+                        .ins()
+                        .store(MachMemFlags::new(), val, obj_ptr, offset);
+                }
+            }
+            _ => {
+                return Err(ForgeError::codegen(format!(
+                    "Unsupported statement: {:?}",
+                    stmt
+                )))
+            }
         }
         Ok(())
     }
 
     pub fn compile_expr(&mut self, expr: &Expr) -> ForgeResult<Value> {
         match expr {
-            Expr::Bool(b) => Ok(self.builder.ins().iconst(types::I32, if *b { 1 } else { 0 })),
+            Expr::Bool(b) => Ok(self
+                .builder
+                .ins()
+                .iconst(types::I32, if *b { 1 } else { 0 })),
             Expr::Number(n) => {
                 if n.is_float {
                     Ok(self.builder.ins().f64const(n.float_val))
@@ -863,6 +1249,15 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                 }
             }
             Expr::Identifier(name) => {
+                if name.contains('.') {
+                    let mut parts = name.split('.');
+                    let object_name = parts.next().unwrap();
+                    let member = parts.collect::<Vec<_>>().join(".");
+                    return self.compile_expr(&Expr::MemberAccess {
+                        object: Box::new(Expr::Identifier(object_name.to_string())),
+                        member,
+                    });
+                }
                 if let Some(var) = self.var_map.get(name).copied() {
                     Ok(self.builder.use_var(var))
                 } else if let Some(gv) = self.string_map.get(name).copied() {
@@ -880,13 +1275,19 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
 
                 let len_val = self.builder.ins().iconst(self.ctx.ptr_type, len as i64);
                 let elem_size_val = self.builder.ins().iconst(self.ctx.ptr_type, 8);
-                self.builder.ins().store(MachMemFlags::new(), len_val, array_ptr, 0);
-                self.builder.ins().store(MachMemFlags::new(), elem_size_val, array_ptr, 8);
+                self.builder
+                    .ins()
+                    .store(MachMemFlags::new(), len_val, array_ptr, 0);
+                self.builder
+                    .ins()
+                    .store(MachMemFlags::new(), elem_size_val, array_ptr, 8);
 
                 for (i, elem) in elements.iter().enumerate() {
                     let val = self.compile_expr(elem)?;
                     let offset = (16 + i * 8) as i32;
-                    self.builder.ins().store(MachMemFlags::new(), val, array_ptr, offset);
+                    self.builder
+                        .ins()
+                        .store(MachMemFlags::new(), val, array_ptr, offset);
                 }
 
                 Ok(array_ptr)
@@ -901,7 +1302,9 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                 for (i, elem) in elements.iter().enumerate() {
                     let val = self.compile_expr(elem)?;
                     let offset = (i * 8) as i32;
-                    self.builder.ins().store(MachMemFlags::new(), val, tuple_ptr, offset);
+                    self.builder
+                        .ins()
+                        .store(MachMemFlags::new(), val, tuple_ptr, offset);
                 }
 
                 Ok(tuple_ptr)
@@ -914,21 +1317,35 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                 let call_inst = self.builder.ins().call(self.runtime.malloc, &[header_size]);
                 let list_ptr = self.builder.inst_results(call_inst)[0];
 
-                let buf_size = self.builder.ins().iconst(self.ctx.ptr_type, (capacity * 8) as i64);
+                let buf_size = self
+                    .builder
+                    .ins()
+                    .iconst(self.ctx.ptr_type, (capacity * 8) as i64);
                 let call_buf = self.builder.ins().call(self.runtime.malloc, &[buf_size]);
                 let buf_ptr = self.builder.inst_results(call_buf)[0];
 
                 let len_val = self.builder.ins().iconst(self.ctx.ptr_type, len as i64);
-                let cap_val = self.builder.ins().iconst(self.ctx.ptr_type, capacity as i64);
+                let cap_val = self
+                    .builder
+                    .ins()
+                    .iconst(self.ctx.ptr_type, capacity as i64);
 
-                self.builder.ins().store(MachMemFlags::new(), len_val, list_ptr, 0);
-                self.builder.ins().store(MachMemFlags::new(), cap_val, list_ptr, 8);
-                self.builder.ins().store(MachMemFlags::new(), buf_ptr, list_ptr, 16);
+                self.builder
+                    .ins()
+                    .store(MachMemFlags::new(), len_val, list_ptr, 0);
+                self.builder
+                    .ins()
+                    .store(MachMemFlags::new(), cap_val, list_ptr, 8);
+                self.builder
+                    .ins()
+                    .store(MachMemFlags::new(), buf_ptr, list_ptr, 16);
 
                 for (i, elem) in elements.iter().enumerate() {
                     let val = self.compile_expr(elem)?;
                     let offset = (i * 8) as i32;
-                    self.builder.ins().store(MachMemFlags::new(), val, buf_ptr, offset);
+                    self.builder
+                        .ins()
+                        .store(MachMemFlags::new(), val, buf_ptr, offset);
                 }
 
                 Ok(list_ptr)
@@ -948,35 +1365,53 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                     }
                 }
 
-                let len = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_val, 0);
+                let len =
+                    self.builder
+                        .ins()
+                        .load(self.ctx.ptr_type, MachMemFlags::new(), obj_val, 0);
                 self.emit_bounds_check(idx_val_ptr, len)?;
 
                 let eight = self.builder.ins().iconst(self.ctx.ptr_type, 8);
                 let byte_offset = self.builder.ins().imul(idx_val_ptr, eight);
 
                 if is_list {
-                    let buf_ptr = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_val, 16);
+                    let buf_ptr = self.builder.ins().load(
+                        self.ctx.ptr_type,
+                        MachMemFlags::new(),
+                        obj_val,
+                        16,
+                    );
                     let elem_addr = self.builder.ins().iadd(buf_ptr, byte_offset);
-                    Ok(self.builder.ins().load(types::I32, MachMemFlags::new(), elem_addr, 0))
+                    Ok(self
+                        .builder
+                        .ins()
+                        .load(types::I32, MachMemFlags::new(), elem_addr, 0))
                 } else {
                     let elem_addr = self.builder.ins().iadd(obj_val, byte_offset);
-                    Ok(self.builder.ins().load(types::I32, MachMemFlags::new(), elem_addr, 16))
+                    Ok(self
+                        .builder
+                        .ins()
+                        .load(types::I32, MachMemFlags::new(), elem_addr, 16))
                 }
             }
             Expr::MemberAccess { object, member } => {
                 let obj_val = self.compile_expr(object)?;
                 if member == "Length" || member == "Len" {
-                    // Length is stored at offset 0
-                    let len_val = self.builder.ins().load(types::I32, MachMemFlags::new(), obj_val, 0);
+                    let len_val =
+                        self.builder
+                            .ins()
+                            .load(types::I32, MachMemFlags::new(), obj_val, 0);
                     return Ok(len_val);
                 }
 
-                // Field access on tuple
                 if let Expr::Identifier(name) = &**object {
                     if let Some(VarInfo::Tuple { fields }) = self.var_info.get(name).cloned() {
-                        let idx = fields.iter().position(|(_, f_name)| f_name == member).ok_or_else(|| {
-                            ForgeError::codegen(format!("Unknown tuple field: {}", member))
-                        })?;
+                        let idx = fields
+                            .iter()
+                            .position(|(_, f_name)| f_name == member)
+                            .ok_or_else(|| {
+                                ForgeError::codegen(format!("Unknown tuple field: {}", member))
+                            })?;
                         let (field_type, _) = &fields[idx];
                         let offset = (idx * 8) as i32;
                         let val_type = match field_type {
@@ -984,17 +1419,32 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                             Subtype::Weld => self.ctx.ptr_type,
                             _ => types::I32,
                         };
-                        return Ok(self.builder.ins().load(val_type, MachMemFlags::new(), obj_val, offset));
+                        return Ok(self.builder.ins().load(
+                            val_type,
+                            MachMemFlags::new(),
+                            obj_val,
+                            offset,
+                        ));
                     }
                 }
 
-                Err(ForgeError::codegen(format!("Member access not supported: {}.{}", "obj", member)))
+                Err(ForgeError::codegen(format!(
+                    "Member access not supported: {}.{}",
+                    "obj", member
+                )))
             }
-            Expr::MethodCall { object, method, args } => {
+            Expr::MethodCall {
+                object,
+                method,
+                args,
+            } => {
                 let obj_val = self.compile_expr(object)?;
                 match method.as_str() {
                     "Length" | "Len" => {
-                        let len_val = self.builder.ins().load(types::I32, MachMemFlags::new(), obj_val, 0);
+                        let len_val =
+                            self.builder
+                                .ins()
+                                .load(types::I32, MachMemFlags::new(), obj_val, 0);
                         Ok(len_val)
                     }
                     "Add" => {
@@ -1002,15 +1452,36 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                             return Err(ForgeError::codegen("Add expects 1 argument"));
                         }
                         let item_val = self.compile_expr(&args[0])?;
-                        let len_val = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_val, 0);
-                        let cap_val = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_val, 8);
-                        let buf_val = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_val, 16);
+                        let len_val = self.builder.ins().load(
+                            self.ctx.ptr_type,
+                            MachMemFlags::new(),
+                            obj_val,
+                            0,
+                        );
+                        let cap_val = self.builder.ins().load(
+                            self.ctx.ptr_type,
+                            MachMemFlags::new(),
+                            obj_val,
+                            8,
+                        );
+                        let buf_val = self.builder.ins().load(
+                            self.ctx.ptr_type,
+                            MachMemFlags::new(),
+                            obj_val,
+                            16,
+                        );
 
-                        let need_realloc = self.builder.ins().icmp(IntCC::SignedGreaterThanOrEqual, len_val, cap_val);
+                        let need_realloc = self.builder.ins().icmp(
+                            IntCC::SignedGreaterThanOrEqual,
+                            len_val,
+                            cap_val,
+                        );
                         let grow_block = self.builder.create_block();
                         let append_block = self.builder.create_block();
 
-                        self.builder.ins().brif(need_realloc, grow_block, &[], append_block, &[]);
+                        self.builder
+                            .ins()
+                            .brif(need_realloc, grow_block, &[], append_block, &[]);
 
                         self.builder.switch_to_block(grow_block);
                         self.builder.seal_block(grow_block);
@@ -1018,24 +1489,40 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                         let new_cap = self.builder.ins().imul(cap_val, two);
                         let eight = self.builder.ins().iconst(self.ctx.ptr_type, 8);
                         let new_buf_size = self.builder.ins().imul(new_cap, eight);
-                        let call_realloc = self.builder.ins().call(self.runtime.realloc, &[buf_val, new_buf_size]);
+                        let call_realloc = self
+                            .builder
+                            .ins()
+                            .call(self.runtime.realloc, &[buf_val, new_buf_size]);
                         let new_buf = self.builder.inst_results(call_realloc)[0];
-                        self.builder.ins().store(MachMemFlags::new(), new_cap, obj_val, 8);
-                        self.builder.ins().store(MachMemFlags::new(), new_buf, obj_val, 16);
+                        self.builder
+                            .ins()
+                            .store(MachMemFlags::new(), new_cap, obj_val, 8);
+                        self.builder
+                            .ins()
+                            .store(MachMemFlags::new(), new_buf, obj_val, 16);
                         self.builder.ins().jump(append_block, &[]);
 
                         self.builder.switch_to_block(append_block);
                         self.builder.seal_block(append_block);
 
-                        let current_buf = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_val, 16);
+                        let current_buf = self.builder.ins().load(
+                            self.ctx.ptr_type,
+                            MachMemFlags::new(),
+                            obj_val,
+                            16,
+                        );
                         let eight = self.builder.ins().iconst(self.ctx.ptr_type, 8);
                         let offset = self.builder.ins().imul(len_val, eight);
                         let slot_addr = self.builder.ins().iadd(current_buf, offset);
-                        self.builder.ins().store(MachMemFlags::new(), item_val, slot_addr, 0);
+                        self.builder
+                            .ins()
+                            .store(MachMemFlags::new(), item_val, slot_addr, 0);
 
                         let one = self.builder.ins().iconst(self.ctx.ptr_type, 1);
                         let new_len = self.builder.ins().iadd(len_val, one);
-                        self.builder.ins().store(MachMemFlags::new(), new_len, obj_val, 0);
+                        self.builder
+                            .ins()
+                            .store(MachMemFlags::new(), new_len, obj_val, 0);
 
                         let zero = self.builder.ins().iconst(types::I32, 0);
                         Ok(zero)
@@ -1047,8 +1534,18 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                         let idx_val = self.compile_expr(&args[0])?;
                         let idx_val_ptr = self.builder.ins().sextend(self.ctx.ptr_type, idx_val);
 
-                        let len_val = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_val, 0);
-                        let buf_val = self.builder.ins().load(self.ctx.ptr_type, MachMemFlags::new(), obj_val, 16);
+                        let len_val = self.builder.ins().load(
+                            self.ctx.ptr_type,
+                            MachMemFlags::new(),
+                            obj_val,
+                            0,
+                        );
+                        let buf_val = self.builder.ins().load(
+                            self.ctx.ptr_type,
+                            MachMemFlags::new(),
+                            obj_val,
+                            16,
+                        );
                         self.emit_bounds_check(idx_val_ptr, len_val)?;
 
                         let eight = self.builder.ins().iconst(self.ctx.ptr_type, 8);
@@ -1064,19 +1561,52 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                         let remaining_elements = self.builder.ins().isub(len_val, next_idx);
                         let bytes_to_move = self.builder.ins().imul(remaining_elements, eight);
 
-                        self.builder.ins().call(self.runtime.memmove, &[dest_addr, src_addr, bytes_to_move]);
+                        self.builder
+                            .ins()
+                            .call(self.runtime.memmove, &[dest_addr, src_addr, bytes_to_move]);
 
                         let new_len = self.builder.ins().isub(len_val, one);
-                        self.builder.ins().store(MachMemFlags::new(), new_len, obj_val, 0);
+                        self.builder
+                            .ins()
+                            .store(MachMemFlags::new(), new_len, obj_val, 0);
 
                         let zero = self.builder.ins().iconst(types::I32, 0);
                         Ok(zero)
                     }
-                    other => Err(ForgeError::codegen(format!("Unknown method call: {}", other))),
+                    other => Err(ForgeError::codegen(format!(
+                        "Unknown method call: {}",
+                        other
+                    ))),
                 }
             }
-            Expr::NamespaceCall { namespace, method, args } => {
-                self.compile_namespace_call(namespace, method, args)
+            Expr::NamespaceCall {
+                namespace,
+                method,
+                args,
+            } => self.compile_namespace_call(namespace, method, args),
+            Expr::Call { callee, args } => {
+                let func_id = self.func_ids.get(callee).copied().ok_or_else(|| {
+                    ForgeError::codegen(format!("Undefined function: {}", callee))
+                })?;
+                let func_ref = self
+                    .ctx
+                    .module
+                    .declare_func_in_func(func_id, self.builder.func);
+                let mut call_args = Vec::new();
+                for arg in args {
+                    call_args.push(self.compile_expr(arg)?);
+                }
+                let call_inst = self.builder.ins().call(func_ref, &call_args);
+                let ret_kind = self
+                    .func_return_kinds
+                    .get(callee)
+                    .cloned()
+                    .unwrap_or(RetKind::Void);
+                if ret_kind.is_void() {
+                    return Ok(self.builder.ins().iconst(types::I32, 0));
+                }
+                let results = self.builder.inst_results(call_inst);
+                Ok(results[0])
             }
             Expr::BinaryOp { op, lhs, rhs } => {
                 let l = self.compile_expr(lhs)?;
@@ -1103,8 +1633,13 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                             let pow_inst = self.builder.ins().call(self.runtime.pow, &[l_f, r_f]);
                             Ok(self.builder.inst_results(pow_inst)[0])
                         }
-                        BinOp::Rem => Err(ForgeError::codegen("Modulo (%) is only supported for integer types")),
-                        _ => Err(ForgeError::codegen(format!("Unsupported float op: {:?}", op))),
+                        BinOp::Rem => Err(ForgeError::codegen(
+                            "Modulo (%) is only supported for integer types",
+                        )),
+                        _ => Err(ForgeError::codegen(format!(
+                            "Unsupported float op: {:?}",
+                            op
+                        ))),
                     }
                 } else {
                     match op {
@@ -1124,8 +1659,15 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                         BinOp::Ne => Ok(self.builder.ins().icmp(IntCC::NotEqual, l, r)),
                         BinOp::Lt => Ok(self.builder.ins().icmp(IntCC::SignedLessThan, l, r)),
                         BinOp::Gt => Ok(self.builder.ins().icmp(IntCC::SignedGreaterThan, l, r)),
-                        BinOp::Le => Ok(self.builder.ins().icmp(IntCC::SignedLessThanOrEqual, l, r)),
-                        BinOp::Ge => Ok(self.builder.ins().icmp(IntCC::SignedGreaterThanOrEqual, l, r)),
+                        BinOp::Le => {
+                            Ok(self.builder.ins().icmp(IntCC::SignedLessThanOrEqual, l, r))
+                        }
+                        BinOp::Ge => {
+                            Ok(self
+                                .builder
+                                .ins()
+                                .icmp(IntCC::SignedGreaterThanOrEqual, l, r))
+                        }
                         BinOp::And => Ok(self.builder.ins().band(l, r)),
                         BinOp::Or => Ok(self.builder.ins().bor(l, r)),
                         BinOp::Xor => Ok(self.builder.ins().bxor(l, r)),
@@ -1154,8 +1696,13 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                         let slot_data = StackSlotData::new(StackSlotKind::ExplicitSlot, 256, 0);
                         let slot = self.builder.create_sized_stack_slot(slot_data);
                         let slot_ptr = self.builder.ins().stack_addr(self.ctx.ptr_type, slot, 0);
-                        let fmt_val = self.builder.ins().symbol_value(self.ctx.ptr_type, self.runtime.str_scanf);
-                        self.builder.ins().call(self.runtime.scanf, &[fmt_val, slot_ptr]);
+                        let fmt_val = self
+                            .builder
+                            .ins()
+                            .symbol_value(self.ctx.ptr_type, self.runtime.str_scanf);
+                        self.builder
+                            .ins()
+                            .call(self.runtime.scanf, &[fmt_val, slot_ptr]);
                         return Ok(slot_ptr);
                     }
                 };
@@ -1166,8 +1713,13 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                 let slot_ptr = self.builder.ins().stack_addr(self.ctx.ptr_type, slot, 0);
                 let fmt_val = self.builder.ins().symbol_value(self.ctx.ptr_type, fmt_gv);
 
-                self.builder.ins().call(self.runtime.scanf, &[fmt_val, slot_ptr]);
-                Ok(self.builder.ins().stack_load(self.ctx.ptr_type, ty, slot, 0))
+                self.builder
+                    .ins()
+                    .call(self.runtime.scanf, &[fmt_val, slot_ptr]);
+                Ok(self
+                    .builder
+                    .ins()
+                    .stack_load(self.ctx.ptr_type, ty, slot, 0))
             }
             Expr::Str(parts) => {
                 let mut s = String::new();
@@ -1179,18 +1731,68 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                 if let Some(gv) = self.string_map.get(&s).copied() {
                     Ok(self.builder.ins().symbol_value(self.ctx.ptr_type, gv))
                 } else {
-                    Err(ForgeError::codegen(format!("Undefined string literal: {}", s)))
+                    Err(ForgeError::codegen(format!(
+                        "Undefined string literal: {}",
+                        s
+                    )))
                 }
             }
-            _ => Err(ForgeError::codegen(format!("Unsupported expr: {:?}", expr))),
         }
     }
 }
 
 pub fn compile(program: &Program, obj_path: &std::path::Path, _link_math: bool) -> ForgeResult<()> {
     let mut ctx = CodeGenContext::new()?;
+    let ptr_type = ctx.ptr_type;
+    let function_return_kinds: HashMap<String, RetKind> = program
+        .statements
+        .iter()
+        .filter_map(|statement| match statement {
+            Statement::FunctionDecl(function) => {
+                Some((function.name.clone(), function.ret_kind.clone()))
+            }
+            _ => None,
+        })
+        .collect();
 
-    // Define main
+    let mut function_ids: HashMap<String, FuncId> = HashMap::new();
+
+    for stmt in &program.statements {
+        let Statement::FunctionDecl(function) = stmt else {
+            continue;
+        };
+        if function.name == "Main" {
+            continue;
+        }
+        let mut sig = ctx.module.make_signature();
+        for param in &function.params {
+            let ty = match &param.type_decl {
+                TypeDecl::Number(Subtype::Float) => types::F64,
+                TypeDecl::Number(_) | TypeDecl::Bool => types::I32,
+                TypeDecl::Weld => ptr_type,
+                TypeDecl::Ore(_) | TypeDecl::OreTuple(_) | TypeDecl::Materials(_, _) => ptr_type,
+            };
+            sig.params.push(AbiParam::new(ty));
+        }
+        match &function.ret_kind {
+            RetKind::Int | RetKind::Bool => sig.returns.push(AbiParam::new(types::I32)),
+            RetKind::Nunction | RetKind::Void => {}
+            RetKind::Float => sig.returns.push(AbiParam::new(types::F64)),
+            RetKind::Weld
+            | RetKind::Ore(_)
+            | RetKind::OreTuple(_)
+            | RetKind::Materials(_, _)
+            | RetKind::Generic
+            | RetKind::Function
+            | RetKind::Dynamic => sig.returns.push(AbiParam::new(ptr_type)),
+        }
+        let func_id = ctx
+            .module
+            .declare_function(&function.name, Linkage::Local, &sig)
+            .map_err(|e| ForgeError::codegen(format!("declare {}: {}", function.name, e)))?;
+        function_ids.insert(function.name.clone(), func_id);
+    }
+
     let mut main_sig = ctx.module.make_signature();
     main_sig.returns.push(AbiParam::new(types::I32));
     let main_id = ctx
@@ -1198,56 +1800,158 @@ pub fn compile(program: &Program, obj_path: &std::path::Path, _link_math: bool) 
         .declare_function("main", Linkage::Export, &main_sig)
         .map_err(|e| ForgeError::codegen(format!("declare main: {}", e)))?;
 
-    let mut clif_ctx = ctx.module.make_context();
-    let mut fn_builder_ctx = FunctionBuilderContext::new();
-
-    clif_ctx.func.signature = main_sig.clone();
-    clif_ctx.func.name = UserFuncName::user(0, main_id.as_u32());
-
-    // In modern Cranelift, we must declare data/funcs inside the function context
-    let runtime = ctx.declare_runtime_in_func(&mut clif_ctx.func);
-
-    // Find Main
-    let main_func = program.statements.iter().find_map(|s| {
-        if let Statement::FunctionDecl(f) = s {
-            if f.name == "Main" { return Some(f); }
-        }
-        None
-    }).ok_or_else(|| ForgeError::codegen("No Main function found"))?;
-    let functions: HashMap<String, FunctionDecl> = program.statements.iter().filter_map(|stmt| {
-        if let Statement::FunctionDecl(function) = stmt {
-            Some((function.name.clone(), function.clone()))
-        } else {
-            None
-        }
-    }).collect();
-    let expanded_body = expand_function_calls(&main_func.body, &functions)?;
-
-    // Pre-pass to collect all string literals so we can declare them in the function context
-    let mut string_map: HashMap<String, GlobalValue> = HashMap::new();
-    for stmt in &expanded_body {
-        collect_strings(stmt, &mut string_map, &mut ctx, &mut clif_ctx)?;
-    }
     for stmt in &program.statements {
-        if let Statement::ObjectDecl(object) = stmt {
-            for (path, value) in &object.inits {
-                if let Expr::Str(parts) = value {
-                    let literal = parts.iter().filter_map(|part| match part {
-                        StringPart::Literal(text) => Some(text.as_str()),
-                        StringPart::Interp(_) => None,
-                    }).collect::<String>();
-                    let name = format!("{}.{}", object.name, path.iter().skip(1).cloned().collect::<Vec<_>>().join("."));
-                    if !string_map.contains_key(&literal) {
-                        let id = ctx.define_string(&format!("str_lit_{}", string_map.len()), format!("{}\0", literal).as_bytes())?;
-                        let gv = ctx.module.declare_data_in_func(id, &mut clif_ctx.func);
-                        string_map.insert(literal.clone(), gv);
-                    }
-                    if let Some(gv) = string_map.get(&literal) {
-                        string_map.insert(name, *gv);
-                    }
-                }
+        let Statement::FunctionDecl(function) = stmt else {
+            continue;
+        };
+        if function.name == "Main" {
+            continue;
+        }
+        let func_id = *function_ids.get(&function.name).unwrap();
+        let mut clif_ctx = ctx.module.make_context();
+        let mut fn_builder_ctx = FunctionBuilderContext::new();
+        let mut sig = ctx.module.make_signature();
+        for param in &function.params {
+            let ty = match &param.type_decl {
+                TypeDecl::Number(Subtype::Float) => types::F64,
+                TypeDecl::Number(_) | TypeDecl::Bool => types::I32,
+                TypeDecl::Weld => ptr_type,
+                TypeDecl::Ore(_) | TypeDecl::OreTuple(_) | TypeDecl::Materials(_, _) => ptr_type,
+            };
+            sig.params.push(AbiParam::new(ty));
+        }
+        match &function.ret_kind {
+            RetKind::Int | RetKind::Bool => sig.returns.push(AbiParam::new(types::I32)),
+            RetKind::Nunction | RetKind::Void => {}
+            RetKind::Float => sig.returns.push(AbiParam::new(types::F64)),
+            RetKind::Weld
+            | RetKind::Ore(_)
+            | RetKind::OreTuple(_)
+            | RetKind::Materials(_, _)
+            | RetKind::Generic
+            | RetKind::Function
+            | RetKind::Dynamic => sig.returns.push(AbiParam::new(ptr_type)),
+        }
+        clif_ctx.func.signature = sig.clone();
+        clif_ctx.func.name = UserFuncName::user(0, func_id.as_u32());
+        let runtime = ctx.declare_runtime_in_func(&mut clif_ctx.func);
+
+        let mut string_map: HashMap<String, GlobalValue> = HashMap::new();
+        for stmt in &function.body {
+            collect_strings(stmt, &mut string_map, &mut ctx, &mut clif_ctx)?;
+        }
+        if !string_map.contains_key("\n") {
+            let id = ctx.define_string("str_newline", b"\n\0")?;
+            let gv = ctx.module.declare_data_in_func(id, &mut clif_ctx.func);
+            string_map.insert("\n".to_string(), gv);
+        }
+
+        let mut builder = FunctionBuilder::new(&mut clif_ctx.func, &mut fn_builder_ctx);
+        let entry = builder.create_block();
+        builder.append_block_params_for_function_params(entry);
+        builder.switch_to_block(entry);
+        builder.seal_block(entry);
+
+        let mut compiler = FunctionCompiler::new(
+            &mut ctx,
+            builder,
+            runtime,
+            string_map,
+            function_ids.clone(),
+            function_return_kinds.clone(),
+            function.ret_kind.clone(),
+        );
+
+        for (index, param) in function.params.iter().enumerate() {
+            let ty = match &param.type_decl {
+                TypeDecl::Number(Subtype::Float) => types::F64,
+                TypeDecl::Number(_) | TypeDecl::Bool => types::I32,
+                TypeDecl::Weld => ptr_type,
+                TypeDecl::Ore(_) | TypeDecl::OreTuple(_) | TypeDecl::Materials(_, _) => ptr_type,
+            };
+            let var = compiler.builder.declare_var(ty);
+            let value = compiler.builder.block_params(entry)[index];
+            compiler.var_map.insert(param.name.clone(), var);
+            compiler.var_info.insert(
+                param.name.clone(),
+                match &param.type_decl {
+                    TypeDecl::Number(Subtype::Float) => VarInfo::Primitive(types::F64),
+                    TypeDecl::Number(_) => VarInfo::Primitive(types::I32),
+                    TypeDecl::Bool => VarInfo::Primitive(types::I32),
+                    TypeDecl::Weld => VarInfo::Primitive(ptr_type),
+                    TypeDecl::Ore(size) => VarInfo::Array {
+                        element_type: Subtype::Int,
+                        size: size.unwrap_or(0) as usize,
+                    },
+                    TypeDecl::OreTuple(fields) => VarInfo::Tuple {
+                        fields: fields.clone(),
+                    },
+                    TypeDecl::Materials(elem_type, _) => VarInfo::List {
+                        element_type: elem_type.clone(),
+                    },
+                },
+            );
+            if matches!(&param.type_decl, TypeDecl::Weld) {
+                compiler.string_vars.insert(param.name.clone());
+            }
+            if matches!(&param.type_decl, TypeDecl::Bool) {
+                compiler.bool_vars.insert(param.name.clone());
+            }
+            compiler.builder.def_var(var, value);
+        }
+
+        for stmt in &function.body {
+            if compiler.terminated {
+                break;
+            }
+            compiler.compile_statement(stmt)?;
+        }
+
+        if !compiler.terminated && !ends_with_explicit_return(&function.body) {
+            if function.ret_kind.is_void() {
+                compiler.builder.ins().return_(&[]);
+            } else {
+                let zero = match &function.ret_kind {
+                    RetKind::Int | RetKind::Bool => compiler.builder.ins().iconst(types::I32, 0),
+                    RetKind::Float => compiler.builder.ins().f64const(0.0),
+                    _ => compiler.builder.ins().iconst(ptr_type, 0),
+                };
+                compiler.builder.ins().return_(&[zero]);
             }
         }
+
+        ctx.module
+            .define_function(func_id, &mut clif_ctx)
+            .map_err(|e| ForgeError::codegen(format!("define {}: {}", function.name, e)))?;
+    }
+
+    let main_func = program
+        .statements
+        .iter()
+        .find_map(|s| {
+            if let Statement::FunctionDecl(f) = s {
+                if f.name == "Main" {
+                    return Some(f);
+                }
+            }
+            None
+        })
+        .ok_or_else(|| ForgeError::codegen("No Main function found"))?;
+
+    let mut clif_ctx = ctx.module.make_context();
+    let mut fn_builder_ctx = FunctionBuilderContext::new();
+    clif_ctx.func.signature = main_sig.clone();
+    clif_ctx.func.name = UserFuncName::user(0, main_id.as_u32());
+    let runtime = ctx.declare_runtime_in_func(&mut clif_ctx.func);
+
+    let mut string_map: HashMap<String, GlobalValue> = HashMap::new();
+    for stmt in &program.statements {
+        if matches!(stmt, Statement::ObjectDecl(_)) {
+            collect_strings(stmt, &mut string_map, &mut ctx, &mut clif_ctx)?;
+        }
+    }
+    for stmt in &main_func.body {
+        collect_strings(stmt, &mut string_map, &mut ctx, &mut clif_ctx)?;
     }
     if !string_map.contains_key("\n") {
         let id = ctx.define_string("str_newline", b"\n\0")?;
@@ -1260,28 +1964,50 @@ pub fn compile(program: &Program, obj_path: &std::path::Path, _link_math: bool) 
         let block = builder.create_block();
         builder.switch_to_block(block);
         builder.seal_block(block);
-
-        let mut compiler = FunctionCompiler::new(&mut ctx, builder, runtime, string_map);
-
-        for stmt in &expanded_body {
+        let mut compiler = FunctionCompiler::new(
+            &mut ctx,
+            builder,
+            runtime,
+            string_map,
+            function_ids.clone(),
+            function_return_kinds.clone(),
+            RetKind::Int,
+        );
+        for stmt in &program.statements {
+            if matches!(stmt, Statement::ObjectDecl(_)) {
+                compiler.compile_statement(stmt)?;
+            }
+        }
+        for stmt in &main_func.body {
+            if compiler.terminated {
+                break;
+            }
             compiler.compile_statement(stmt)?;
         }
-
-        let ret_val = compiler.builder.ins().iconst(types::I32, 0);
-        compiler.builder.ins().return_(&[ret_val]);
+        if !compiler.terminated && !ends_with_explicit_return(&main_func.body) {
+            let ret_value = compiler.builder.ins().iconst(types::I32, 0);
+            compiler.builder.ins().return_(&[ret_value]);
+        }
     }
 
     ctx.module
         .define_function(main_id, &mut clif_ctx)
         .map_err(|e| ForgeError::codegen(format!("define main: {}", e)))?;
-
-    ctx.module.clear_context(&mut clif_ctx);
-
     let product = ctx.module.finish();
-    let bytes = product.emit().map_err(|e| ForgeError::codegen(format!("emit object: {}", e)))?;
-    std::fs::write(obj_path, bytes).map_err(|e| ForgeError::codegen(format!("write object: {}", e)))?;
+    let bytes = product
+        .emit()
+        .map_err(|e| ForgeError::codegen(format!("emit object: {}", e)))?;
+    std::fs::write(obj_path, bytes)
+        .map_err(|e| ForgeError::codegen(format!("write object: {}", e)))?;
 
     Ok(())
+}
+
+fn ends_with_explicit_return(body: &[Statement]) -> bool {
+    match body.last() {
+        Some(Statement::Return(_)) => true,
+        _ => false,
+    }
 }
 
 fn collect_strings(
@@ -1302,12 +2028,21 @@ fn collect_strings(
         Statement::Assignment(a) => {
             collect_strings_in_expr(&a.value, string_map, ctx, clif_ctx)?;
         }
+        Statement::ObjectDecl(obj) => {
+            for (_, value) in &obj.inits {
+                collect_strings_in_expr(value, string_map, ctx, clif_ctx)?;
+            }
+        }
         Statement::If(if_node) => {
             for (_, body) in &if_node.branches {
-                for s in body { collect_strings(s, string_map, ctx, clif_ctx)?; }
+                for s in body {
+                    collect_strings(s, string_map, ctx, clif_ctx)?;
+                }
             }
             if let Some(else_body) = &if_node.else_body {
-                for s in else_body { collect_strings(s, string_map, ctx, clif_ctx)?; }
+                for s in else_body {
+                    collect_strings(s, string_map, ctx, clif_ctx)?;
+                }
             }
         }
         Statement::While(while_node) => {
@@ -1319,6 +2054,9 @@ fn collect_strings(
             }
             collect_strings_in_expr(&for_node.condition, string_map, ctx, clif_ctx)?;
             collect_strings_in_body(&for_node.body, string_map, ctx, clif_ctx)?;
+        }
+        Statement::Return(Some(value)) | Statement::ExprStmt(value) => {
+            collect_strings_in_expr(value, string_map, ctx, clif_ctx)?;
         }
         _ => {}
     }
@@ -1335,10 +2073,12 @@ fn collect_strings_in_expr(
         Expr::Str(parts) => {
             let mut s = String::new();
             for part in parts {
-                if let StringPart::Literal(l) = part { s.push_str(l); }
+                if let StringPart::Literal(l) = part {
+                    s.push_str(l);
+                }
             }
             if !string_map.contains_key(&s) {
-                let name = format!("str_lit_{}", string_map.len());
+                let name = string_symbol_name(&s);
                 let id = ctx.define_string(&name, format!("{}\0", s).as_bytes())?;
                 let gv = ctx.module.declare_data_in_func(id, &mut clif_ctx.func);
                 string_map.insert(s.clone(), gv);
@@ -1346,7 +2086,7 @@ fn collect_strings_in_expr(
             for part in parts {
                 if let StringPart::Literal(text) = part {
                     if !string_map.contains_key(text) {
-                        let name = format!("str_lit_{}", string_map.len());
+                        let name = string_symbol_name(text);
                         let id = ctx.define_string(&name, format!("{}\0", text).as_bytes())?;
                         let gv = ctx.module.declare_data_in_func(id, &mut clif_ctx.func);
                         string_map.insert(text.clone(), gv);
@@ -1354,14 +2094,47 @@ fn collect_strings_in_expr(
                 }
             }
         }
-        Expr::ArrayLiteral(elements) | Expr::TupleLiteral(elements) | Expr::ListLiteral(elements) => {
+        Expr::ArrayLiteral(elements)
+        | Expr::TupleLiteral(elements)
+        | Expr::ListLiteral(elements) => {
             for elem in elements {
                 collect_strings_in_expr(elem, string_map, ctx, clif_ctx)?;
             }
         }
+        Expr::Call { args, .. } | Expr::NamespaceCall { args, .. } => {
+            for arg in args {
+                collect_strings_in_expr(arg, string_map, ctx, clif_ctx)?;
+            }
+        }
+        Expr::MethodCall { object, args, .. } => {
+            collect_strings_in_expr(object, string_map, ctx, clif_ctx)?;
+            for arg in args {
+                collect_strings_in_expr(arg, string_map, ctx, clif_ctx)?;
+            }
+        }
+        Expr::BinaryOp { lhs, rhs, .. } => {
+            collect_strings_in_expr(lhs, string_map, ctx, clif_ctx)?;
+            collect_strings_in_expr(rhs, string_map, ctx, clif_ctx)?;
+        }
+        Expr::UnaryOp { operand, .. } => {
+            collect_strings_in_expr(operand, string_map, ctx, clif_ctx)?;
+        }
+        Expr::MemberAccess { object, .. } => {
+            collect_strings_in_expr(object, string_map, ctx, clif_ctx)?;
+        }
+        Expr::IndexAccess { object, index } => {
+            collect_strings_in_expr(object, string_map, ctx, clif_ctx)?;
+            collect_strings_in_expr(index, string_map, ctx, clif_ctx)?;
+        }
         _ => {}
     }
     Ok(())
+}
+
+fn string_symbol_name(value: &str) -> String {
+    let mut hasher = DefaultHasher::new();
+    value.hash(&mut hasher);
+    format!("str_lit_{:016x}", hasher.finish())
 }
 
 fn collect_strings_in_body(
@@ -1376,49 +2149,3 @@ fn collect_strings_in_body(
     Ok(())
 }
 
-fn expand_function_calls(
-    body: &[Statement],
-    functions: &HashMap<String, FunctionDecl>,
-) -> ForgeResult<Vec<Statement>> {
-    let mut expanded = Vec::new();
-    for statement in body {
-        match statement {
-            Statement::ExprStmt(Expr::Call { callee, args }) if args.is_empty() => {
-                let function = functions.get(callee).ok_or_else(|| {
-                    ForgeError::codegen(format!("Undefined function: {}", callee))
-                })?;
-                if function.ret_kind != RetKind::Nunction || !function.params.is_empty() {
-                    return Err(ForgeError::codegen(format!(
-                        "Only zero-argument Nunction calls are supported: {}",
-                        callee
-                    )));
-                }
-                expanded.extend(expand_function_calls(&function.body, functions)?);
-            }
-            Statement::If(node) => {
-                let mut node = node.clone();
-                node.branches = node.branches.iter().map(|(condition, branch)| {
-                    Ok((condition.clone(), expand_function_calls(branch, functions)?))
-                }).collect::<ForgeResult<Vec<_>>>()?;
-                node.else_body = node.else_body.as_ref().map(|branch| {
-                    expand_function_calls(branch, functions)
-                }).transpose()?;
-                expanded.push(Statement::If(node));
-            }
-            Statement::While(node) => {
-                let mut node = node.clone();
-                node.body = expand_function_calls(&node.body, functions)?;
-                expanded.push(Statement::While(node));
-            }
-            Statement::For(node) => {
-                let mut node = node.clone();
-                node.body = expand_function_calls(&node.body, functions)?;
-                expanded.push(Statement::For(node));
-            }
-            Statement::Stop => expanded.push(Statement::Stop),
-            Statement::Skip => expanded.push(Statement::Skip),
-            _ => expanded.push(statement.clone()),
-        }
-    }
-    Ok(expanded)
-}

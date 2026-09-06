@@ -1,10 +1,19 @@
 // ForgeLang AST - Rust port of furnace/ast_nodes.py
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Modifier { Open, Closed, Showcase }
+pub enum Modifier {
+    Open,
+    Closed,
+    Showcase,
+}
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Subtype { Int, Float, Generic, Weld }
+pub enum Subtype {
+    Int,
+    Float,
+    Generic,
+    Weld,
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TypeDecl {
@@ -36,9 +45,46 @@ impl TypeDecl {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum RetKind {
-    Int, Float, Generic, Weld, Ore, Materials,
-    Function, // "function" lowercase = dynamic
+    Int,
+    Float,
+    Generic,
+    Weld,
+    Bool,
+    Ore(Option<i64>),
+    OreTuple(Vec<(Subtype, String)>),
+    Materials(Subtype, bool),
+    Function, // lowercase "function" = dynamic
     Nunction, // void
+    Dynamic,
+    Void,
+}
+
+impl RetKind {
+    pub fn is_void(&self) -> bool {
+        matches!(self, RetKind::Nunction | RetKind::Void)
+    }
+
+    pub fn is_dynamic(&self) -> bool {
+        matches!(self, RetKind::Function | RetKind::Dynamic)
+    }
+
+    pub fn from_type_decl(type_decl: &TypeDecl) -> Self {
+        match type_decl {
+            TypeDecl::Number(subtype) => match subtype {
+                Subtype::Int => RetKind::Int,
+                Subtype::Float => RetKind::Float,
+                Subtype::Generic => RetKind::Generic,
+                Subtype::Weld => RetKind::Weld,
+            },
+            TypeDecl::Weld => RetKind::Weld,
+            TypeDecl::Bool => RetKind::Bool,
+            TypeDecl::Ore(size) => RetKind::Ore(*size),
+            TypeDecl::OreTuple(fields) => RetKind::OreTuple(fields.clone()),
+            TypeDecl::Materials(elem_type, has_new) => {
+                RetKind::Materials(elem_type.clone(), *has_new)
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -62,7 +108,10 @@ pub enum Statement {
 
 /// Increment/decrement direction for For loop headers.
 #[derive(Debug, Clone, PartialEq)]
-pub enum IncrOp { Inc, Dec }
+pub enum IncrOp {
+    Inc,
+    Dec,
+}
 
 /// For loop: `For (init; condition; increment) { body }`
 #[derive(Debug, Clone)]
@@ -73,7 +122,6 @@ pub struct ForNode {
     pub increment_op: IncrOp,
     pub body: Vec<Statement>,
 }
-
 
 #[derive(Debug, Clone)]
 pub struct VarDecl {
@@ -107,10 +155,15 @@ pub struct FunctionDecl {
 }
 
 #[derive(Debug, Clone)]
-pub struct Param { pub type_decl: TypeDecl, pub name: String }
+pub struct Param {
+    pub type_decl: TypeDecl,
+    pub name: String,
+}
 
 #[derive(Debug, Clone)]
-pub struct PrintNode { pub expr: Expr }
+pub struct PrintNode {
+    pub expr: Expr,
+}
 
 #[derive(Debug, Clone)]
 pub enum StringPart {
@@ -119,7 +172,9 @@ pub enum StringPart {
 }
 
 #[derive(Debug, Clone)]
-pub struct InputNode { pub subtype: Option<Subtype> }
+pub struct InputNode {
+    pub subtype: Option<Subtype>,
+}
 
 #[derive(Debug, Clone)]
 pub struct IfNode {
@@ -136,8 +191,14 @@ pub struct WhileNode {
 #[derive(Debug, Clone)]
 pub enum AssignmentTarget {
     Var(String),
-    Member { object: Box<AssignmentTarget>, member: String },
-    Index { object: Box<AssignmentTarget>, index: Expr },
+    Member {
+        object: Box<AssignmentTarget>,
+        member: String,
+    },
+    Index {
+        object: Box<AssignmentTarget>,
+        index: Expr,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -158,13 +219,37 @@ pub enum Expr {
     Str(Vec<StringPart>),
     Bool(bool),
     Identifier(String),
-    MemberAccess { object: Box<Expr>, member: String },
-    IndexAccess { object: Box<Expr>, index: Box<Expr> },
-    BinaryOp { op: BinOp, lhs: Box<Expr>, rhs: Box<Expr> },
-    UnaryOp { op: UnOp, operand: Box<Expr> },
-    Call { callee: String, args: Vec<Expr> },
-    NamespaceCall { namespace: String, method: String, args: Vec<Expr> },
-    MethodCall { object: Box<Expr>, method: String, args: Vec<Expr> },
+    MemberAccess {
+        object: Box<Expr>,
+        member: String,
+    },
+    IndexAccess {
+        object: Box<Expr>,
+        index: Box<Expr>,
+    },
+    BinaryOp {
+        op: BinOp,
+        lhs: Box<Expr>,
+        rhs: Box<Expr>,
+    },
+    UnaryOp {
+        op: UnOp,
+        operand: Box<Expr>,
+    },
+    Call {
+        callee: String,
+        args: Vec<Expr>,
+    },
+    NamespaceCall {
+        namespace: String,
+        method: String,
+        args: Vec<Expr>,
+    },
+    MethodCall {
+        object: Box<Expr>,
+        method: String,
+        args: Vec<Expr>,
+    },
     Input(InputNode),
     ArrayLiteral(Vec<Expr>),
     TupleLiteral(Vec<Expr>),
@@ -180,13 +265,30 @@ pub struct NumberLiteral {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum BinOp {
-    Add, Sub, Mul, Div, Rem, Pow,
-    Eq, Ne, Lt, Gt, Le, Ge,
-    And, Or, Xor,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Rem,
+    Pow,
+    Eq,
+    Ne,
+    Lt,
+    Gt,
+    Le,
+    Ge,
+    And,
+    Or,
+    Xor,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum UnOp { Plus, Neg }
+pub enum UnOp {
+    Plus,
+    Neg,
+}
 
 #[derive(Debug, Clone, Default)]
-pub struct Program { pub statements: Vec<Statement> }
+pub struct Program {
+    pub statements: Vec<Statement>,
+}

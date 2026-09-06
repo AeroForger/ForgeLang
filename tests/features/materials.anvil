@@ -1,0 +1,13 @@
+Nunction ShowValues(Materials Int Values)
+{
+    Print(Values[1]);
+    Values.Add(10);
+    Print(Values[3]);
+    Print(Values.Length);
+}
+
+Open Nunction Main()
+{
+    Materials Int Values = (7, 8, 9,);
+    ShowValues(Values);
+}

@@ -63,7 +63,7 @@ member_init     = { ident ~ ("." ~ ident)* ~ "=" ~ expr ~ (";" | ",")? }
 
 // --- Functions ---
 function_decl   = { modifier? ~ ret_kind ~ ident ~ "(" ~ param_list? ~ ")" ~ block }
-ret_kind        = { kw_int | kw_float | kw_generic | kw_weld | kw_string | kw_ore | kw_materials | kw_function | kw_nunction }
+ret_kind        = { type_decl | kw_generic | kw_function | kw_nunction }
 
 param_list      = { param ~ ("," ~ param)* }
 param           = { type_decl ~ ident }

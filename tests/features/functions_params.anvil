@@ -1,0 +1,8 @@
+Int add(Int a, Int b) {
+    Return a + b;
+}
+
+Nunction Main() {
+    Int result = add(10, 20);
+    Print(result);
+}

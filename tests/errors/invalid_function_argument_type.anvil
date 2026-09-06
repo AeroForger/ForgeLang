@@ -1,0 +1,7 @@
+Int Add(Int A, Int B) {
+    Return A + B;
+}
+
+Nunction Main() {
+    Add("hello", true);
+}

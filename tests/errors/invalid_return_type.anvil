@@ -1,0 +1,7 @@
+Int Bad() {
+    Return "wrong";
+}
+
+Nunction Main() {
+    Print(1);
+}

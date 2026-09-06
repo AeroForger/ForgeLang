@@ -9,13 +9,25 @@ pub struct ForgeError {
 
 impl ForgeError {
     pub fn new(message: impl Into<String>, line: usize, col: usize) -> Self {
-        Self { message: message.into(), line, col }
+        Self {
+            message: message.into(),
+            line,
+            col,
+        }
     }
     pub fn parse(message: impl Into<String>) -> Self {
-        Self { message: message.into(), line: 0, col: 0 }
+        Self {
+            message: message.into(),
+            line: 0,
+            col: 0,
+        }
     }
     pub fn codegen(message: impl Into<String>) -> Self {
-        Self { message: message.into(), line: 0, col: 0 }
+        Self {
+            message: message.into(),
+            line: 0,
+            col: 0,
+        }
     }
 }
 
@@ -33,7 +45,11 @@ impl std::error::Error for ForgeError {}
 
 impl From<String> for ForgeError {
     fn from(message: String) -> Self {
-        ForgeError { message, line: 0, col: 0 }
+        ForgeError {
+            message,
+            line: 0,
+            col: 0,
+        }
     }
 }
 

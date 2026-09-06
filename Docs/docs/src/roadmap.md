@@ -1,6 +1,6 @@
-# Alpha 3.4 Roadmap
+# Alpha 4 Roadmap
 
-Alpha 3.4 continues development of the Rust-based Furnace compiler.
+Alpha 4 continues development of the Rust-based Furnace compiler.
 
 ## Short Term
 
@@ -55,21 +55,15 @@ Showcase
 
 visibility rules.
 
-### Parameterized Functions
+### Additional Function Features
 
-The current backend handles zero-argument `Nunction` calls through inlining.
+Parameterized functions and return-value functions are supported by the current native function call path.
 
-Future versions will introduce native function calls with:
-
-- Parameter passing
-- Return values
-- Stack management
-- Function frames
-- A defined calling convention
+Future work includes clearer diagnostics for control-flow paths that do not return and broader support for generic function types.
 
 ### Multicore Runtime
 
-Alpha 3.4 uses Rayon for compiler-side parallel analysis.
+Alpha 4 uses Rayon for compiler-side parallel analysis.
 
 Future versions are planned to provide mechanisms for ForgeLang programs to execute work on multiple CPU cores.
 

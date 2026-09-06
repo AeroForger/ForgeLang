@@ -15,11 +15,7 @@ function Countdown(Int I)
 }
 ```
 
-The current backend does not yet generate parameterized function calls or return-value functions.
-
-As a result, general recursive functions are not currently executable.
-
-Native recursive calls are planned once the compiler has a function calling convention.
+Recursive calls use the same native function call path as other calls. A recursive function can have parameters and can return a value.
 
 ---
 

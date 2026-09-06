@@ -1,0 +1,11 @@
+Ore(Int Number1, Weld Name) MakePerson()
+{
+    Return {14, "Den"};
+}
+
+Open Nunction Main()
+{
+    Ore(Int Number1, Weld Name) Person = MakePerson();
+    Print(Person.Number1);
+    Print(Person.Name);
+}

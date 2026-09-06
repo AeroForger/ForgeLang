@@ -30,6 +30,7 @@ For example:
 ```fish
 furnace compile main.anvil linux
 furnace run main.anvil
+furnace new console -n Project
 furnace -help
 furnace --help
 furnace -version
@@ -55,7 +56,7 @@ The compile process:
 3. Parses the source.
 4. Builds the AST.
 5. Performs semantic analysis.
-6. Expands eligible zero-argument `Nunction` calls.
+6. Generates native functions and function calls.
 7. Generates a native object file.
 8. Invokes the platform linker.
 9. Produces the executable.
@@ -102,7 +103,7 @@ Furnace exposes its version through centralized compiler metadata.
 The current version is:
 
 ```rust
-pub const VERSION: &str = "Alpha 3.4";
+pub const VERSION: &str = "Alpha 4";
 ```
 
 Version information can be requested with:
@@ -120,7 +121,7 @@ Help can be requested with:
 Example version output:
 
 ```text
-Furnace Alpha 3.4
+Furnace Alpha 4
 ```
 
 Usage:
@@ -129,9 +130,28 @@ Usage:
 Usage:
     Furnace compile <file>.anvil <platform>
     Furnace run <file>.anvil
+    Furnace new <APP_TYPE> -n <NAME>
     Furnace -version
     Furnace -help
 ```
+
+## Create a Project
+
+Create a console project with:
+
+```fish
+./target/debug/furnace new console -n Project
+```
+
+The command creates `Project/Project.anvil` with this source:
+
+```forge
+Open Nunction Main()
+{
+}
+```
+
+The supported application type is `console`. Furnace rejects unknown types, empty names, and existing project directories.
 
 ## Link the Object Manually
 

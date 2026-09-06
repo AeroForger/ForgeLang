@@ -1,13 +1,9 @@
 # Current Limitations
 
-Alpha 3.4 is an early development release.
+Alpha 4 is an early development release.
 
 The following features are not currently fully implemented in the backend:
 
-- Parameterized function code generation
-- Native calls to parameterized user-defined functions
-- Function return-value code generation
-- `Return` statements
 - `Data` declaration code generation
 - Object instantiation code generation
 - `Switch` / `Deal` / `Base` pattern matching

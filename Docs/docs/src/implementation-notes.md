@@ -1,6 +1,6 @@
 # Implementation Notes
 
-Alpha 3.4 uses a different compiler implementation from the earlier experimental versions of ForgeLang.
+Alpha 4 uses a different compiler implementation from the earlier experimental versions of ForgeLang.
 
 Earlier versions used:
 
@@ -12,7 +12,7 @@ ANTLR
 LLVM
 ```
 
-Alpha 3.4 uses:
+Alpha 4 uses:
 
 ```text
 Rust
@@ -28,7 +28,7 @@ ForgeLang source -> pest -> AST -> Semantic Analysis -> Cranelift -> Native Obje
 
 The change to Rust also makes the compiler itself part of the ForgeLang project's systems-level development work.
 
-Alpha 3.4 should not be treated as a finished language specification.
+Alpha 4 should not be treated as a finished language specification.
 
 Some syntax exists before its backend implementation.
 

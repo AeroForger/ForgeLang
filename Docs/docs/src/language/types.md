@@ -1,6 +1,6 @@
 # Types
 
-Alpha 3.4 currently includes primitive types, arrays, tuples, lists, and a limited generic type.
+Alpha 4 currently includes primitive types, arrays, tuples, lists, and a limited generic type.
 
 ## Primitive Types
 
