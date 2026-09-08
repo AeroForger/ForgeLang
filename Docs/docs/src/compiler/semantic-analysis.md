@@ -22,7 +22,7 @@ It currently handles checks including:
 - Boolean type compatibility for `Bool` and `Boolean` variables
 - Other language-level errors
 
-Semantic analysis happens before Cranelift code generation.
+Semantic analysis happens before either code generation path.
 
 This keeps invalid programs from being passed directly to the backend.
 

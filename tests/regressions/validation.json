@@ -1,0 +1,288 @@
+[
+  {
+    "name": "array_negative_index",
+    "source": "Open Nunction Main() { Ore[] V = [1, 2,]; Print(V[-1]); }",
+    "expected": {
+      "stdout": "Index out of bounds\n",
+      "exit_status": 1
+    }
+  },
+  {
+    "name": "array_index_at_length",
+    "source": "Open Nunction Main() { Ore[] V = [1, 2,]; Print(V[2]); }",
+    "expected": {
+      "stdout": "Index out of bounds\n",
+      "exit_status": 1
+    }
+  },
+  {
+    "name": "list_negative_write",
+    "source": "Open Nunction Main() { Materials Int V = (1, 2,); V[-1] = 9; }",
+    "expected": {
+      "stdout": "Index out of bounds\n",
+      "exit_status": 1
+    }
+  },
+  {
+    "name": "list_remove_at_length",
+    "source": "Open Nunction Main() { Materials Int V = (1, 2,); V.RemoveAt(2); }",
+    "expected": {
+      "stdout": "Index out of bounds\n",
+      "exit_status": 1
+    }
+  },
+  {
+    "name": "wrong_list_element",
+    "source": "Open Nunction Main() { Materials Int V = (1,); V.Add(\"bad\"); }",
+    "expected": {
+      "reject": true,
+      "diagnostic": "Type mismatch"
+    }
+  },
+  {
+    "name": "wrong_tuple_field_assignment",
+    "source": "Open Nunction Main() { Ore(Int A) T = {1}; T.A = \"bad\"; }",
+    "expected": {
+      "reject": true,
+      "diagnostic": "Type mismatch"
+    }
+  },
+  {
+    "name": "invalid_method_receiver",
+    "source": "Open Nunction Main() { Int X = 1; X.Add(2); }",
+    "expected": {
+      "reject": true,
+      "diagnostic": "error:",
+      "forbidden_diagnostics": ["not supported in native backend", "Verifier errors"]
+    }
+  },
+  {
+    "name": "add_extra_argument",
+    "source": "Open Nunction Main() { Materials Int V = (1,); V.Add(2, 3); }",
+    "expected": {
+      "reject": true,
+      "diagnostic": "Add expects 1 argument"
+    }
+  },
+  {
+    "name": "integer_width_characterization",
+    "source": "Open Nunction Main() { Print(2147483647 + 1); }",
+    "expected": {
+      "backends": {
+        "native": {
+          "stdout": "2147483648\n"
+        },
+        "cranelift": {
+          "stdout": "-2147483648\n"
+        }
+      }
+    }
+  },
+  {
+    "name": "six_integer_parameters",
+    "source": "Int Sum(Int A, Int B, Int C, Int D, Int E, Int F) { Return A+B+C+D+E+F; } Open Nunction Main() { Print(Sum(1,2,3,4,5,6)); }",
+    "expected": {
+      "stdout": "21\n"
+    }
+  },
+  {
+    "name": "seven_parameter_characterization",
+    "source": "Int First(Int A, Int B, Int C, Int D, Int E, Int F, Int G) { Return A; } Open Nunction Main() { Print(First(1,2,3,4,5,6,7)); }",
+    "expected": {
+      "backends": {
+        "native": {
+          "reject": true,
+          "diagnostic": "parameters"
+        },
+        "cranelift": {
+          "stdout": "1\n"
+        }
+      }
+    }
+  },
+  {
+    "name": "integer_values_across_calls",
+    "source": "Int Id(Int X) { Return X; } Open Nunction Main() { Print(Id(1)+(Id(2)+(Id(3)+(Id(4)+(Id(5)+(Id(6)+Id(7))))))); }",
+    "expected": {
+      "stdout": "28\n"
+    }
+  },
+  {
+    "name": "unknown_member_receiver",
+    "source": "Open Nunction Main() { Print(Missing.Value); }",
+    "expected": {
+      "reject": true,
+      "diagnostic": "Unknown member access receiver"
+    }
+  },
+  {
+    "name": "unknown_index_receiver",
+    "source": "Open Nunction Main() { Print(Missing[0]); }",
+    "expected": {
+      "reject": true,
+      "diagnostic": "Unknown index access receiver"
+    }
+  },
+  {
+    "name": "unknown_method_receiver",
+    "source": "Open Nunction Main() { Missing.Add(1); }",
+    "expected": {
+      "reject": true,
+      "diagnostic": "Unknown method call receiver"
+    }
+  },
+  {
+    "name": "data_member_access_is_preserved",
+    "source": "Data Pair { Int A; } Pair P { P.A = 11; } Open Nunction Main() { Print(P.A); }",
+    "expected": {
+      "stdout": "11\n"
+    }
+  },
+  {
+    "name": "scalar_initializer_type_mismatch",
+    "source": "Open Nunction Main() { Int Value = \"bad\"; }",
+    "expected": {
+      "reject": true,
+      "diagnostic": "Type mismatch"
+    }
+  },
+  {
+    "name": "scalar_initializer_unknown",
+    "source": "Open Nunction Main() { Int Value = Missing; }",
+    "expected": {
+      "reject": true,
+      "diagnostic": "Type mismatch"
+    }
+  },
+  {
+    "name": "indexed_assignment_requires_int",
+    "source": "Open Nunction Main() { Materials Int Values = (1,); Values[\"bad\"] = 2; }",
+    "expected": {
+      "reject": true,
+      "diagnostic": "Index must be Int"
+    }
+  },
+  {
+    "name": "empty_list_is_contextually_typed",
+    "source": "Int Count(Materials Int Values) { Return Values.Length; } Open Nunction Main() { Print(Count(())); }",
+    "expected": {
+      "stdout": "0\n"
+    }
+  },
+  {
+    "name": "mixed_generic_list_is_rejected",
+    "source": "Open Nunction Main() { Materials Generic Values = (1, \"bad\"); }",
+    "expected": {
+      "reject": true,
+      "diagnostic": "Type mismatch in list initializer"
+    }
+  },
+  {
+    "name": "array_initializer_requires_int_elements",
+    "source": "Open Nunction Main() { Ore[] Values = [1.5,]; }",
+    "expected": {
+      "reject": true,
+      "diagnostic": "Type mismatch in array initializer"
+    }
+  },
+  {
+    "name": "tuple_float_member_is_numeric",
+    "source": "Open Nunction Main() { Ore(Float Value) Pair = {1.5}; Print(Pair.Value + 0.5); }",
+    "expected": {
+      "stdout": "2.000000\n"
+    }
+  },
+  {
+    "name": "local_data_member_access_is_preserved",
+    "source": "Data Pair { Weld Name; } Open Nunction Main() { Pair P { P.Name = \"ok\"; } Weld Name = P.Name; Print(Name); }",
+    "expected": {
+      "stdout": "ok\n"
+    }
+  },
+  {
+    "name": "undeclared_data_type_is_rejected",
+    "source": "Ghost P { P.Value = 1; } Open Nunction Main() { Print(P.Value); }",
+    "expected": {
+      "reject": true,
+      "diagnostic": "Unknown Data type"
+    }
+  },
+  {
+    "name": "data_field_initializer_type_is_checked",
+    "source": "Data Pair { Int Value; } Pair P { P.Value = \"bad\"; } Open Nunction Main() {}",
+    "expected": {
+      "reject": true,
+      "diagnostic": "Type mismatch for Data field"
+    }
+  },
+  {
+    "name": "weld_input_initializer_is_valid",
+    "source": "Open Nunction Main() { Weld Value = Input(Weld); Print(Value); }",
+    "stdin": "forge\n",
+    "expected": {
+      "stdout": "forge\n"
+    }
+  },
+  {
+    "name": "mixed_bare_list_is_rejected",
+    "source": "Open Nunction Main() { (1, \"bad\"); }",
+    "expected": {
+      "reject": true,
+      "diagnostic": "List literal elements must have one consistent resolved type"
+    }
+  },
+  {
+    "name": "unresolved_bare_list_is_rejected",
+    "source": "Open Nunction Main() { (1, Missing); }",
+    "expected": {
+      "reject": true,
+      "diagnostic": "List literal elements must have one consistent resolved type"
+    }
+  },
+  {
+    "name": "generic_list_add_rejects_non_integer",
+    "source": "Open Nunction Main() { Materials Generic new Values; Values.Add(\"bad\"); }",
+    "expected": {
+      "reject": true,
+      "diagnostic": "Type mismatch"
+    }
+  },
+  {
+    "name": "float_array_argument_is_rejected",
+    "source": "Nunction Take(Ore[] Values) {} Open Nunction Main() { Take([1.5,]); }",
+    "expected": {
+      "reject": true,
+      "diagnostic": "Type mismatch in array literal"
+    }
+  },
+  {
+    "name": "float_array_return_is_rejected",
+    "source": "Ore[] Make() { Return [1.5,]; } Open Nunction Main() {}",
+    "expected": {
+      "reject": true,
+      "diagnostic": "Type mismatch in array literal"
+    }
+  },
+  {
+    "name": "valid_scalar_aliases_and_inference",
+    "source": "String Echo(Weld Value) { Return Value; } Open Nunction Main() { String A = \"ok\"; Weld B = Echo(A); Number Int I = 1; Int J = I + 1; Number Float F = J + 0.5; Boolean X = true; Bool Y = X; Print(B); Print(J); Print(F); Print(Y); }",
+    "expected": {
+      "stdout": "ok\n2\n2.500000\ntrue\n"
+    }
+  },
+  {
+    "name": "numeric_access_results",
+    "source": "Open Nunction Main() { Ore[] A = [1,]; Ore(Float F, Int I) T = {1.5, 2}; Materials Int L = (3,); Int X = A[0] + L[0]; Float Y = T.F + T.I; Int Z = L.Len() + 1; Print(X); Print(Y); Print(Z); }",
+    "expected": {
+      "stdout": "4\n3.500000\n2\n"
+    }
+  },
+  {
+    "name": "for_initializer_type_mismatch",
+    "source": "Open Nunction Main() { For(Int I = \"bad\"; I < 1; I++) {} }",
+    "expected": {
+      "reject": true,
+      "diagnostic": "Type mismatch"
+    }
+  }
+]

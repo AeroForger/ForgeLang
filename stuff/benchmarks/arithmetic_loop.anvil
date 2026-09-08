@@ -1,0 +1,11 @@
+Open Int Main() {
+    Int A = 1;
+    Int B = 2;
+    Int I = 0;
+    While (I < 100000) {
+        A = A + B;
+        B = B + 3;
+        I = I + 1;
+    }
+    Return A;
+}

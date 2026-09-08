@@ -1,0 +1,13 @@
+Open Int Main() {
+    Int Value = 0;
+    Int I = 0;
+    While (I < 100000) {
+        If (I % 2 == 0) {
+            Value = Value + 3;
+        } Else {
+            Value = Value - 1;
+        }
+        I = I + 1;
+    }
+    Return Value;
+}

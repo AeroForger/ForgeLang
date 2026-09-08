@@ -30,6 +30,8 @@ For example:
 ```fish
 furnace compile main.anvil linux
 furnace run main.anvil
+furnace backend native
+furnace backend cranelift
 furnace new console -n Project
 furnace -help
 furnace --help
@@ -56,9 +58,9 @@ The compile process:
 3. Parses the source.
 4. Builds the AST.
 5. Performs semantic analysis.
-6. Generates native functions and function calls.
-7. Generates a native object file.
-8. Invokes the platform linker.
+6. Selects the direct native path or the Cranelift path.
+7. Generates functions and calls.
+8. Writes an ELF64 executable directly, or creates an object file and invokes the platform linker.
 9. Produces the executable.
 
 Example output:
@@ -91,10 +93,31 @@ The CLI can compile and execute a program directly:
 This command:
 
 1. Compiles the source.
-2. Links the generated object.
+2. Writes the direct executable or links the generated object.
 3. Executes the resulting binary.
 4. Forwards the program's standard output and standard error.
 5. Returns the child process exit code.
+
+## Check a Backend
+
+Use the `backend` command to check either available backend:
+
+```fish
+./target/debug/furnace backend native
+./target/debug/furnace backend cranelift
+```
+
+Available backends:
+
+- `native` writes a direct x86-64 ELF64 executable.
+- `cranelift` writes a native object file and links it with `cc`.
+
+Use `--backend` with `compile` or `run` to choose the path for that command:
+
+```fish
+./target/debug/furnace compile main.anvil linux --backend native
+./target/debug/furnace run main.anvil --backend cranelift
+```
 
 ## Version and Help
 
@@ -103,7 +126,7 @@ Furnace exposes its version through centralized compiler metadata.
 The current version is:
 
 ```rust
-pub const VERSION: &str = "Alpha 4";
+pub const VERSION: &str = "Alpha 5";
 ```
 
 Version information can be requested with:
@@ -121,18 +144,23 @@ Help can be requested with:
 Example version output:
 
 ```text
-Furnace Alpha 4
+Furnace Alpha 5
 ```
 
 Usage:
 
 ```text
 Usage:
-    Furnace compile <file>.anvil <platform>
-    Furnace run <file>.anvil
+    Furnace compile <file>.anvil <platform> [--backend native|cranelift]
+    Furnace run <file>.anvil [--backend native|cranelift]
+    Furnace backend <native|cranelift>
     Furnace new <APP_TYPE> -n <NAME>
     Furnace -version
     Furnace -help
+
+Available backends:
+    native: direct x86-64 ELF64 executable
+    cranelift: native object file linked with cc
 ```
 
 ## Create a Project

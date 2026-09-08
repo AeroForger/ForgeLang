@@ -5,7 +5,10 @@ const CONSOLE_TEMPLATE: &str = "Open Nunction Main()\n{\n}\n";
 
 pub fn execute(app_type: &str, name: &str) -> ExitCode {
     if app_type != "console" {
-        eprintln!("error: unsupported application type '{}'; expected console", app_type);
+        eprintln!(
+            "error: unsupported application type '{}'; expected console",
+            app_type
+        );
         return ExitCode::from(2);
     }
 
@@ -16,7 +19,10 @@ pub fn execute(app_type: &str, name: &str) -> ExitCode {
 
     let project_dir = PathBuf::from(name);
     if project_dir.exists() {
-        eprintln!("error: directory '{}' already exists", project_dir.display());
+        eprintln!(
+            "error: directory '{}' already exists",
+            project_dir.display()
+        );
         return ExitCode::from(1);
     }
 

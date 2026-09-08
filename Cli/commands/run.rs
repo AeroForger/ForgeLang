@@ -1,9 +1,10 @@
 use std::path::Path;
 use std::process::{Command, ExitCode};
 
+use crate::args::BackendKind;
 use crate::platform::Platform;
 
-pub fn execute(input: &Path) -> ExitCode {
+pub fn execute(input: &Path, backend: BackendKind) -> ExitCode {
     let source = match std::fs::read_to_string(input) {
         Ok(s) => s,
         Err(e) => {
@@ -27,14 +28,6 @@ pub fn execute(input: &Path) -> ExitCode {
 
     let pid = std::process::id();
     let temp_dir = std::env::temp_dir();
-    let obj_path = temp_dir.join(format!(
-        "furnace_run_{}_{}.o",
-        pid,
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos()
-    ));
     let exe_path = temp_dir.join(format!(
         "furnace_run_{}_{}.exe",
         pid,
@@ -44,36 +37,86 @@ pub fn execute(input: &Path) -> ExitCode {
             .as_nanos()
     ));
 
-    if let Err(e) = furnace::codegen::compile(&program, &obj_path, true) {
-        eprintln!("{}", e);
-        return ExitCode::from(1);
-    }
+    match backend {
+        BackendKind::Native => {
+            let elf_bytes = match furnace::backend::compile_to_elf(&program) {
+                Ok(bytes) => bytes,
+                Err(e) => {
+                    eprintln!("{}", e);
+                    return ExitCode::from(1);
+                }
+            };
 
-    let platform = Platform::Linux;
-    let mut linker = Command::new(platform.linker_name());
-    linker.arg(&obj_path).arg("-o").arg(&exe_path);
-    for flag in platform.default_linker_flags() {
-        linker.arg(flag);
-    }
+            if let Err(e) = std::fs::write(&exe_path, elf_bytes) {
+                eprintln!("error: cannot write temporary executable: {}", e);
+                return ExitCode::from(1);
+            }
 
-    let link_status = match linker.status() {
-        Ok(status) => status,
-        Err(e) => {
-            let _ = std::fs::remove_file(&obj_path);
-            eprintln!(
-                "error: cannot invoke linker '{}': {}",
-                platform.linker_name(),
-                e
-            );
-            return ExitCode::from(1);
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                if let Ok(metadata) = std::fs::metadata(&exe_path) {
+                    let mut perms = metadata.permissions();
+                    perms.set_mode(0o755);
+                    let _ = std::fs::set_permissions(&exe_path, perms);
+                }
+            }
         }
-    };
+        BackendKind::Cranelift => {
+            let obj_path = temp_dir.join(format!(
+                "furnace_run_{}_{}.o",
+                pid,
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_nanos()
+            ));
 
-    let _ = std::fs::remove_file(&obj_path);
+            if let Err(e) = furnace::codegen::compile(&program, &obj_path, true) {
+                eprintln!("{}", e);
+                return ExitCode::from(1);
+            }
 
-    if !link_status.success() {
-        eprintln!("error: linker exited with status {}", link_status);
-        return ExitCode::from(1);
+            let runtime_path = obj_path.with_extension("runtime.c");
+            if let Err(e) = std::fs::write(&runtime_path, furnace::codegen::RUNTIME_SUPPORT_C) {
+                let _ = std::fs::remove_file(&obj_path);
+                eprintln!("error: cannot write runtime support: {}", e);
+                return ExitCode::from(1);
+            }
+
+            let platform = Platform::Linux;
+            let mut linker = Command::new(platform.linker_name());
+            linker
+                .arg(&obj_path)
+                .arg(&runtime_path)
+                .arg("-o")
+                .arg(&exe_path);
+            for flag in platform.default_linker_flags() {
+                linker.arg(flag);
+            }
+
+            let link_status = match linker.status() {
+                Ok(status) => status,
+                Err(e) => {
+                    let _ = std::fs::remove_file(&obj_path);
+                    let _ = std::fs::remove_file(&runtime_path);
+                    eprintln!(
+                        "error: cannot invoke linker '{}': {}",
+                        platform.linker_name(),
+                        e
+                    );
+                    return ExitCode::from(1);
+                }
+            };
+
+            let _ = std::fs::remove_file(&obj_path);
+            let _ = std::fs::remove_file(&runtime_path);
+
+            if !link_status.success() {
+                eprintln!("error: linker exited with status {}", link_status);
+                return ExitCode::from(1);
+            }
+        }
     }
 
     let run_status = match Command::new(&exe_path)

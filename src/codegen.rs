@@ -1,4 +1,4 @@
-use cranelift_codegen::ir::condcodes::IntCC;
+use cranelift_codegen::ir::condcodes::{FloatCC, IntCC};
 use cranelift_codegen::ir::{
     types, AbiParam, FuncRef, GlobalValue, InstBuilder, MachMemFlags, StackSlotData, StackSlotKind,
     UserFuncName, Value,
@@ -13,6 +13,14 @@ use crate::errors::{ForgeError, ForgeResult};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
+
+pub const RUNTIME_SUPPORT_C: &str = r#"
+#include <stdio.h>
+
+int furnace_print_f64(const char *format, double value) {
+    return printf(format, value);
+}
+"#;
 
 /// Module-level identifiers for external C libraries and global format strings.
 pub struct RuntimeSymbols {
@@ -94,7 +102,7 @@ impl CodeGenContext {
         printf_sig.params.push(AbiParam::new(types::F64));
         printf_sig.returns.push(AbiParam::new(types::I32));
         let printf_id = module
-            .declare_function("printf", Linkage::Import, &printf_sig)
+            .declare_function("furnace_print_f64", Linkage::Import, &printf_sig)
             .map_err(|e| ForgeError::codegen(format!("declare printf: {}", e)))?;
 
         let mut puts_sig = module.make_signature();
@@ -533,6 +541,22 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
         }
     }
 
+    fn collection_element_type(&self, object: &Expr) -> types::Type {
+        let subtype = match object {
+            Expr::Identifier(name) => match self.var_info.get(name) {
+                Some(VarInfo::Array { element_type, .. })
+                | Some(VarInfo::List { element_type }) => Some(element_type),
+                _ => None,
+            },
+            _ => None,
+        };
+        match subtype {
+            Some(Subtype::Float) => types::F64,
+            Some(Subtype::Weld) => self.ctx.ptr_type,
+            _ => types::I32,
+        }
+    }
+
     fn emit_bounds_check(&mut self, index_val: Value, len_val: Value) -> ForgeResult<()> {
         let in_bounds = self
             .builder
@@ -841,14 +865,15 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                                             .ins()
                                             .call(self.runtime.fputs, &[value, stdout]);
                                     } else {
-                                        let fmt = if self.float_vars.contains(name) {
+                                        let is_float = self.is_float_expr(&interp_expr);
+                                        let fmt = if is_float {
                                             self.runtime.float_inline_fmt
                                         } else {
                                             self.runtime.int_inline_fmt
                                         };
                                         let fmt_value =
                                             self.builder.ins().symbol_value(self.ctx.ptr_type, fmt);
-                                        let numeric_value = if self.float_vars.contains(name) {
+                                        let numeric_value = if is_float {
                                             value
                                         } else {
                                             self.builder.ins().fcvt_from_sint(types::F64, value)
@@ -1176,7 +1201,7 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
             }
             Statement::ObjectDecl(obj) => {
                 let mut fields = Vec::new();
-                for (_, value) in &obj.inits {
+                for (path, value) in &obj.inits {
                     let field_type = match value {
                         Expr::Number(n) if n.is_float => Subtype::Float,
                         Expr::Number(_) => Subtype::Int,
@@ -1184,11 +1209,7 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                         Expr::Str(_) => Subtype::Weld,
                         _ => Subtype::Generic,
                     };
-                    let field_name = obj
-                        .inits
-                        .first()
-                        .and_then(|(path, _)| path.last().cloned())
-                        .unwrap_or_default();
+                    let field_name = path.last().cloned().unwrap_or_default();
                     if !fields.iter().any(|(_, name)| name == &field_name) {
                         fields.push((field_type, field_name));
                     }
@@ -1382,10 +1403,11 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                         16,
                     );
                     let elem_addr = self.builder.ins().iadd(buf_ptr, byte_offset);
+                    let element_type = self.collection_element_type(object);
                     Ok(self
                         .builder
                         .ins()
-                        .load(types::I32, MachMemFlags::new(), elem_addr, 0))
+                        .load(element_type, MachMemFlags::new(), elem_addr, 0))
                 } else {
                     let elem_addr = self.builder.ins().iadd(obj_val, byte_offset);
                     Ok(self
@@ -1636,10 +1658,22 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                         BinOp::Rem => Err(ForgeError::codegen(
                             "Modulo (%) is only supported for integer types",
                         )),
-                        _ => Err(ForgeError::codegen(format!(
-                            "Unsupported float op: {:?}",
-                            op
-                        ))),
+                        BinOp::Eq => Ok(self.builder.ins().fcmp(FloatCC::Equal, l_f, r_f)),
+                        BinOp::Ne => Ok(self.builder.ins().fcmp(FloatCC::NotEqual, l_f, r_f)),
+                        BinOp::Lt => Ok(self.builder.ins().fcmp(FloatCC::LessThan, l_f, r_f)),
+                        BinOp::Gt => Ok(self.builder.ins().fcmp(FloatCC::GreaterThan, l_f, r_f)),
+                        BinOp::Le => {
+                            Ok(self.builder.ins().fcmp(FloatCC::LessThanOrEqual, l_f, r_f))
+                        }
+                        BinOp::Ge => {
+                            Ok(self
+                                .builder
+                                .ins()
+                                .fcmp(FloatCC::GreaterThanOrEqual, l_f, r_f))
+                        }
+                        BinOp::And | BinOp::Or | BinOp::Xor => Err(ForgeError::codegen(
+                            "Boolean operators are not supported for Float values",
+                        )),
                     }
                 } else {
                     match op {
@@ -1692,18 +1726,19 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                     Some(Subtype::Int) => (self.runtime.int_scanf, types::I32),
                     Some(Subtype::Float) => (self.runtime.float_scanf, types::F64),
                     _ => {
-                        // String input
-                        let slot_data = StackSlotData::new(StackSlotKind::ExplicitSlot, 256, 0);
-                        let slot = self.builder.create_sized_stack_slot(slot_data);
-                        let slot_ptr = self.builder.ins().stack_addr(self.ctx.ptr_type, slot, 0);
+                        // Input strings escape the current function, so allocate
+                        // program-lifetime storage rather than returning a stack address.
+                        let size = self.builder.ins().iconst(self.ctx.ptr_type, 256);
+                        let allocation = self.builder.ins().call(self.runtime.malloc, &[size]);
+                        let string_ptr = self.builder.inst_results(allocation)[0];
                         let fmt_val = self
                             .builder
                             .ins()
                             .symbol_value(self.ctx.ptr_type, self.runtime.str_scanf);
                         self.builder
                             .ins()
-                            .call(self.runtime.scanf, &[fmt_val, slot_ptr]);
-                        return Ok(slot_ptr);
+                            .call(self.runtime.scanf, &[fmt_val, string_ptr]);
+                        return Ok(string_ptr);
                     }
                 };
 
@@ -1893,6 +1928,9 @@ pub fn compile(program: &Program, obj_path: &std::path::Path, _link_math: bool) 
             );
             if matches!(&param.type_decl, TypeDecl::Weld) {
                 compiler.string_vars.insert(param.name.clone());
+            }
+            if matches!(&param.type_decl, TypeDecl::Number(Subtype::Float)) {
+                compiler.float_vars.insert(param.name.clone());
             }
             if matches!(&param.type_decl, TypeDecl::Bool) {
                 compiler.bool_vars.insert(param.name.clone());
@@ -2148,4 +2186,3 @@ fn collect_strings_in_body(
     }
     Ok(())
 }
-

@@ -1,6 +1,6 @@
-# Alpha 4 Roadmap
+# Alpha 5 Roadmap
 
-Alpha 4 continues development of the Rust-based Furnace compiler.
+Alpha 5 continues development of the Rust-based Furnace compiler.
 
 ## Short Term
 
@@ -63,7 +63,7 @@ Future work includes clearer diagnostics for control-flow paths that do not retu
 
 ### Multicore Runtime
 
-Alpha 4 uses Rayon for compiler-side parallel analysis.
+Alpha 5 uses Rayon for compiler-side parallel analysis.
 
 Future versions are planned to provide mechanisms for ForgeLang programs to execute work on multiple CPU cores.
 

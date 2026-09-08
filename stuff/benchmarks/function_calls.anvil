@@ -1,0 +1,13 @@
+Int Step(Int Value) {
+    Return Value + 3;
+}
+
+Open Int Main() {
+    Int Value = 0;
+    Int I = 0;
+    While (I < 100000) {
+        Value = Step(Value);
+        I = I + 1;
+    }
+    Return Value;
+}

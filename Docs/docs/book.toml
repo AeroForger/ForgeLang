@@ -1,9 +1,9 @@
 [book]
-title = "ForgeLang Alpha 4"
+title = "ForgeLang Alpha 5"
 authors = ["ForgeLang Contributors"]
 language = "en"
 src = "src"
-description = "Official documentation for the ForgeLang Alpha 4 programming language and its Furnace compiler."
+description = "Official documentation for the ForgeLang Alpha 5 programming language and its Furnace compiler."
 
 [build]
 build-dir = "book"

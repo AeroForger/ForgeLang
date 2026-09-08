@@ -1,6 +1,6 @@
 # Linking
 
-Furnace generates a native object file.
+The Cranelift path generates a native object file. The direct native path creates an ELF64 executable and does not use this step.
 
 The object file is linked using the system C compiler.
 
@@ -12,7 +12,7 @@ cc main.o -o main -lm
 
 The linker produces the final executable.
 
-This is the last stage of the current Alpha 4 pipeline. Once the object file is generated, the program becomes a native binary like any other C or Rust program built for the target platform.
+This is the last stage of the Cranelift path. Once the object file is generated, it becomes a native binary after the system C compiler links it.
 
 The currently supported target is `linux`.
 

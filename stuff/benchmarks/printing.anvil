@@ -1,0 +1,5 @@
+Open Nunction Main() {
+    Print("native benchmark");
+    Print(1 + 2 + 3);
+    Print(True);
+}

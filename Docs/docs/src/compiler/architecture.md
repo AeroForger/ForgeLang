@@ -12,8 +12,17 @@ The grammar uses explicit precedence rules rather than left-recursive expression
 
 Operator precedence, from highest to lowest, is:
 
-```text
-primary -> postfix -> power -> unary -> multiplicative -> additive -> comparison -> and -> or -> xor
+```mermaid
+flowchart LR
+    A(primary) --> B(postfix)
+    B --> C(power)
+    C --> D(unary)
+    D --> E(multiplicative)
+    E --> F(additive)
+    F --> G(comparison)
+    G --> H(and)
+    H --> I(or)
+    I --> J(xor)
 ```
 
 A documented language rule is that unary operators bind looser than `**`.
@@ -60,25 +69,15 @@ This stage handles language-level checks such as:
 
 ## Code Generation
 
-`src/codegen.rs` converts supported ForgeLang constructs into Cranelift IR.
+Furnace has two code generation paths. The direct native path lowers supported programs to the internal representation in `src/ir.rs`, writes x86-64 instruction bytes, and creates an ELF64 executable. The other path in `src/codegen.rs` converts programs that need typed features to Cranelift IR and produces an object file.
 
-Cranelift handles:
-
-- Instruction selection
-- Register allocation
-- Machine code generation
-- Target-specific code generation
-- Object-file generation
-
-Furnace produces a native object file from the generated code.
+The paths share the AST and semantic analysis. The compiler selects the path after semantic analysis based on the types and statements used by the program. See [Native Code Generation](native-code-generation.md) for the direct path.
 
 ### Function Calls
 
-Furnace declares each ForgeLang function as an independent Cranelift function and emits calls to those functions from the caller.
+The direct path writes each ForgeLang function as a separate block of machine code. Calls use the System V x86-64 argument registers, and return values use `RAX`.
 
-This preserves function-local compiler state and supports parameterized, return-value, recursive, and `Nunction` calls without source-level expansion.
-
-Parameterized calls and `Return` statements are not handled by this pass.
+The Cranelift path declares each ForgeLang function as an independent Cranelift function and emits calls from the caller.
 
 ### Collection Layout
 
@@ -114,7 +113,9 @@ These layouts are implementation details of the current backend and may change i
 
 ## Linking
 
-Furnace generates a native object file.
+The direct native path creates an ELF64 executable itself, so it does not call a linker.
+
+The Cranelift path generates a native object file and uses the system C compiler as the linker.
 
 The object file is linked using the system C compiler.
 
@@ -129,4 +130,4 @@ The linker produces the final executable.
 ---
 
 [← Previous](semantic-analysis.md)
-[Next →](code-generation.md)
+[Next →](native-code-generation.md)

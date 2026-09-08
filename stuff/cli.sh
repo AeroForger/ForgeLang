@@ -19,15 +19,26 @@ fi
 
 # version output
 actual="$($BIN -version 2>&1)"
-[ "$actual" = "Furnace Alpha 4" ] || fail "-version output mismatch: '$actual'"
+[ "$actual" = "Furnace Alpha 5" ] || fail "-version output mismatch: '$actual'"
 
 # help output
 help_actual="$($BIN -help 2>&1)"
-printf '%s\n' "$help_actual" | grep -q "Furnace Alpha 4" || fail "-help is missing banner"
+printf '%s\n' "$help_actual" | grep -q "Furnace Alpha 5" || fail "-help is missing banner"
 printf '%s\n' "$help_actual" | grep -q "Furnace compile <file>.anvil <platform>" || fail "-help is missing compile usage"
 printf '%s\n' "$help_actual" | grep -q "Furnace run <file>.anvil" || fail "-help is missing run usage"
+printf '%s\n' "$help_actual" | grep -q "Furnace backend <native|cranelift>" || fail "-help is missing backend usage"
+printf '%s\n' "$help_actual" | grep -q "Available backends:" || fail "-help is missing backend list"
 printf '%s\n' "$help_actual" | grep -q "Furnace new <APP_TYPE> -n <NAME>" || fail "-help is missing new usage"
 printf '%s\n' "$help_actual" | grep -q "console" || fail "-help is missing console application type"
+
+# backend command
+native_backend_out="$($BIN backend native 2>&1)" || fail "native backend command failed"
+[ "$native_backend_out" = $'Backend: native\nOutput: direct x86-64 ELF64 executable' ] || fail "native backend output mismatch: '$native_backend_out'"
+cranelift_backend_out="$($BIN backend cranelift 2>&1)" || fail "cranelift backend command failed"
+[ "$cranelift_backend_out" = $'Backend: cranelift\nOutput: native object file linked with cc' ] || fail "cranelift backend output mismatch: '$cranelift_backend_out'"
+if $BIN backend unknown >/dev/null 2>&1; then
+    fail "unknown backend should fail"
+fi
 
 # new console project
 PROJECT_DIR="$TMPDIR/Project"

@@ -41,6 +41,7 @@
 
 - [Semantic Analysis](compiler/semantic-analysis.md)
 - [Compiler Architecture](compiler/architecture.md)
+- [Native Code Generation](compiler/native-code-generation.md)
 - [Code Generation](compiler/code-generation.md)
 - [Linking](compiler/linking.md)
 
@@ -57,5 +58,5 @@
 # Project Status
 
 - [Current Limitations](limitations.md)
-- [Alpha 4 Roadmap](roadmap.md)
+- [Alpha 5 Roadmap](roadmap.md)
 - [Implementation Notes](implementation-notes.md)

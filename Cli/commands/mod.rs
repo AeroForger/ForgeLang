@@ -1,3 +1,4 @@
+pub mod backend;
 pub mod compile;
 pub mod help;
 pub mod new;

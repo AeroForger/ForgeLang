@@ -6,24 +6,24 @@ ForgeLang source files use the `.anvil` extension. If you drop one on the floor,
 
 The compiler is **Furnace**.
 
-> **Status:** Alpha 4
+> **Status:** Alpha 5
 > **Compiler:** Furnace
 > **Implementation:** Rust
 > **Parser:** pest
-> **Backend:** Cranelift
-> **Output:** Native object code
+> **Code generation:** Direct x86-64 path or Cranelift
+> **Output:** ELF64 executable or native object code
 
 ## What ForgeLang Is
 
-ForgeLang is a statically typed programming language whose compiled programs do not require a virtual machine or interpreter at runtime. The compiler pipeline turns source code into native machine code that is linked by the system linker into a regular executable.
+ForgeLang is a statically typed programming language whose compiled programs do not require a virtual machine or interpreter at runtime. Furnace either writes an ELF64 executable directly or uses the system linker for the Cranelift path.
 
 ## What Furnace Is
 
-Furnace is the name of the ForgeLang compiler. The current generation is written in Rust and uses [pest](https://pest.rs/) for parsing, [Cranelift](https://cranelift.dev/) for code generation, [Rayon](https://github.com/rayon-rs/rayon) for parallel semantic analysis, and `cc` for linking.
+Furnace is the name of the ForgeLang compiler. The current generation is written in Rust and uses [pest](https://pest.rs/) for parsing, a direct x86-64 code path and [Cranelift](https://cranelift.dev/) for code generation, [Rayon](https://github.com/rayon-rs/rayon) for parallel semantic analysis, and `cc` for the typed path's linking step.
 
 ## Current Version
 
-This documentation describes **Alpha 4** of ForgeLang and the corresponding release of Furnace.
+This documentation describes **Alpha 5** of ForgeLang and the corresponding release of Furnace.
 
 ## Source Files
 
@@ -31,18 +31,24 @@ ForgeLang source files use the `.anvil` extension. Furnace checks that input fil
 
 ## Compiler Pipeline
 
-```text
-ForgeLang source -> pest -> AST -> Semantic Analysis -> Cranelift -> Native Object Code -> System Linker -> Executable
+```mermaid
+flowchart LR
+    A(ForgeLang source) --> B(pest)
+    B --> C(AST)
+    C --> D(Semantic analysis)
+    D --> E(Direct native path or Cranelift path)
+    E --> F(Executable)
 ```
 
 Furnace is divided into several stages:
 
 * **pest** parses the source into an AST.
 * **Semantic analysis** validates the AST and rejects invalid programs.
-* **Cranelift** generates native object code from the validated AST.
-* **cc** (the system C compiler) links the object file into an executable.
+* The direct native path writes x86-64 instructions and an ELF64 executable.
+* **Cranelift** generates a native object file for programs that need the typed path.
+* **cc** (the system C compiler) links that object file into an executable.
 
-Alpha 4 uses:
+Alpha 5 uses:
 
 * **Rust** for the compiler
 * **pest** for parsing

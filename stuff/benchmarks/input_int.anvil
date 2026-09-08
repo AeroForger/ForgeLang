@@ -1,0 +1,4 @@
+Open Int Main() {
+    Int value = Input(Int);
+    Return value;
+}

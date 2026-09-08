@@ -1,0 +1,58 @@
+[
+  {
+    "name": "f64_precision",
+    "source": "Open Nunction Main() { Float X = 16777217.0; Print(X); }",
+    "expected": {
+      "stdout": "16777217.000000\n"
+    }
+  },
+  {
+    "name": "mixed_reassignment",
+    "source": "Open Nunction Main() { Int N = 3; Float X = -1.25; X = N + X; Print(X); X = X / 2.0; Print(X); }",
+    "expected": {
+      "stdout": "1.750000\n0.875000\n"
+    }
+  },
+  {
+    "name": "float_comparisons",
+    "source": "Open Nunction Main() { Float X = 1.5; If (X < 2.0) { Print(1); } If (X == 1.5) { Print(2); } If (X != 2.0) { Print(3); } If (X >= 1.5) { Print(4); } If (X > 1.0) { Print(5); } If (X <= 1.5) { Print(6); } }",
+    "expected": {
+      "stdout": "1\n2\n3\n4\n5\n6\n"
+    }
+  },
+  {
+    "name": "float_increment_decrement",
+    "source": "Open Nunction Main() { Float X = 0.5; For (Int I = 0; I < 3; X++) { Print(X); I = I + 1; } For (Int J = 0; J < 2; X--) { Print(X); J = J + 1; } Print(X); }",
+    "expected": {
+      "stdout": "0.500000\n1.500000\n2.500000\n3.500000\n2.500000\n1.500000\n"
+    }
+  },
+  {
+    "name": "float_parameter_return",
+    "source": "Float Twice(Float X) { Return X * 2.0; } Open Nunction Main() { Print(Twice(1.25)); }",
+    "expected": {
+      "stdout": "2.500000\n"
+    }
+  },
+  {
+    "name": "mixed_abi_nested_calls",
+    "source": "Float Add(Int N, Float X, Weld Label) { Print(Label); Return N + X; } Float Identity(Float X) { Return X; } Open Nunction Main() { Print(Add(3, Identity(1.25), \"mixed\")); }",
+    "expected": {
+      "stdout": "mixed\n4.250000\n"
+    }
+  },
+  {
+    "name": "float_values_across_calls",
+    "source": "Float Identity(Float X) { Return X; } Open Nunction Main() { Print(Identity(1.0) + (Identity(2.0) + (Identity(3.0) + (Identity(4.0) + (Identity(5.0) + (Identity(6.0) + Identity(7.0))))))); }",
+    "expected": {
+      "stdout": "28.000000\n"
+    }
+  },
+  {
+    "name": "float_power_negation",
+    "source": "Open Nunction Main() { Float X = 2.0; Print(-(X ** 3.0)); }",
+    "expected": {
+      "stdout": "-8.000000\n"
+    }
+  }
+]

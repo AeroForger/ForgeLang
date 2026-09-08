@@ -1,0 +1,50 @@
+[
+  {
+    "name": "sequential_integer_reads",
+    "source": "Open Nunction Main() { Int A = Input(Int); Int B = Input(Int); Print(A); Print(B); }",
+    "stdin": "12\n34\n",
+    "expected": {
+      "stdout": "12\n34\n"
+    }
+  },
+  {
+    "name": "sequential_mixed_reads",
+    "source": "Open Nunction Main() { Int A = Input(Int); Float B = Input(Float); Weld C = Input(); Print(A); Print(B); Print(C); }",
+    "stdin": "12\n3.5\nforge\n",
+    "expected": {
+      "stdout": "12\n3.500000\nforge\n"
+    }
+  },
+  {
+    "name": "float_input_precision",
+    "source": "Open Nunction Main() { Float X = Input(Float); Print(X); }",
+    "stdin": "16777217.25\n",
+    "expected": {
+      "stdout": "16777217.250000\n"
+    }
+  },
+  {
+    "name": "string_input",
+    "source": "Open Nunction Main() { Weld Name = Input(); Print(Name); }",
+    "stdin": "forge\n",
+    "expected": {
+      "stdout": "forge\n"
+    }
+  },
+  {
+    "name": "returned_input_string_lifetime",
+    "source": "Weld Read() { Return Input(); } Open Nunction Main() { Weld A = Read(); Weld B = Read(); Print(A); Print(B); }",
+    "stdin": "first\nsecond\n",
+    "expected": {
+      "stdout": "first\nsecond\n"
+    }
+  },
+  {
+    "name": "bounded_string_input",
+    "source": "Open Nunction Main() { Weld Name = Input(); Print(Name); }",
+    "stdin": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n",
+    "expected": {
+      "stdout": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n"
+    }
+  }
+]

@@ -12,9 +12,14 @@ fn main() -> ExitCode {
     };
 
     match command {
-        args::Command::Compile { input, platform } => commands::compile::execute(&input, platform),
-        args::Command::Run { input } => commands::run::execute(&input),
+        args::Command::Compile {
+            input,
+            platform,
+            backend,
+        } => commands::compile::execute(&input, platform, backend),
+        args::Command::Run { input, backend } => commands::run::execute(&input, backend),
         args::Command::New { app_type, name } => commands::new::execute(&app_type, &name),
+        args::Command::Backend { backend } => commands::backend::execute(backend),
         args::Command::Version => commands::version::execute(),
         args::Command::Help => commands::help::execute(),
     }

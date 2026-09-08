@@ -1,0 +1,12 @@
+Open Int Main() {
+    Int A = 3;
+    Int B = 5;
+    Int C = 7;
+    Int I = 0;
+    While (I < 100000) {
+        A = (A + B) * (C - 2);
+        B = (B + C) * (A - 1);
+        I = I + 1;
+    }
+    Return A;
+}

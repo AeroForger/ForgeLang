@@ -1,4 +1,4 @@
-# ForgeLang Alpha 4 Language Documentation
+# ForgeLang Alpha 5 Language Documentation
 
 **ForgeLang** is a statically typed systems programming language that compiles to native machine code.
 
@@ -6,12 +6,12 @@ ForgeLang source files use the `.anvil` extension. If you drop one on the floor,
 
 The compiler is **Furnace**.
 
-> **Status:** Alpha 4 \
+> **Status:** Alpha 5 \
 > **Compiler:** Furnace \
 > **Implementation:** Rust \
 > **Parser:** pest \
-> **Backend:** Cranelift \
-> **Output:** Native object code 
+> **Code generation:** Direct x86-64 path or Cranelift \
+> **Output:** ELF64 executable or native object code 
 
 ---
 
@@ -82,10 +82,12 @@ The compiler is **Furnace**.
 29. [Imports](#29-imports)
 30. [Semantic Analysis](#30-semantic-analysis)
 31. [Compiler Architecture](#31-compiler-architecture)
+
+    31.6. [Native Code Generation](#316-native-code-generation)
 32. [Compilation](#32-compilation)
 33. [Complete Example](#33-complete-example)
 34. [Current Limitations](#34-current-limitations)
-35. [Alpha 4 Roadmap](#35-alpha-34-roadmap)
+35. [Alpha 5 Roadmap](#35-alpha-35-roadmap)
 
 ---
 
@@ -95,19 +97,25 @@ ForgeLang is a statically typed programming language that compiles source code t
 
 Compiled ForgeLang programs do not require a virtual machine or interpreter at runtime.
 
-The compiler pipeline is:
+The compiler stages are:
 
-```
-ForgeLang source -> pest -> AST -> Semantic Analysis -> Cranelift -> Native Object -> System Linker -> Executable
+```mermaid
+flowchart LR
+    A(ForgeLang source) --> B(pest)
+    B --> C(AST)
+    C --> D(Semantic analysis)
+    D --> E(Direct native path or Cranelift path)
+    E --> F(Executable)
 ```
 
 Furnace is written in Rust.
 
-Alpha 4 uses:
+Alpha 5 uses:
 
 * **Rust** for the compiler
 * **pest** for parsing
-* **Cranelift** for code generation
+* **x86-64 instruction encoding** for the direct native path
+* **Cranelift** for programs that need the typed code path
 * **Rayon** for parallel semantic analysis
 * **cc** for linking
 
@@ -337,7 +345,7 @@ The assigned value must be compatible with the variable's type.
 
 # 7. Types
 
-Alpha 4 currently includes primitive types, arrays, tuples, lists, and a limited generic type.
+Alpha 5 currently includes primitive types, arrays, tuples, lists, and a limited generic type.
 
 ## 7.1 Primitive Types
 
@@ -758,7 +766,7 @@ The current implementation uses standard C input facilities internally.
 
 # 13. Operators
 
-Alpha 4 supports arithmetic, comparison, bitwise, unary, and loop increment operators.
+Alpha 5 supports arithmetic, comparison, bitwise, unary, and loop increment operators.
 
 ## 13.1 Arithmetic
 
@@ -834,7 +842,7 @@ For (Int I = 10; I > 0; I--)
 
 # 14. Unary Operators
 
-Alpha 4 supports unary negation and unary plus.
+Alpha 5 supports unary negation and unary plus.
 
 Example:
 
@@ -1385,7 +1393,7 @@ It currently handles checks including:
 * Boolean type compatibility for `Bool` and `Boolean` variables
 * Other language-level errors
 
-Semantic analysis happens before Cranelift code generation.
+Semantic analysis happens before either code generation path.
 
 This keeps invalid programs from being passed directly to the backend.
 
@@ -1426,8 +1434,17 @@ The grammar uses explicit precedence rules rather than left-recursive expression
 
 Operator precedence, from highest to lowest, is:
 
-```
-primary -> postfix -> power -> unary -> multiplicative -> additive -> comparison -> and -> or -> xor
+```mermaid
+flowchart LR
+    A(primary) --> B(postfix)
+    B --> C(power)
+    C --> D(unary)
+    D --> E(multiplicative)
+    E --> F(additive)
+    F --> G(comparison)
+    G --> H(and)
+    H --> I(or)
+    I --> J(xor)
 ```
 
 A documented language rule is that unary operators bind looser than `**`.
@@ -1474,7 +1491,9 @@ This stage handles language-level checks such as:
 
 ## 31.4 Code Generation
 
-`src/codegen.rs` converts supported ForgeLang constructs into **Cranelift IR**.
+Furnace has two code generation paths. The direct native path lowers supported programs to the internal representation in `src/ir.rs`, writes x86-64 instruction bytes, and creates an ELF64 executable. The path in `src/codegen.rs` converts programs that need typed features to **Cranelift IR** and produces an object file.
+
+The paths share the AST and semantic analysis. Furnace selects the path after semantic analysis based on the types and statements used by the program.
 
 Cranelift handles:
 
@@ -1484,11 +1503,11 @@ Cranelift handles:
 * Target-specific code generation
 * Object-file generation
 
-Furnace produces a native object file from the generated code.
+The Cranelift path produces a native object file from the generated code.
 
 ### 31.4.1 Native Function Calls
 
-Furnace compiles each ForgeLang function as an independent Cranelift function and emits calls from the caller.
+The Cranelift path compiles each ForgeLang function as an independent Cranelift function and emits calls from the caller.
 
 This supports parameters, return values, calls inside `If`, `While`, and `For`, and recursive calls.
 
@@ -1526,7 +1545,9 @@ These layouts are implementation details of the current backend and may change i
 
 ## 31.5 Linking
 
-Furnace generates a native object file.
+The direct native path creates an ELF64 executable itself, so it does not call a linker.
+
+The Cranelift path generates a native object file.
 
 The object file is linked using the system C compiler.
 
@@ -1537,6 +1558,81 @@ cc main.o -o main -lm
 ```
 
 The linker produces the final executable.
+
+## 31.6 Native Code Generation
+
+The direct native path is implemented in `src/lowering.rs`, `src/ir.rs`, `src/backend/x86_64/`, and `src/backend/elf.rs`.
+
+### 31.6.1 Lowering the AST
+
+`src/lowering.rs` converts the checked AST into the internal representation in `src/ir.rs`.
+
+The representation contains:
+
+* Virtual registers for temporary values
+* Named stack variables
+* Basic blocks with labels
+* Arithmetic and comparison instructions
+* Function calls and parameters
+* Print and input instructions
+* Jumps, conditional branches, and returns
+
+`If`, `While`, and `For` statements become basic blocks. Each branch receives a label. Each loop has a condition block and an exit block. The code still uses virtual registers at this stage.
+
+### 31.6.2 Placing Values
+
+`src/backend/x86_64/mod.rs` assigns virtual registers to `RBX`, `R12`, `R13`, `R14`, and `R15`. Values that do not fit in those registers use stack slots. Function variables also use stack slots.
+
+Function arguments use the first six integer registers from the System V x86-64 calling convention:
+
+```text
+RDI, RSI, RDX, RCX, R8, R9
+```
+
+Function results are returned in `RAX`.
+
+### 31.6.3 Writing Instructions
+
+`src/backend/x86_64/encoder.rs` writes instruction bytes into a byte buffer. It handles moves, integer arithmetic, bitwise operations, comparisons, calls, returns, jumps, function stack frames, and the system calls used by the startup code.
+
+The encoder targets x86-64 directly. It does not send this code to another compiler.
+
+### 31.6.4 Fixing Addresses
+
+Function calls and jumps can refer to code that has not been placed yet. Furnace first writes a temporary relative offset and records its position. After all functions and blocks are placed, it fills in the offsets for function calls, branch jumps, helper calls, and pointers to string data.
+
+### 31.6.5 Building the ELF64 File
+
+`src/backend/elf.rs` writes:
+
+1. An ELF64 header
+2. A loadable program header
+3. A startup entry point
+4. The generated functions and helper routines
+5. The string data used by the program
+
+The startup entry point calls `Main`, moves its return value into the Linux exit-status register, and makes the exit system call. The command-line compiler writes the resulting bytes to the output file and marks it executable.
+
+### 31.6.6 Path Selection
+
+The direct path currently handles integer, Boolean, and `Weld` values, integer input, strings used by printing, arithmetic, comparisons, branches, loops, function calls, and `Program.Stop()`.
+
+Programs that use floats, arrays, tuples, lists, or other typed features use the Cranelift path. That path creates an object file, adds the C runtime helpers, and calls `cc` to make the final executable.
+
+Both paths share parsing, the AST, and semantic analysis. The difference begins after the program has been checked.
+
+### 31.6.7 Direct Path Limits
+
+The direct path currently has these limits:
+
+* x86-64 instruction output only
+* At most six integer function arguments
+* Integer, Boolean, and `Weld` function values
+* Integer input only
+* No direct float, array, tuple, or list code generation
+* No direct `Data`, object, or import code generation
+
+Syntax can be parsed and semantically checked before code generation rejects it or sends it to the other path.
 
 ---
 
@@ -1570,6 +1666,8 @@ For example:
 ```fish
 furnace compile main.anvil linux
 furnace run main.anvil
+furnace backend native
+furnace backend cranelift
 furnace -help
 furnace --help
 furnace -version
@@ -1595,9 +1693,9 @@ The compile process:
 3. Parses the source.
 4. Builds the AST.
 5. Performs semantic analysis.
-6. Generates native functions and function calls.
-7. Generates a native object file.
-8. Invokes the platform linker.
+6. Selects the direct native path or the Cranelift path.
+7. Generates functions and calls.
+8. Writes an ELF64 executable directly, or creates an object file and invokes the platform linker.
 9. Produces the executable.
 
 Example output:
@@ -1635,7 +1733,28 @@ This command:
 4. Forwards the program's standard output and standard error.
 5. Returns the child process exit code.
 
-## 32.4 Create a Project
+## 32.4 Backend Commands
+
+Use the `backend` command to check either available backend:
+
+```fish
+./target/debug/furnace backend native
+./target/debug/furnace backend cranelift
+```
+
+Available backends:
+
+* `native` writes a direct x86-64 ELF64 executable.
+* `cranelift` writes a native object file and links it with `cc`.
+
+Use `--backend` with `compile` or `run` to choose the path for that command:
+
+```fish
+./target/debug/furnace compile main.anvil linux --backend native
+./target/debug/furnace run main.anvil --backend cranelift
+```
+
+## 32.5 Create a Project
 
 Create a console project with:
 
@@ -1652,16 +1771,16 @@ Project/
 
 The generated file contains a minimal `Open Nunction Main()` program. The supported application type is `console`. Furnace rejects unknown types, empty names, and existing project directories.
 
-## 32.5 Version and Help
+## 32.6 Version and Help
 
 Furnace exposes its version through centralized compiler metadata.
 
 The current version is:
 
 ```rust
-pub const VERSION: &str = "Alpha 4";
+pub const VERSION: &str = "Alpha 5";
 ```
-> Fancy way of saying Alpha 4
+> Fancy way of saying Alpha 5
 
 Version information can be requested with:
 
@@ -1678,21 +1797,26 @@ Help can be requested with:
 Example version output:
 
 ```
-Furnace Alpha 4
+Furnace Alpha 5
 ```
 
 Usage:
 
 ```
 Usage:
-    Furnace compile <file>.anvil <platform>
-    Furnace run <file>.anvil
+    Furnace compile <file>.anvil <platform> [--backend native|cranelift]
+    Furnace run <file>.anvil [--backend native|cranelift]
+    Furnace backend <native|cranelift>
     Furnace new <APP_TYPE> -n <NAME>
     Furnace -version
     Furnace -help
+
+Available backends:
+    native: direct x86-64 ELF64 executable
+    cranelift: native object file linked with cc
 ```
 
-## 32.5 Link the Object Manually
+## 32.7 Link the Object Manually
 
 Furnace produces a native object file that can be linked separately:
 
@@ -1702,7 +1826,7 @@ cc main.o -o main -lm
 
 The exact libraries required may depend on the generated program and target platform.
 
-## 32.6 Run
+## 32.8 Run
 
 The resulting executable can be started normally:
 
@@ -1714,7 +1838,7 @@ The resulting executable can be started normally:
 
 # 33. Complete Example
 
-The following program demonstrates several features available in Alpha 4:
+The following program demonstrates several features available in Alpha 5:
 
 * `Nunction`
 * Variables
@@ -1826,7 +1950,7 @@ Open Nunction Main()
 
 # 34. Current Limitations
 
-Alpha 4 is an early development release.
+Alpha 5 is an early development release.
 
 The following features are not currently fully implemented in the backend:
 
@@ -1858,9 +1982,9 @@ This distinction saves everyone from discovering that the compiler supports some
 
 ---
 
-# 35. Alpha 4 Roadmap
+# 35. Alpha 5 Roadmap
 
-Alpha 4 continues development of the Rust-based Furnace compiler.
+Alpha 5 continues development of the Rust-based Furnace compiler.
 
 ## Short Term
 
@@ -1923,7 +2047,7 @@ Future work includes clearer diagnostics for control-flow paths that do not retu
 
 ### Multicore Runtime
 
-Alpha 4 uses Rayon for compiler-side parallel analysis.
+Alpha 5 uses Rayon for compiler-side parallel analysis.
 
 Future versions are planned to provide mechanisms for ForgeLang programs to execute work on multiple CPU cores.
 
@@ -1972,9 +2096,9 @@ The compiler will need sufficient language features, standard library support, a
 
 ---
 
-# Alpha 4 Implementation Notes
+# Alpha 5 Implementation Notes
 
-Alpha 4 uses a different compiler implementation from the earlier experimental versions of ForgeLang.
+Alpha 5 uses a different compiler implementation from the earlier experimental versions of ForgeLang.
 
 Earlier versions used:
 
@@ -1996,13 +2120,18 @@ Cranelift
 
 The current compiler pipeline is:
 
-```
-ForgeLang source -> pest -> AST -> Semantic Analysis -> Cranelift -> Native Object Code
+```mermaid
+flowchart LR
+    A(ForgeLang source) --> B(pest)
+    B --> C(AST)
+    C --> D(Semantic analysis)
+    D --> E(Direct native path or Cranelift path)
+    E --> F(Executable)
 ```
 
 The change to Rust also makes the compiler itself part of the ForgeLang project's systems-level development work.
 
-Alpha 4 should not be treated as a finished language specification.
+Alpha 5 should not be treated as a finished language specification.
 
 Some syntax exists before its backend implementation.
 

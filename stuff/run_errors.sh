@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tests/run_errors.sh — Error tests for ForgeLang parser/compiler
+# tests/run_errors.sh - Error tests for ForgeLang parser/compiler
 set -uo pipefail
 
 FEATURES_DIR="$(cd "$(dirname "$0")" && pwd)/errors"

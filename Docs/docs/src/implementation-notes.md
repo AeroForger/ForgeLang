@@ -1,6 +1,6 @@
 # Implementation Notes
 
-Alpha 4 uses a different compiler implementation from the earlier experimental versions of ForgeLang.
+Alpha 5 uses a different compiler implementation from the earlier experimental versions of ForgeLang.
 
 Earlier versions used:
 
@@ -12,23 +12,29 @@ ANTLR
 LLVM
 ```
 
-Alpha 4 uses:
+Alpha 5 uses:
 
 ```text
 Rust
 pest
-Cranelift
+Direct x86-64 code path
+Cranelift typed path
 ```
 
 The current compiler pipeline is:
 
-```text
-ForgeLang source -> pest -> AST -> Semantic Analysis -> Cranelift -> Native Object Code
+```mermaid
+flowchart LR
+    A(ForgeLang source) --> B(pest)
+    B --> C(AST)
+    C --> D(Semantic analysis)
+    D --> E(Direct native path or Cranelift path)
+    E --> F(Executable)
 ```
 
-The change to Rust also makes the compiler itself part of the ForgeLang project's systems-level development work.
+The compiler is written in Rust and produces native executables through the two paths described above.
 
-Alpha 4 should not be treated as a finished language specification.
+Alpha 5 should not be treated as a finished language specification.
 
 Some syntax exists before its backend implementation.
 
