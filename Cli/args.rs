@@ -44,6 +44,7 @@ pub enum Command {
     Backend {
         backend: BackendKind,
     },
+    Update,
     Version,
     Help,
 }
@@ -57,6 +58,7 @@ pub fn parse_args(args: &[String]) -> Result<Command, ExitCode> {
         eprintln!("    Furnace run <file>.anvil [--backend cranelift|native]");
         eprintln!("    Furnace backend <native|cranelift>");
         eprintln!("    Furnace new <APP_TYPE> -n <NAME>");
+        eprintln!("    Furnace update");
         eprintln!("Available backends: native, cranelift");
         eprintln!("Helpers:");
         eprintln!("    Furnace -version");
@@ -69,6 +71,7 @@ pub fn parse_args(args: &[String]) -> Result<Command, ExitCode> {
     match first {
         "-version" | "--version" | "-v" | "version" => Ok(Command::Version),
         "-help" | "--help" | "-h" | "help" => Ok(Command::Help),
+        "update" | "Update" => Ok(Command::Update),
         "compile" | "Compile" => {
             if args.len() < 3 {
                 eprintln!("error: 'compile' requires an input .anvil file and a target platform");

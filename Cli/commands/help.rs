@@ -8,6 +8,7 @@ pub fn execute() -> ExitCode {
     println!("    Furnace run <file>.anvil [--backend native|cranelift]");
     println!("    Furnace backend <native|cranelift>");
     println!("    Furnace new <APP_TYPE> -n <NAME>");
+    println!("    Furnace update");
     println!();
     println!("Application types:");
     println!("    console");

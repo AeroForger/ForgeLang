@@ -21,6 +21,7 @@ fn main() -> ExitCode {
         args::Command::New { app_type, name } => commands::new::execute(&app_type, &name),
         args::Command::Backend { backend } => commands::backend::execute(backend),
         args::Command::Version => commands::version::execute(),
+        args::Command::Update => commands::update::update_furnace(),
         args::Command::Help => commands::help::execute(),
     }
 }
