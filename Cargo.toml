@@ -25,6 +25,8 @@ cranelift-module = "0.135.1"
 cranelift-object = "0.135.1"
 cranelift-native = "0.135.1"
 target-lexicon = "0.13.5"
+which = "8.0.6"
+tempfile = "3.27.0"
 
 [profile.release]
 opt-level = 3
