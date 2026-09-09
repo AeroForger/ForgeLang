@@ -4,17 +4,6 @@
 # Compiled objects
 *.o
 
-# Local test files and directories
-/test/
-/testing/
-/testing.anvil
-/foreach.anvil
-
-# Local notes and development files
-/FutureIdeas/
-/r.md
-/furnace_code.md
-
 # Ignore hidden files and directories by default
 .*
 
@@ -23,5 +12,5 @@
 !.github/
 !.github/**
 
-# OS junk
-.DS_Store
+# Scratch
+/scratch/
