@@ -50,7 +50,7 @@ def run_case(binary, backend, case, timeout):
     with tempfile.TemporaryDirectory(prefix="furnace-regression-") as directory:
         if case.get("cli"):
             env["FURNACE"] = str(binary)
-            record["run"] = execute(["bash", str(ROOT / "stuff/cli.sh")], directory,
+            record["run"] = execute(["bash", str(ROOT / "language-tests/cli.sh")], directory,
                                     timeout=max(timeout, 30), env=env)
             record["passed"] = normal(record["run"], 0)
             return record

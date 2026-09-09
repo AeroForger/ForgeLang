@@ -29,6 +29,7 @@ printf '%s\n' "$help_actual" | grep -q "Furnace run <file>.anvil" || fail "-help
 printf '%s\n' "$help_actual" | grep -q "Furnace backend <native|cranelift>" || fail "-help is missing backend usage"
 printf '%s\n' "$help_actual" | grep -q "Available backends:" || fail "-help is missing backend list"
 printf '%s\n' "$help_actual" | grep -q "Furnace new <APP_TYPE> -n <NAME>" || fail "-help is missing new usage"
+printf '%s\n' "$help_actual" | grep -q "Furnace update" || fail "-help is missing update usage"
 printf '%s\n' "$help_actual" | grep -q "console" || fail "-help is missing console application type"
 
 # backend command

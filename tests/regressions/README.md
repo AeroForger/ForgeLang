@@ -32,7 +32,7 @@ assertions and is represented as a single subprocess result.
 
 ## Mapping to the original 13 failures
 
-Feature paths below are relative to `stuff/features/`.
+Feature paths below are relative to `language-tests/features/`.
 
 | Existing failing test | New coverage |
 | --- | --- |
@@ -48,7 +48,7 @@ Feature paths below are relative to `stuff/features/`.
 | ore_tuple_parameter.anvil | adjacent mixed tuple fields; existing parameter fixture retained |
 | strings.anvil | multi-field Data object, member interpolation |
 | tuples.anvil | adjacent typed fields and float field interpolation |
-| ../cli.sh | original assertions run under each backend, including the known native mismatch |
+| ../language-tests/cli.sh | original assertions run under each backend, including the known native mismatch |
 
 Numeric tests additionally cover float parameters/returns, mixed ABI calls, and
 seven live call results. Integer call-pressure and six/seven-parameter cases

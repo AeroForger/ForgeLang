@@ -43,13 +43,13 @@ run_step "Python backend harness tests" \
 
 if [ -x "$BINARY" ]; then
     run_step "Legacy feature tests" \
-        env FURNACE="$BINARY" bash "$ROOT/stuff/run.sh"
+        env FURNACE="$BINARY" bash "$ROOT/language-tests/run.sh"
 
     run_step "Legacy error tests" \
-        env FURNACE="$BINARY" bash "$ROOT/stuff/run_errors.sh"
+        env FURNACE="$BINARY" bash "$ROOT/language-tests/run_errors.sh"
 
     run_step "CLI tests" \
-        env FURNACE="$BINARY" bash "$ROOT/stuff/cli.sh"
+        env FURNACE="$BINARY" bash "$ROOT/language-tests/cli.sh"
 
     run_step "Complete native and Cranelift regression matrix" \
         python3 -B "$ROOT/tests/backend_regressions.py" \
