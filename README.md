@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="ForgeLangLogo128.png">
+    <img src="assets/ForgeLangLogo128.png">
     <br>
     <strong>ForgeLang, a statically typed systems programming language built in Rust.</strong>
     <br>
