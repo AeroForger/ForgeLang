@@ -84,12 +84,12 @@ def run_case(binary, backend, case, timeout):
 
 
 def existing_cases():
-    for source in sorted((ROOT / "stuff/features").glob("*.anvil")):
+    for source in sorted((ROOT / "language-tests/features").glob("*.anvil")):
         stdin = source.with_suffix(".stdin")
         yield dict(name=source.stem, group="existing/features", source=source.read_text(),
                    stdin=stdin.read_text() if stdin.exists() else "", legacy_newlines=True,
                    expected=dict(stdout=source.with_suffix(".expected").read_text()))
-    for source in sorted((ROOT / "stuff/errors").glob("*.anvil")):
+    for source in sorted((ROOT / "language-tests/errors").glob("*.anvil")):
         diagnostic = source.with_suffix(".error")
         yield dict(name=source.stem, group="existing/errors", source=source.read_text(),
                    expected=dict(reject=True, diagnostic=diagnostic.read_text().rstrip("\n")
