@@ -1676,11 +1676,11 @@ furnace --version
 
 This means you can use `furnace` directly from any directory, provided Cargo's binary directory is available in your `PATH`.
 
-Documentation will use `cargo build --release` instead of `cargo install --path .`
+Documentation will use `cargo build --release` instead of `cargo install --path .`,However `cargo install --path` is a better version.
 
 ## 32.2 Compile a ForgeLang Program
 
-The current CLI command is:
+The current f command is:
 
 ```fish
 ./target/debug/furnace compile main.anvil linux
@@ -1788,6 +1788,15 @@ Version information can be requested with:
 ./target/debug/furnace -version
 ```
 
+Downloading the newest Furnace version (Supported from Alpha 5.1):
+
+```fish
+# If you havent switched to cargo install:
+./target/debug/furnace update 
+# cargo install version:
+furnace update
+```
+
 Help can be requested with:
 
 ```fish
@@ -1804,12 +1813,12 @@ Usage:
 
 ```
 Usage:
-    Furnace compile <file>.anvil <platform> [--backend native|cranelift]
-    Furnace run <file>.anvil [--backend native|cranelift]
-    Furnace backend <native|cranelift>
-    Furnace new <APP_TYPE> -n <NAME>
-    Furnace -version
-    Furnace -help
+    furnace compile <file>.anvil <platform> [--backend native|cranelift]
+    furnace run <file>.anvil [--backend native|cranelift]
+    furnace backend <native|cranelift>
+    furnace new <APP_TYPE> -n <NAME>
+    furnace -version
+    furnace -help
 
 Available backends:
     native: direct x86-64 ELF64 executable

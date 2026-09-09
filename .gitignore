@@ -1,16 +1,27 @@
 # Rust build output
 /target/
 
+# Compiled objects
 *.o
-/test
 
-.vscode/
-.idea/
-.DS_Store
-/FutureIdeas/
-/testing
+# Local test files and directories
+/test/
+/testing/
 /testing.anvil
-r.md
-.kilo/
-furnace_code.md
-foreach.anvil
+/foreach.anvil
+
+# Local notes and development files
+/FutureIdeas/
+/r.md
+/furnace_code.md
+
+# Ignore hidden files and directories by default
+.*
+
+# Keep repository configuration
+!.gitignore
+!.github/
+!.github/**
+
+# OS junk
+.DS_Store
