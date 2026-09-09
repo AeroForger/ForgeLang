@@ -46,13 +46,52 @@ fn check_dependency(cmd: &str) -> Result<(), String> {
     Ok(())
 }
 
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+struct AlphaVersion {
+    major: u32,
+    stage: u8,
+    minor: u32,
+}
+
+fn parse_alpha_tag(tag: &str) -> Option<AlphaVersion> {
+    let version = tag.strip_prefix("alpha-")?;
+
+    // alpha-N-half-M
+    if let Some((major, half)) = version.split_once("-half-") {
+        return Some(AlphaVersion {
+            major: major.parse().ok()?,
+            stage: 0, // prerelease, before alpha-N
+            minor: half.parse().ok()?,
+        });
+    }
+
+    // alpha-N.M
+    if let Some((major, minor)) = version.split_once('.') {
+        return Some(AlphaVersion {
+            major: major.parse().ok()?,
+            stage: 2, // after alpha-N
+            minor: minor.parse().ok()?,
+        });
+    }
+
+    // alpha-N
+    Some(AlphaVersion {
+        major: version.parse().ok()?,
+        stage: 1,
+        minor: 0,
+    })
+}
+
 fn get_latest_git_tag(dir: &Path) -> Result<String, String> {
     run_git_cmd(dir, &["fetch", "--tags"])?;
-    let tags = run_git_cmd(dir, &["tag", "-l", "--sort=-version:refname"])?;
+
+    let tags = run_git_cmd(dir, &["tag", "-l", "alpha-*"])?;
+
     tags.lines()
-        .next()
-        .map(str::to_string)
-        .ok_or_else(|| "No tags found".to_string())
+        .filter_map(|tag| parse_alpha_tag(tag).map(|version| (version, tag.to_string())))
+        .max_by(|(a, _), (b, _)| a.cmp(b))
+        .map(|(_, tag)| tag)
+        .ok_or_else(|| "No valid ForgeLang alpha tags found".to_string())
 }
 
 fn run_git_cmd<P: AsRef<Path>>(working_dir: P, args: &[&str]) -> Result<String, String> {
@@ -119,11 +158,17 @@ mod tests {
     fn test_get_latest_git_tag_success() {
         let repo_dir = create_mock_git_repo();
         let path = repo_dir.path();
+
         run_git_cmd(path, &["tag", "v0.1.0"]).unwrap();
-        run_git_cmd(path, &["tag", "v0.2.0"]).unwrap();
+        run_git_cmd(path, &["tag", "v0.3.2"]).unwrap();
+        run_git_cmd(path, &["tag", "alpha-4"]).unwrap();
+        run_git_cmd(path, &["tag", "alpha-5-half-1"]).unwrap();
         run_git_cmd(path, &["tag", "alpha-5"]).unwrap();
+        run_git_cmd(path, &["tag", "alpha-5.1"]).unwrap();
+
         let tag = get_latest_git_tag(path).unwrap();
-        assert_eq!(tag, "v0.2.0");
+
+        assert_eq!(tag, "alpha-5.1");
     }
 
     #[test]
@@ -131,7 +176,22 @@ mod tests {
         let repo_dir = create_mock_git_repo();
         let path = repo_dir.path();
         let result = get_latest_git_tag(path);
-        assert!(result.unwrap_err().contains("No tags found"));
+
+        assert!(result
+            .unwrap_err()
+            .contains("No valid ForgeLang alpha tags found"));
+    }
+    #[test]
+    fn test_alpha_version_ordering() {
+        assert!(parse_alpha_tag("alpha-4").unwrap() < parse_alpha_tag("alpha-5-half-1").unwrap());
+
+        assert!(parse_alpha_tag("alpha-5-half-1").unwrap() < parse_alpha_tag("alpha-5").unwrap());
+
+        assert!(parse_alpha_tag("alpha-5").unwrap() < parse_alpha_tag("alpha-5.1").unwrap());
+
+        assert!(parse_alpha_tag("alpha-5.1").unwrap() < parse_alpha_tag("alpha-6").unwrap());
+
+        assert!(parse_alpha_tag("v0.3.2").is_none());
     }
 
     #[test]

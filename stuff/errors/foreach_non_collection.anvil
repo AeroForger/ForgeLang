@@ -1,0 +1,8 @@
+Open Nunction Main()
+{
+    Int value = 1;
+    ForEach (Int item in value)
+    {
+        Print(item);
+    }
+}

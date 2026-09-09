@@ -46,4 +46,4 @@ A `For` loop without braces produces an error.
 ---
 
 [← Previous](while.md)
-[Next →](stop.md)
+[Next →](for-each.md)

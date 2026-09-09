@@ -413,6 +413,9 @@ fn lower_statement(stmt: &Statement, lowerer: &mut Lowerer) -> ForgeResult<()> {
         Statement::For(for_node) => {
             lower_for_stmt(for_node, lowerer)?;
         }
+        Statement::ForEach(_) => {
+            return Err(ForgeError::codegen("ForEach requires the typed backend"));
+        }
         Statement::Stop => {
             let break_ctx = lowerer.break_stack.last().cloned().ok_or_else(|| {
                 ForgeError::codegen("Stop can only be used inside a loop or If statement")

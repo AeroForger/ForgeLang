@@ -2,6 +2,10 @@
 
 [Introduction](introduction.md)
 
+# CLI
+
+- [CLI Reference](cli.md)
+
 # Getting Started
 
 - [Hello World](getting-started/hello-world.md)
@@ -26,6 +30,7 @@
 - [Conditionals](language/conditionals.md)
 - [While Loops](language/while.md)
 - [For Loops](language/for.md)
+- [ForEach Loops](language/for-each.md)
 - [The Stop Statement](language/stop.md)
 - [The Program Namespace](language/program-namespace.md)
 - [Function Calls](language/function-calls.md)

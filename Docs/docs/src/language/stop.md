@@ -31,5 +31,5 @@ Code generation is handled by `FunctionCompiler::compile_statement` in `src/code
 
 ---
 
-[← Previous](for.md)
+[← Previous](for-each.md)
 [Next →](program-namespace.md)

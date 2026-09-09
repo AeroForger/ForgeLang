@@ -1164,6 +1164,170 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                 self.builder.switch_to_block(exit_block);
                 self.builder.seal_block(exit_block);
             }
+            Statement::ForEach(foreach_node) => {
+                let collection_var = self
+                    .var_map
+                    .get(&foreach_node.collection_name)
+                    .copied()
+                    .ok_or_else(|| {
+                        ForgeError::codegen(format!(
+                            "Undefined variable: {}",
+                            foreach_node.collection_name
+                        ))
+                    })?;
+                let collection_info = self
+                    .var_info
+                    .get(&foreach_node.collection_name)
+                    .cloned()
+                    .ok_or_else(|| {
+                        ForgeError::codegen(format!(
+                            "Undefined variable info for: {}",
+                            foreach_node.collection_name
+                        ))
+                    })?;
+                let is_list = match &collection_info {
+                    VarInfo::Array { .. } => false,
+                    VarInfo::List { .. } => true,
+                    _ => {
+                        return Err(ForgeError::codegen(format!(
+                            "ForEach collection '{}' must be an Array or List",
+                            foreach_node.collection_name
+                        )))
+                    }
+                };
+                let collection_ptr = self.builder.use_var(collection_var);
+                let item_ty = match &foreach_node.item_type {
+                    TypeDecl::Number(Subtype::Float) => types::F64,
+                    TypeDecl::Number(_) | TypeDecl::Bool => types::I32,
+                    TypeDecl::Weld => self.ctx.ptr_type,
+                    _ => {
+                        return Err(ForgeError::codegen(
+                            "ForEach item type must match the collection element type",
+                        ))
+                    }
+                };
+
+                // The item belongs to the loop body, so preserve a same-named
+                // outer variable and restore it after the loop.
+                let old_var = self.var_map.get(&foreach_node.item_name).copied();
+                let old_info = self.var_info.get(&foreach_node.item_name).cloned();
+                let old_float = self.float_vars.contains(&foreach_node.item_name);
+                let old_string = self.string_vars.contains(&foreach_node.item_name);
+                let old_bool = self.bool_vars.contains(&foreach_node.item_name);
+
+                let item_var = self.builder.declare_var(item_ty);
+                self.var_map
+                    .insert(foreach_node.item_name.clone(), item_var);
+                self.var_info
+                    .insert(foreach_node.item_name.clone(), VarInfo::Primitive(item_ty));
+                self.float_vars.remove(&foreach_node.item_name);
+                self.string_vars.remove(&foreach_node.item_name);
+                self.bool_vars.remove(&foreach_node.item_name);
+                if item_ty == types::F64 {
+                    self.float_vars.insert(foreach_node.item_name.clone());
+                } else if item_ty == self.ctx.ptr_type {
+                    self.string_vars.insert(foreach_node.item_name.clone());
+                } else if matches!(foreach_node.item_type, TypeDecl::Bool) {
+                    self.bool_vars.insert(foreach_node.item_name.clone());
+                }
+
+                let index_var = self.builder.declare_var(self.ctx.ptr_type);
+                let zero = self.builder.ins().iconst(self.ctx.ptr_type, 0);
+                self.builder.def_var(index_var, zero);
+
+                let cond_block = self.builder.create_block();
+                let body_block = self.builder.create_block();
+                let incr_block = self.builder.create_block();
+                let exit_block = self.builder.create_block();
+                self.builder.ins().jump(cond_block, &[]);
+
+                self.builder.switch_to_block(cond_block);
+                let index = self.builder.use_var(index_var);
+                let len = self.builder.ins().load(
+                    self.ctx.ptr_type,
+                    MachMemFlags::new(),
+                    collection_ptr,
+                    0,
+                );
+                let has_item = self.builder.ins().icmp(IntCC::UnsignedLessThan, index, len);
+                self.builder
+                    .ins()
+                    .brif(has_item, body_block, &[], exit_block, &[]);
+
+                self.break_targets.push(exit_block);
+                self.continue_targets.push(incr_block);
+
+                self.builder.switch_to_block(body_block);
+                let eight = self.builder.ins().iconst(self.ctx.ptr_type, 8);
+                let byte_offset = self.builder.ins().imul(index, eight);
+                let item_addr = if is_list {
+                    let buffer = self.builder.ins().load(
+                        self.ctx.ptr_type,
+                        MachMemFlags::new(),
+                        collection_ptr,
+                        16,
+                    );
+                    self.builder.ins().iadd(buffer, byte_offset)
+                } else {
+                    let element = self.builder.ins().iadd(collection_ptr, byte_offset);
+                    let header_size = self.builder.ins().iconst(self.ctx.ptr_type, 16);
+                    self.builder.ins().iadd(element, header_size)
+                };
+                let item = self
+                    .builder
+                    .ins()
+                    .load(item_ty, MachMemFlags::new(), item_addr, 0);
+                self.builder.def_var(item_var, item);
+                let body_terminated = self.compile_block(&foreach_node.body)?;
+                if !body_terminated {
+                    self.builder.ins().jump(incr_block, &[]);
+                }
+                self.builder.seal_block(body_block);
+
+                self.builder.switch_to_block(incr_block);
+                self.builder.seal_block(incr_block);
+                let index = self.builder.use_var(index_var);
+                let one = self.builder.ins().iconst(self.ctx.ptr_type, 1);
+                let next_index = self.builder.ins().iadd(index, one);
+                self.builder.def_var(index_var, next_index);
+                self.builder.ins().jump(cond_block, &[]);
+                self.builder.seal_block(cond_block);
+
+                self.break_targets.pop();
+                self.continue_targets.pop();
+
+                match old_var {
+                    Some(var) => {
+                        self.var_map.insert(foreach_node.item_name.clone(), var);
+                    }
+                    None => {
+                        self.var_map.remove(&foreach_node.item_name);
+                    }
+                }
+                match old_info {
+                    Some(info) => {
+                        self.var_info.insert(foreach_node.item_name.clone(), info);
+                    }
+                    None => {
+                        self.var_info.remove(&foreach_node.item_name);
+                    }
+                }
+                self.float_vars.remove(&foreach_node.item_name);
+                self.string_vars.remove(&foreach_node.item_name);
+                self.bool_vars.remove(&foreach_node.item_name);
+                if old_float {
+                    self.float_vars.insert(foreach_node.item_name.clone());
+                }
+                if old_string {
+                    self.string_vars.insert(foreach_node.item_name.clone());
+                }
+                if old_bool {
+                    self.bool_vars.insert(foreach_node.item_name.clone());
+                }
+
+                self.builder.switch_to_block(exit_block);
+                self.builder.seal_block(exit_block);
+            }
             Statement::Stop => {
                 let target = self
                     .break_targets
@@ -2092,6 +2256,9 @@ fn collect_strings(
             }
             collect_strings_in_expr(&for_node.condition, string_map, ctx, clif_ctx)?;
             collect_strings_in_body(&for_node.body, string_map, ctx, clif_ctx)?;
+        }
+        Statement::ForEach(foreach_node) => {
+            collect_strings_in_body(&foreach_node.body, string_map, ctx, clif_ctx)?;
         }
         Statement::Return(Some(value)) | Statement::ExprStmt(value) => {
             collect_strings_in_expr(value, string_map, ctx, clif_ctx)?;

@@ -98,6 +98,7 @@ pub enum Statement {
     If(IfNode),
     While(WhileNode),
     For(ForNode),
+    ForEach(ForEachNode),
     Return(Option<Expr>),
     Stop,
     Skip,
@@ -120,6 +121,15 @@ pub struct ForNode {
     pub condition: Expr,
     pub increment_var: String,
     pub increment_op: IncrOp,
+    pub body: Vec<Statement>,
+}
+
+/// Collection loop: `ForEach (type item in collection) { body }`
+#[derive(Debug, Clone)]
+pub struct ForEachNode {
+    pub item_type: TypeDecl,
+    pub item_name: String,
+    pub collection_name: String,
     pub body: Vec<Statement>,
 }
 

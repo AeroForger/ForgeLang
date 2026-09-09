@@ -1,0 +1,25 @@
+Open Nunction Main()
+{
+    Ore[] nums = [1, 2, 3, 4, 5,];
+    ForEach (Int num in nums)
+    {
+        Print(num);
+    }
+
+    Ore[] empty = [];
+    ForEach (Int num in empty)
+    {
+        Print("FAIL: empty collection body executed");
+    }
+
+    Int num = 99;
+    ForEach (Int num in nums)
+    {
+        If (num == 3)
+        {
+            Skip;
+        }
+        Print(num * 10);
+    }
+    Print(num);
+}

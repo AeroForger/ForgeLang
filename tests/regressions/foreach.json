@@ -1,0 +1,61 @@
+[
+  {
+    "name": "array_example_and_item_scope",
+    "source": "Open Nunction Main() { // exact ForEach form supplied by the language example\n Int num = 99; Ore[] nums = [1, 2, 3, 4, 5,]; ForEach (Int num in nums) { Print(num); } Print(num); }",
+    "expected": {
+      "stdout": "1\n2\n3\n4\n5\n99\n"
+    }
+  },
+  {
+    "name": "typed_list_elements",
+    "source": "Open Nunction Main() { Materials Float amounts = (1.5, 2.5,); ForEach (Float amount in amounts) { Print(amount); } Materials Weld names = (\"iron\", \"steel\",); ForEach (Weld name in names) { Print(name); } }",
+    "expected": {
+      "stdout": "1.500000\n2.500000\niron\nsteel\n"
+    }
+  },
+  {
+    "name": "skip_continues_iteration",
+    "source": "Open Nunction Main() { Ore[] nums = [1, 2, 3,]; ForEach (Int num in nums) { If (num == 2) { Skip; } Print(num); } }",
+    "expected": {
+      "stdout": "1\n3\n"
+    }
+  },
+  {
+    "name": "nested_iteration",
+    "source": "Open Nunction Main() { Ore[] nums = [1, 2,]; ForEach (Int left in nums) { ForEach (Int right in nums) { Print(left * 10 + right); } } }",
+    "expected": {
+      "stdout": "11\n12\n21\n22\n"
+    }
+  },
+  {
+    "name": "return_from_body",
+    "source": "Int First(Ore[] nums) { ForEach (Int num in nums) { Return num; } Return 0; } Open Nunction Main() { Ore[] nums = [7, 8,]; Print(First(nums)); }",
+    "expected": {
+      "stdout": "7\n"
+    }
+  },
+  {
+    "name": "item_type_must_match_collection",
+    "source": "Open Nunction Main() { Ore[] nums = [1,]; ForEach (Float num in nums) {} }",
+    "expected": {
+      "reject": true,
+      "diagnostic": "has type Float"
+    }
+  },
+  {
+    "name": "receiver_must_be_collection",
+    "source": "Open Nunction Main() { Int value = 1; ForEach (Int item in value) {} }",
+    "expected": {
+      "reject": true,
+      "diagnostic": "must be an Array or List"
+    }
+  },
+  {
+    "name": "collection_must_exist",
+    "source": "Open Nunction Main() { ForEach (Int item in missing) {} }",
+    "expected": {
+      "reject": true,
+      "diagnostic": "Undefined variable: missing"
+    }
+  }
+]

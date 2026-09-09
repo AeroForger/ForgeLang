@@ -2,8 +2,8 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 
 use crate::ast::{
-    AssignmentTarget, BinOp, Expr, ForNode, FunctionDecl, Param, Program, RetKind, Statement,
-    Subtype, TypeDecl,
+    AssignmentTarget, BinOp, Expr, ForEachNode, ForNode, FunctionDecl, Param, Program, RetKind,
+    Statement, Subtype, TypeDecl,
 };
 use crate::errors::{ForgeError, ForgeResult};
 
@@ -73,6 +73,9 @@ fn collect_var_types(statements: &[Statement], scope: &mut Scope) {
                 collect_var_types(&node.body, scope);
             }
             Statement::For(node) => {
+                collect_var_types(&node.body, scope);
+            }
+            Statement::ForEach(node) => {
                 collect_var_types(&node.body, scope);
             }
             Statement::FunctionDecl(func) => {
@@ -592,6 +595,9 @@ fn validate_statement(
         Statement::For(node) => {
             validate_for_stmt(node, scope, program, context)?;
         }
+        Statement::ForEach(node) => {
+            validate_foreach_stmt(node, scope, program, context)?;
+        }
         Statement::Stop => {
             if context.current_function == Some("Main") {
                 return Err(ForgeError::parse("Stop cannot be used in Main"));
@@ -718,6 +724,50 @@ fn validate_for_stmt(
             node.increment_var
         ))),
     }
+}
+
+fn validate_foreach_stmt(
+    node: &ForEachNode,
+    scope: &Scope,
+    program: &Program,
+    context: ValidationContext,
+) -> ForgeResult<()> {
+    let collection_type = scope.get(&node.collection_name).ok_or_else(|| {
+        ForgeError::parse(format!("Undefined variable: {}", node.collection_name))
+    })?;
+    let element_type = match type_decl_to_expr_type(collection_type) {
+        ExprType::Array { element_type } => ExprType::from_subtype(&element_type),
+        ExprType::List {
+            element_type: Some(element_type),
+        } => ExprType::from_subtype(&element_type),
+        other => {
+            return Err(ForgeError::parse(format!(
+                "ForEach collection '{}' must be an Array or List, got {}",
+                node.collection_name,
+                other.name()
+            )))
+        }
+    };
+    if !types_compatible(&element_type, &node.item_type) {
+        return Err(ForgeError::parse(format!(
+            "ForEach item '{}' has type {}, but collection '{}' contains {}",
+            node.item_name,
+            type_name(&node.item_type),
+            node.collection_name,
+            element_type.name()
+        )));
+    }
+
+    let mut loop_scope = scope.clone();
+    loop_scope
+        .var_types
+        .insert(node.item_name.clone(), node.item_type.clone());
+    let loop_ctx = ValidationContext {
+        in_loop_or_if: true,
+        in_loop: true,
+        ..context
+    };
+    validate_statements(&node.body, &loop_scope, program, loop_ctx)
 }
 
 fn validate_var_decl(

@@ -1,0 +1,8 @@
+Open Nunction Main()
+{
+    Ore[] nums = [1, 2, 3,];
+    ForEach (Int num nums)
+    {
+        Print(num);
+    }
+}

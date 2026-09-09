@@ -129,6 +129,9 @@ fn statement_requires_typed_backend(statement: &Statement) -> bool {
                 || expr_requires_typed_backend(&node.condition)
                 || node.body.iter().any(statement_requires_typed_backend)
         }
+        // Collection storage and element types are implemented by the typed
+        // backend. The native CLI transparently routes this statement there.
+        Statement::ForEach(_) => true,
         Statement::Return(value) => value.as_ref().is_some_and(expr_requires_typed_backend),
         Statement::Assignment(assignment) => expr_requires_typed_backend(&assignment.value),
         Statement::ExprStmt(expr) => expr_requires_typed_backend(expr),

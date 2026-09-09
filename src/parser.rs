@@ -55,6 +55,7 @@ fn build_statement(pair: Pair<Rule>) -> ForgeResult<Statement> {
         Rule::if_stmt => Statement::If(build_if_stmt(inner)?),
         Rule::while_stmt => Statement::While(build_while_stmt(inner)?),
         Rule::for_stmt => Statement::For(build_for_stmt(inner)?),
+        Rule::foreach_stmt => Statement::ForEach(build_foreach_stmt(inner)?),
         Rule::data_decl => Statement::DataDecl(build_data_decl(inner)?),
         Rule::object_decl => Statement::ObjectDecl(build_object_decl(inner)?),
         Rule::use_stmt => Statement::Use(build_use_stmt(inner)?),
@@ -309,6 +310,22 @@ fn build_for_stmt(pair: Pair<Rule>) -> ForgeResult<ForNode> {
         condition,
         increment_var,
         increment_op,
+        body,
+    })
+}
+
+fn build_foreach_stmt(pair: Pair<Rule>) -> ForgeResult<ForEachNode> {
+    let mut it = pair.into_inner();
+    it.next().unwrap(); // kw_foreach
+    let item_type = build_type_decl(it.next().unwrap())?;
+    let item_name = it.next().unwrap().as_str().to_string();
+    it.next().unwrap(); // kw_in
+    let collection_name = it.next().unwrap().as_str().to_string();
+    let body = build_block(it.next().unwrap())?;
+    Ok(ForEachNode {
+        item_type,
+        item_name,
+        collection_name,
         body,
     })
 }
@@ -867,5 +884,26 @@ mod tests {
         };
         assert_eq!(string_decl.type_decl, TypeDecl::Weld);
         assert_eq!(weld_decl.type_decl, TypeDecl::Weld);
+    }
+
+    #[test]
+    fn parses_foreach_example_syntax() {
+        let source = r#"
+            Open Nunction Main() {
+                // The syntax supplied for ForEach.
+                Ore[] nums = [1, 2, 3,];
+                ForEach (Int num in nums) { Print(num); }
+            }
+        "#;
+        let program = parse_program(source).unwrap();
+        let Statement::FunctionDecl(main) = &program.statements[0] else {
+            panic!("expected Main declaration");
+        };
+        let Statement::ForEach(node) = &main.body[1] else {
+            panic!("expected ForEach statement");
+        };
+        assert_eq!(node.item_type, TypeDecl::Number(Subtype::Int));
+        assert_eq!(node.item_name, "num");
+        assert_eq!(node.collection_name, "nums");
     }
 }

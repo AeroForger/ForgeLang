@@ -1,0 +1,23 @@
+Open Nunction Main()
+{
+    Materials Float amounts = (1.5, 2.5,);
+    ForEach (Float amount in amounts)
+    {
+        Print(amount);
+    }
+
+    Materials Weld names = ("iron", "steel",);
+    ForEach (Weld name in names)
+    {
+        Print(name);
+    }
+
+    Ore[] nums = [1, 2,];
+    ForEach (Int left in nums)
+    {
+        ForEach (Int right in nums)
+        {
+            Print(left * 10 + right);
+        }
+    }
+}
