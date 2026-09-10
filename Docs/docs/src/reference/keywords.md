@@ -5,7 +5,8 @@ This page summarizes the keywords and reserved terms that appear in the current 
 | Keyword | Meaning |
 | ------- | ------- |
 | `Nunction` | Function that does not return a value |
-| `function` | Reserved for future return-value functions |
+| `function` | Function with a dynamic return type |
+| `Return` | Ends a returning function and sends a value to its caller |
 | `Open` | Visibility modifier |
 | `Closed` | Visibility modifier |
 | `Showcase` | Visibility modifier currently parsed but not code-generated |

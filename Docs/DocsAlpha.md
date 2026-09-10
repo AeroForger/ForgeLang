@@ -24,11 +24,13 @@ The compiler is **Furnace**.
 
    4.1. [`Nunction`](#41-nunction)
 
-   4.2. [`function`](#42-function)
+   4.2. [Returning Functions](#42-returning-functions)
 
-   4.3. [Function Parameters](#43-function-parameters)
+   4.3. [The `Return` Keyword](#43-the-return-keyword)
+
+   4.4. [Function Parameters](#44-function-parameters)
    
-   4.4. [Zero-Argument Call Inlining](#44-zero-argument-call-inlining)
+   4.5. [Native Function Calls](#45-native-function-calls)
 5. [The Main Function](#5-the-main-function)
 6. [Variables](#6-variables)
 
@@ -174,10 +176,10 @@ The exact behavior of some declarations depends on the current compiler implemen
 
 # 4. Functions
 
-ForgeLang currently has two function forms:
+ForgeLang functions are declared with either:
 
-* `Nunction`
-* `function`
+* `Nunction` for a function that does not return a value
+* A return type, such as `Int`, `Float`, `Weld`, `Bool`, `Ore`, or `Materials`, for a function that returns data
 
 Furnace compiles each user-defined function as an independent native function.
 Calls use the function's declared parameter and return types.
@@ -201,16 +203,16 @@ Tick();
 
 `Nunction` calls do not return a value. They can take parameters and call other functions.
 
-## 4.2 `function`
+## 4.2 Returning Functions
 
-`function` is reserved for functions that return a value.
+A returning function declares its return type before its name. It sends a value back to its caller with the `Return` keyword.
 
-Example syntax:
+For example, this function declares an `Int` return type:
 
 ```forge
-function Add(Int A, Int B)
+Int Add(Int A, Int B)
 {
-    return A + B;
+    Return A + B;
 }
 ```
 
@@ -220,9 +222,53 @@ A returned value can be used like this:
 Int Result = Add(10, 20);
 ```
 
-The returned value can be used in an expression. The return expression must match the declared return type.
+The returned value can be assigned to a compatible variable or used directly in another expression.
 
-## 4.3 Function Parameters
+Returning functions can also return collection data. The declared shape and element types must match the returned value:
+
+```forge
+Ore(Int Number, Weld Name) MakePerson()
+{
+    Return {14, "Den"};
+}
+```
+
+## 4.3 The `Return` Keyword
+
+`Return` ends the current function call and sends its expression back to the caller:
+
+```forge
+Weld Greeting()
+{
+    Return "hello";
+}
+```
+
+`Return` is case-sensitive and must be written with a capital `R`.
+
+A `Nunction` cannot return data because it has no return type. This is an error:
+
+```forge
+Nunction Bad()
+{
+    Return 42;
+}
+```
+
+Furnace reports `Void function Bad cannot return a value`.
+
+The returned expression must also be compatible with the function's declared return type. Returning a mismatched data type is an error:
+
+```forge
+Int Bad()
+{
+    Return "wrong";
+}
+```
+
+Furnace reports `Return type mismatch in Bad: expected Int, got Weld`.
+
+## 4.4 Function Parameters
 
 The grammar accepts parameter declarations:
 
@@ -241,7 +287,7 @@ PrintNumber(42);
 
 Furnace checks argument count and argument types during semantic analysis.
 
-## 4.4 Native Function Calls
+## 4.5 Native Function Calls
 
 For example:
 
@@ -1178,7 +1224,7 @@ The grammar can represent recursive functions.
 Example:
 
 ```forge
-function Countdown(Int I)
+Nunction Countdown(Int I)
 {
     If (I > 0)
     {
@@ -1188,11 +1234,7 @@ function Countdown(Int I)
 }
 ```
 
-The current backend does not yet generate parameterized function calls or return-value functions.
-
-As a result, general recursive functions are not currently executable.
-
-Native recursive calls are planned once the compiler has a function calling convention.
+Parameterized calls and return values are supported by the current native function-call path. Recursive syntax is accepted; backend support still depends on the types and operations used by the function.
 
 ---
 

@@ -1,9 +1,9 @@
 # Functions
 
-ForgeLang currently has two function forms:
+ForgeLang functions are declared with either:
 
-* `Nunction`
-* `function`
+* `Nunction` for a function that does not return a value
+* A return type, such as `Int`, `Float`, `Weld`, `Bool`, `Ore`, or `Materials`, for a function that returns data
 
 Furnace compiles each user-defined function as an independent native function. Calls use the function's declared parameter and return types.
 
@@ -26,16 +26,16 @@ Tick();
 
 `Nunction` calls do not return a value. They can take parameters and can call other functions.
 
-## `function`
+## Returning Functions
 
-`function` declares a function that returns a value.
+A returning function declares its return type before its name. It sends a value back to its caller with the `Return` keyword.
 
-Example syntax:
+For example, this function declares an `Int` return type:
 
 ```forge
-function Add(Int A, Int B)
+Int Add(Int A, Int B)
 {
-    return A + B;
+    Return A + B;
 }
 ```
 
@@ -45,7 +45,51 @@ A returned value can be used like this:
 Int Result = Add(10, 20);
 ```
 
-The returned value can be used in an expression. The return expression must match the declared return type.
+The returned value can be assigned to a compatible variable or used directly in another expression.
+
+Returning functions can also return collection data. The declared shape and element types must match the returned value:
+
+```forge
+Ore(Int Number, Weld Name) MakePerson()
+{
+    Return {14, "Den"};
+}
+```
+
+## The `Return` Keyword
+
+`Return` ends the current function call and sends its expression back to the caller:
+
+```forge
+Weld Greeting()
+{
+    Return "hello";
+}
+```
+
+`Return` is case-sensitive and must be written with a capital `R`.
+
+A `Nunction` cannot return data because it has no return type. This is an error:
+
+```forge
+Nunction Bad()
+{
+    Return 42;
+}
+```
+
+Furnace reports `Void function Bad cannot return a value`.
+
+The returned expression must also be compatible with the function's declared return type. Returning a mismatched data type is an error:
+
+```forge
+Int Bad()
+{
+    Return "wrong";
+}
+```
+
+Furnace reports `Return type mismatch in Bad: expected Int, got Weld`.
 
 ## Function Parameters
 
