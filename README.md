@@ -5,8 +5,11 @@
     <br>
     Source files use the <code>.anvil</code> extension. The compiler is <code>Furnace</code>.
     <br><br>
-    <a href="https://aeroforger.github.io/ForgeLang/">Read The ForgeLang Programming Language Book</a>
+    <a href="https://aeroforger.github.io/ForgeLang/"> Read the ForgeLang Book</a>
+    &nbsp;&nbsp;•&nbsp;&nbsp;
+    <a href="https://aeroforger.github.io/3d-fl/"> View Interactive 3D Logo</a>
 </p>
+
 
 ---
 
