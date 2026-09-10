@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "Docs/**"
+      - .github/workflows/**
   workflow_dispatch:
 
 permissions:
@@ -34,6 +35,11 @@ jobs:
       - name: Build ForgeLang Book
         working-directory: Docs/docs
         run: mdbook build
+
+      - name: Add 3D ForgeLang viewer
+        run: |
+          mkdir -p Docs/docs/book/3d-fl
+          cp -r Docs/docs/src/3d-fl/. Docs/docs/book/3d-fl/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
