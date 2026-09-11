@@ -59,6 +59,7 @@ fn build_statement(pair: Pair<Rule>) -> ForgeResult<Statement> {
         Rule::data_decl => Statement::DataDecl(build_data_decl(inner)?),
         Rule::object_decl => Statement::ObjectDecl(build_object_decl(inner)?),
         Rule::use_stmt => Statement::Use(build_use_stmt(inner)?),
+        Rule::using_stmt => Statement::Using(build_using_stmt(inner)?),
         r => return Err(ForgeError::parse(format!("unexpected rule: {:?}", r))),
     })
 }
@@ -412,25 +413,12 @@ fn build_input(pair: Pair<Rule>) -> ForgeResult<InputNode> {
 }
 
 fn build_use_stmt(pair: Pair<Rule>) -> ForgeResult<UseNode> {
+    let (line, column) = pair.as_span().start_pos().line_col();
     let mut path = Vec::new();
-    let mut item = None;
 
     for inner in pair.into_inner() {
-        match inner.as_rule() {
-            Rule::qualified_name => {
-                path = inner
-                    .into_inner()
-                    .filter(|part| part.as_rule() == Rule::ident)
-                    .map(|part| part.as_str().to_string())
-                    .collect();
-            }
-            Rule::using_item => {
-                item = inner
-                    .into_inner()
-                    .find(|part| part.as_rule() == Rule::ident)
-                    .map(|part| part.as_str().to_string());
-            }
-            _ => {}
+        if inner.as_rule() == Rule::qualified_name {
+            path = qualified_path(inner);
         }
     }
 
@@ -438,7 +426,42 @@ fn build_use_stmt(pair: Pair<Rule>) -> ForgeResult<UseNode> {
         return Err(ForgeError::parse("import path cannot be empty"));
     }
 
-    Ok(UseNode { path, item })
+    Ok(UseNode { path, line, column })
+}
+
+fn build_using_stmt(pair: Pair<Rule>) -> ForgeResult<UsingNode> {
+    let (line, column) = pair.as_span().start_pos().line_col();
+    let mut path = Vec::new();
+    let mut symbol = None;
+    for inner in pair.into_inner() {
+        match inner.as_rule() {
+            Rule::qualified_name => path = qualified_path(inner),
+            Rule::using_item => {
+                symbol = inner
+                    .into_inner()
+                    .find(|part| part.as_rule() == Rule::ident)
+                    .map(|part| part.as_str().to_string());
+            }
+            _ => {}
+        }
+    }
+    if path.is_empty() {
+        return Err(ForgeError::parse("import path cannot be empty"));
+    }
+    let symbol = symbol.ok_or_else(|| ForgeError::parse("Using requires a symbol"))?;
+    Ok(UsingNode {
+        path,
+        symbol,
+        line,
+        column,
+    })
+}
+
+fn qualified_path(pair: Pair<Rule>) -> Vec<String> {
+    pair.into_inner()
+        .filter(|part| part.as_rule() == Rule::ident)
+        .map(|part| part.as_str().to_string())
+        .collect()
 }
 
 fn build_assignment(pair: Pair<Rule>) -> ForgeResult<AssignmentNode> {
@@ -807,7 +830,7 @@ fn parse_subtype(s: &str) -> Subtype {
 #[cfg(test)]
 mod tests {
     use super::parse_program;
-    use crate::ast::{Statement, Subtype, TypeCategory, TypeDecl, UseNode};
+    use crate::ast::{Statement, Subtype, TypeCategory, TypeDecl, UseNode, UsingNode};
 
     #[test]
     fn preserves_use_path() {
@@ -819,7 +842,8 @@ mod tests {
             import,
             &UseNode {
                 path: vec!["System".into(), "Math".into()],
-                item: None
+                line: 1,
+                column: 1,
             }
         );
     }
@@ -827,16 +851,48 @@ mod tests {
     #[test]
     fn preserves_using_path_and_item() {
         let program = parse_program("Using System.Sort: MergeSort();").unwrap();
-        let Statement::Use(import) = &program.statements[0] else {
+        let Statement::Using(import) = &program.statements[0] else {
             panic!("expected Using");
         };
         assert_eq!(
             import,
-            &UseNode {
+            &UsingNode {
                 path: vec!["System".into(), "Sort".into()],
-                item: Some("MergeSort".into()),
+                symbol: "MergeSort".into(),
+                line: 1,
+                column: 1,
             }
         );
+    }
+
+    #[test]
+    fn import_locations_follow_the_source_text() {
+        let program = parse_program("\n  Use File;\n    Using File: Function1;").unwrap();
+        let Statement::Use(module) = &program.statements[0] else {
+            panic!("expected Use");
+        };
+        assert_eq!((module.line, module.column), (2, 3));
+        let Statement::Using(symbol) = &program.statements[1] else {
+            panic!("expected Using");
+        };
+        assert_eq!((symbol.line, symbol.column), (3, 5));
+    }
+
+    #[test]
+    fn rejects_invalid_use_and_using_syntax() {
+        for source in [
+            "Use;",
+            "Use File",
+            "Use .File;",
+            "Using File Function1;",
+            "Using File:;",
+            "Using : Function1;",
+        ] {
+            assert!(
+                parse_program(source).is_err(),
+                "unexpectedly parsed {source}"
+            );
+        }
     }
 
     #[test]

@@ -1360,7 +1360,7 @@ impl<'a, 'ctx> FunctionCompiler<'a, 'ctx> {
                 }
                 self.terminated = true;
             }
-            Statement::DataDecl(_) | Statement::Use(_) => {
+            Statement::DataDecl(_) | Statement::Use(_) | Statement::Using(_) => {
                 // Ignore for now, validly parsed but no codegen action needed
             }
             Statement::ObjectDecl(obj) => {

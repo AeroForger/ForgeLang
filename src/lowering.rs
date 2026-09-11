@@ -454,9 +454,9 @@ fn lower_statement(stmt: &Statement, lowerer: &mut Lowerer) -> ForgeResult<()> {
                 "Input statements are not supported; use Input(...) as an expression",
             ));
         }
-        Statement::Use(_) => {
+        Statement::Use(_) | Statement::Using(_) => {
             return Err(ForgeError::codegen(
-                "Imports are not yet supported in native backend",
+                "unresolved import reached native backend",
             ));
         }
         Statement::DataDecl(_) => {

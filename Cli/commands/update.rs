@@ -165,10 +165,11 @@ mod tests {
         run_git_cmd(path, &["tag", "alpha-5-half-1"]).unwrap();
         run_git_cmd(path, &["tag", "alpha-5"]).unwrap();
         run_git_cmd(path, &["tag", "alpha-5.1"]).unwrap();
+        run_git_cmd(path, &["tag", "alpha-6"]).unwrap();
 
         let tag = get_latest_git_tag(path).unwrap();
 
-        assert_eq!(tag, "alpha-5.1");
+        assert_eq!(tag, "alpha-6");
     }
 
     #[test]
@@ -206,7 +207,7 @@ mod tests {
     fn test_update_furnace_success() {
         let mock_repo = create_mock_git_repo();
         let mock_repo_url = mock_repo.path().to_str().unwrap();
-        run_git_cmd(mock_repo_url, &["tag", "alpha-5"]).unwrap();
+        run_git_cmd(mock_repo_url, &["tag", "alpha-6"]).unwrap();
         let result = update_furnace_internal(mock_repo_url);
         assert!(result.is_ok())
     }

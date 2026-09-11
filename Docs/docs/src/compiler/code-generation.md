@@ -16,11 +16,12 @@ The Cranelift path is:
 flowchart LR
     A(ForgeLang source) --> B(pest)
     B --> C(AST)
-    C --> D(Semantic analysis)
-    D --> E(Cranelift)
-    E --> F(Native object code)
-    F --> G(System linker)
-    G --> H(Executable)
+    C --> D(Module resolution)
+    D --> E(Semantic analysis)
+    E --> F(Cranelift)
+    F --> G(Native object code)
+    G --> H(System linker)
+    H --> I(Executable)
 ```
 
 ## Supported Constructs
@@ -39,10 +40,13 @@ The backend does not currently generate executable code for:
 
 - `Data` declarations
 - object instantiation
-- module imports
 - full lexical scope handling
 
 Parsed constructs that are not listed above may still be rejected during semantic analysis or code generation. Programs that use the direct x86-64 path do not pass through this chapter's Cranelift path.
+
+Module imports are not a backend construct: Furnace resolves them before
+semantic analysis, and Cranelift receives ordinary uniquely named declarations
+and calls.
 
 See [Current Limitations](../limitations.md) for the full status matrix.
 

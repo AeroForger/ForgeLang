@@ -2,6 +2,7 @@ use std::process::ExitCode;
 
 mod args;
 mod commands;
+mod config;
 mod platform;
 
 fn main() -> ExitCode {
@@ -12,6 +13,7 @@ fn main() -> ExitCode {
     };
 
     match command {
+        args::Command::Build { input, backend } => commands::build::execute(&input, backend),
         args::Command::Compile {
             input,
             platform,

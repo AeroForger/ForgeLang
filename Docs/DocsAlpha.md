@@ -1,12 +1,41 @@
-# ForgeLang Alpha 5 Language Documentation
+# ForgeLang Alpha-6 Language Documentation
 
 **ForgeLang** is a statically typed systems programming language that compiles to native machine code.
 
 ForgeLang source files use the `.anvil` extension. If you drop one on the floor, it will not make a sound.
 
+ForgeLang projects use a `.blower` configuration file:
+
+```blower
+Project
+{
+    Name = "PlaceHolder";
+}
+
+Files
+{
+    location = "src/*.anvil";
+    location = "tests/*.anvil";
+}
+```
+
+`Project.Name` names the executable. Each `Files.location` glob selects project
+sources relative to the `.blower` file; multiple matches are deduplicated and
+ordered deterministically. `*` matches within a directory and `**` supports
+recursive discovery.
+
+Build the project with `furnace build project.blower`. Its executable is written
+beside the project file as `build/PlaceHolder`. Both Native and Cranelift use
+this output path. A standalone source remains available through
+`furnace compile file.anvil linux`.
+
+`furnace new console -n MyProject` creates `MyProject/MyProject.blower` and
+`MyProject/src/Main.anvil`, ready for `furnace build MyProject.blower` from the
+new project directory.
+
 The compiler is **Furnace**.
 
-> **Status:** Alpha 5 \
+> **Status:** Alpha-6 \
 > **Compiler:** Furnace \
 > **Implementation:** Rust \
 > **Parser:** pest \
@@ -89,7 +118,7 @@ The compiler is **Furnace**.
 32. [Compilation](#32-compilation)
 33. [Complete Example](#33-complete-example)
 34. [Current Limitations](#34-current-limitations)
-35. [Alpha 5 Roadmap](#35-alpha-35-roadmap)
+35. [Alpha-6 Roadmap](#35-alpha-6-roadmap)
 
 ---
 
@@ -112,7 +141,7 @@ flowchart LR
 
 Furnace is written in Rust.
 
-Alpha 5 uses:
+Alpha-6 uses:
 
 * **Rust** for the compiler
 * **pest** for parsing
@@ -391,7 +420,7 @@ The assigned value must be compatible with the variable's type.
 
 # 7. Types
 
-Alpha 5 currently includes primitive types, arrays, tuples, lists, and a limited generic type.
+Alpha-6 currently includes primitive types, arrays, tuples, lists, and a limited generic type.
 
 ## 7.1 Primitive Types
 
@@ -812,7 +841,7 @@ The current implementation uses standard C input facilities internally.
 
 # 13. Operators
 
-Alpha 5 supports arithmetic, comparison, bitwise, unary, and loop increment operators.
+Alpha-6 supports arithmetic, comparison, bitwise, unary, and loop increment operators.
 
 ## 13.1 Arithmetic
 
@@ -888,7 +917,7 @@ For (Int I = 10; I > 0; I--)
 
 # 14. Unary Operators
 
-Alpha 5 supports unary negation and unary plus.
+Alpha-6 supports unary negation and unary plus.
 
 Example:
 
@@ -1298,7 +1327,8 @@ Open Nunction Main()
 }
 ```
 
-The complete module and visibility system is still under development.
+`Open` declarations can cross module boundaries through `Use` and `Using`.
+`Closed` declarations remain private to their source module.
 
 ## 26.1 `Showcase`
 
@@ -1387,27 +1417,79 @@ They are currently checked for structural validity.
 
 # 29. Imports
 
-ForgeLang provides `Use` and `Using` syntax for imports.
+ForgeLang provides `Use` and `Using` for importing modules and symbols. Import
+resolution happens before semantic analysis and is shared by Native and
+Cranelift.
 
 ## 29.1 Use
 
 ```forge
-Use System.Sort;
+Use File;
+
+Open Nunction Main()
+{
+    File.Function1();
+}
 ```
 
-`Use` specifies a module path.
+`Use` imports a module while preserving its namespace. It does not make
+`Function1()` directly available.
 
 ## 29.2 Using
 
 ```forge
-Using System.Math: Sqrt();
+Using File: Function1;
+
+Open Nunction Main()
+{
+    Function1();
+}
 ```
 
-`Using` specifies an item from a module.
+`Using` imports one specific symbol directly into the current module's scope.
+It does not expose every symbol from that module.
 
-The module system is not yet fully implemented.
+```forge
+Use File;
+File.Function1();
 
-These statements can be parsed and stored in the AST, but they do not currently provide a working module system during code generation.
+Using File: Function1;
+Function1();
+```
+
+## 29.3 Module Discovery
+
+For `.blower` projects, only files selected by `Files.location` belong to the
+module table and can be imported. Module names come from `.anvil` filenames, so
+`src/File.anvil` defines module `File`. Duplicate module filenames are rejected
+instead of resolved ambiguously.
+
+For standalone `furnace compile Main.anvil linux`, `Use File;` resolves
+`File.anvil` relative to `Main.anvil`. Nested import paths such as
+`Use System.Math;` are represented structurally and resolve a matching
+`System/Math.anvil`; this syntax does not pretend that an unavailable standard
+library exists.
+
+## 29.4 Visibility, Conflicts, and Cycles
+
+Only `Open` declarations are accessible across module boundaries. Functions
+are callable through either import form; existing named declarations such as
+`Data` types can be selected with `Using` where their normal syntax permits.
+Repeated identical imports are idempotent. Furnace rejects missing modules,
+missing or private symbols, duplicate module names, selective-import name
+conflicts, and imports that conflict with local declarations.
+
+Imports belong to the module that declares them and do not implicitly re-export
+nested dependencies. Furnace builds a dependency graph once and rejects direct
+and longer cycles:
+
+```text
+error: circular import detected: A -> B -> C -> A
+```
+
+`Use` and `Using` resolve only local or project-declared source modules. Package
+registries, downloads, versions, wildcard imports, and remote modules are not
+part of this feature.
 
 ---
 
@@ -1672,9 +1754,12 @@ The direct path currently has these limits:
 * Integer, Boolean, and `Weld` function values
 * Integer input only
 * No direct float, array, tuple, or list code generation
-* No direct `Data`, object, or import code generation
+* No direct `Data` or object code generation
 
-Syntax can be parsed and semantically checked before code generation rejects it or sends it to the other path.
+Imports resolve before backend selection, so imported functions work through
+the direct path without backend-specific import instructions. Other syntax can
+be parsed and semantically checked before code generation rejects it or sends it
+to the other path.
 
 ---
 
@@ -1775,9 +1860,9 @@ This command:
 4. Forwards the program's standard output and standard error.
 5. Returns the child process exit code.
 
-## 32.4 Backend Commands
+## 32.4 Persistent Backend Selection
 
-Use the `backend` command to check either available backend:
+Use the `backend` command to save the default backend:
 
 ```fish
 ./target/debug/furnace backend native
@@ -1789,12 +1874,26 @@ Available backends:
 * `native` writes a direct x86-64 ELF64 executable.
 * `cranelift` writes a native object file and links it with `cc`.
 
-Use `--backend` with `compile` or `run` to choose the path for that command:
+The saved backend is automatically used by `furnace build`, `furnace compile`,
+and `furnace run`, and persists across separate terminal sessions and Furnace
+processes. Cranelift remains the built-in default when no setting has been
+saved.
+
+On Unix, the setting is stored at `$XDG_CONFIG_HOME/furnace/config`, falling
+back to `~/.config/furnace/config`. On Windows it is stored at
+`%APPDATA%\furnace\config`.
+
+Use `--backend` with `build`, `compile`, or `run` for a one-command override:
 
 ```fish
+./target/debug/furnace build Project.blower --backend native
 ./target/debug/furnace compile main.anvil linux --backend native
 ./target/debug/furnace run main.anvil --backend cranelift
 ```
+
+Backend resolution priority is the explicit command override, the saved
+preference, and then the built-in default. Invalid saved configuration is
+reported as an error.
 
 ## 32.5 Create a Project
 
@@ -1820,9 +1919,9 @@ Furnace exposes its version through centralized compiler metadata.
 The current version is:
 
 ```rust
-pub const VERSION: &str = "Alpha 5";
+pub const VERSION: &str = "Alpha-6";
 ```
-> Fancy way of saying Alpha 5
+> Fancy way of saying Alpha-6
 
 Version information can be requested with:
 
@@ -1830,7 +1929,7 @@ Version information can be requested with:
 ./target/debug/furnace -version
 ```
 
-Downloading the newest Furnace version (Supported from Alpha 5.1):
+Downloading the newest Furnace version:
 
 ```fish
 # If you havent switched to cargo install:
@@ -1848,7 +1947,7 @@ Help can be requested with:
 Example version output:
 
 ```
-Furnace Alpha 5
+Furnace Alpha-6
 ```
 
 Usage:
@@ -1889,7 +1988,7 @@ The resulting executable can be started normally:
 
 # 33. Complete Example
 
-The following program demonstrates several features available in Alpha 5:
+The following program demonstrates several features available in Alpha-6:
 
 * `Nunction`
 * Variables
@@ -2001,7 +2100,7 @@ Open Nunction Main()
 
 # 34. Current Limitations
 
-Alpha 5 is an early development release.
+Alpha-6 is an early development release.
 
 The following features are not currently fully implemented in the backend:
 
@@ -2009,8 +2108,7 @@ The following features are not currently fully implemented in the backend:
 * Object instantiation code generation
 * `Switch` / `Deal` / `Base` pattern matching
 * `Do` / `Fail` / `Final` error handling
-* Functional `Use` / `Using` imports
-* Complete module system
+* Package and dependency module ecosystem
 * Complete lexical scope handling
 * Multicore ForgeLang program execution
 * Garbage collection
@@ -2033,9 +2131,9 @@ This distinction saves everyone from discovering that the compiler supports some
 
 ---
 
-# 35. Alpha 5 Roadmap
+# 35. Alpha-6 Roadmap
 
-Alpha 5 continues development of the Rust-based Furnace compiler.
+Alpha-6 continues development of the Rust-based Furnace compiler.
 
 ## Short Term
 
@@ -2071,20 +2169,20 @@ Future versions are planned to support generic data types and generic function p
 
 ## Mid Term
 
-### Module System
+### Module Ecosystem
 
-ForgeLang will gain a working module system based around:
+ForgeLang now has local and `.blower` project imports based around:
 
 ```
 Use
 Using
 ```
 
-The module system will interact with:
+The implemented import system applies `Open` and `Closed` visibility. Future
+module work can extend standard-library and package integration and define the
+role of:
 
 ```
-Open
-Closed
 Showcase
 ```
 
@@ -2098,7 +2196,7 @@ Future work includes clearer diagnostics for control-flow paths that do not retu
 
 ### Multicore Runtime
 
-Alpha 5 uses Rayon for compiler-side parallel analysis.
+Alpha-6 uses Rayon for compiler-side parallel analysis.
 
 Future versions are planned to provide mechanisms for ForgeLang programs to execute work on multiple CPU cores.
 
@@ -2147,9 +2245,9 @@ The compiler will need sufficient language features, standard library support, a
 
 ---
 
-# Alpha 5 Implementation Notes
+# Alpha-6 Implementation Notes
 
-Alpha 5 uses a different compiler implementation from the earlier experimental versions of ForgeLang.
+Alpha-6 uses a different compiler implementation from the earlier experimental versions of ForgeLang.
 
 Earlier versions used:
 
@@ -2182,7 +2280,7 @@ flowchart LR
 
 The change to Rust also makes the compiler itself part of the ForgeLang project's systems-level development work.
 
-Alpha 5 should not be treated as a finished language specification.
+Alpha-6 should not be treated as a finished language specification.
 
 Some syntax exists before its backend implementation.
 

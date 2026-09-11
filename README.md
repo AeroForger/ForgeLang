@@ -17,7 +17,7 @@
 
 ForgeLang is a statically typed, C-style systems programming language designed for native execution and explicit control.
 
-**Alpha 5** uses a compiler written in **Rust**. Furnace uses **pest** for parsing, a direct x86-64 code path for supported programs, and **Cranelift** for programs that need the typed path.
+**Alpha-6** uses a compiler written in **Rust**. Furnace uses **pest** for parsing, a direct x86-64 code path for supported programs, and **Cranelift** for programs that need the typed path.
 
 ### The Stack
 
@@ -29,7 +29,7 @@ ForgeLang is a statically typed, C-style systems programming language designed f
 
 ---
 
-## Alpha 5 Features
+## Alpha-6 Features
 
 ## Native Code Generation
 
@@ -74,7 +74,7 @@ Both paths share parsing, the AST, and semantic analysis. The difference begins 
 
 ### Direct Path Limits
 
-The direct path currently supports x86-64 output, at most six integer function arguments, integer input, and integer, Boolean, and `Weld` function values. It does not directly generate code for floats, arrays, tuples, lists, `Data`, objects, or imports.
+The direct path currently supports x86-64 output, at most six integer function arguments, integer input, and integer, Boolean, and `Weld` function values. It does not directly generate code for floats, arrays, tuples, lists, `Data`, or objects. Imports resolve before backend selection and work with both paths.
 
 ### The Language
 
@@ -114,7 +114,7 @@ Open Nunction Main()
 }
 ```
 
-Alpha 5 currently supports:
+Alpha-6 currently supports:
 
 * **Types:** `Number`, `Int`, `Float`, `Weld`, `String`, `Bool` / `Boolean`
 * **Control flow:** `If`, `Else If`, `Else`, `While`, `For`
@@ -218,9 +218,9 @@ Furnace parses the source and performs semantic analysis, then selects the direc
 ./target/release/furnace run main.anvil
 ```
 
-### Backend Commands
+### Persistent Backend Selection
 
-Check a backend with:
+Save the default backend with:
 
 ```fish
 ./target/release/furnace backend native
@@ -232,9 +232,15 @@ Available backends:
 * `native` writes a direct x86-64 ELF64 executable.
 * `cranelift` writes a native object file and links it with `cc`.
 
-Use `--backend` with `compile` or `run` to choose the path for that command:
+The selection persists across Furnace invocations and is used by `build`,
+`compile`, and `run`. Cranelift is the built-in default when no preference has
+been saved.
+
+Use `--backend` with `build`, `compile`, or `run` to override the saved choice
+for one command:
 
 ```fish
+./target/release/furnace build project.blower --backend native
 ./target/release/furnace compile main.anvil linux --backend native
 ./target/release/furnace run main.anvil --backend cranelift
 ```
@@ -283,16 +289,17 @@ The overall pipeline runs in this order:
 flowchart LR
     A(ForgeLang source) --> B(pest parser)
     B --> C(AST)
-    C --> D(Semantic analysis)
-    D --> E(Direct x86-64 path or Cranelift path)
-    E --> F(Executable)
+    C --> D(Module resolution)
+    D --> E(Semantic analysis)
+    E --> F(Direct x86-64 path or Cranelift path)
+    F --> G(Executable)
 ```
 
 ---
 
 ## Current Limitations
 
-Alpha 5 is still under development.
+Alpha-6 is still under development.
 
 The following features are not yet fully implemented in the backend:
 
@@ -301,7 +308,6 @@ The following features are not yet fully implemented in the backend:
 * Object instantiation code generation
 * `Switch` / `Deal` / `Base` pattern matching
 * `Do` / `Fail` / `Final` error handling
-* `Use` / `Using` module system
 * Garbage collection
 * Multicore program execution
 * Self-hosting Furnace
@@ -323,7 +329,6 @@ For the complete language reference and current implementation details, see **[T
 
 ### Mid Term
 
-* `Use` / `Using` module system
 * `Open` / `Closed` / `Showcase` visibility rules
 * Multicore program execution
 * Generic data types

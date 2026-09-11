@@ -9,6 +9,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TARGET_DIR="${FURNACE_TEST_TARGET_DIR:-$ROOT/target/unified-tests}"
 BINARY="${FURNACE:-$TARGET_DIR/debug/furnace}"
 REPORT_DIR="$(mktemp -d)"
+export FURNACE_CONFIG_DIR="$REPORT_DIR/furnace-config"
 
 trap 'rm -rf "$REPORT_DIR"' EXIT
 
@@ -32,8 +33,9 @@ run_step() {
     fi
 }
 
-run_step "Rust unit and integration tests" \
-    cargo test --offline --locked --target-dir "$TARGET_DIR" -- --test-threads=1
+# `--all-targets` includes `.blower`, persistent-backend, and import tests.
+run_step "Rust tests, including project and import tests" \
+    cargo test --offline --locked --all-targets --target-dir "$TARGET_DIR" -- --test-threads=1
 
 run_step "Compiler binary build" \
     cargo build --offline --locked --bin furnace --target-dir "$TARGET_DIR"

@@ -104,6 +104,7 @@ pub enum Statement {
     Skip,
     Assignment(AssignmentNode),
     Use(UseNode),
+    Using(UsingNode),
     ExprStmt(Expr),
 }
 
@@ -220,7 +221,16 @@ pub struct AssignmentNode {
 #[derive(Debug, Clone, PartialEq)]
 pub struct UseNode {
     pub path: Vec<String>,
-    pub item: Option<String>,
+    pub line: usize,
+    pub column: usize,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct UsingNode {
+    pub path: Vec<String>,
+    pub symbol: String,
+    pub line: usize,
+    pub column: usize,
 }
 
 #[derive(Debug, Clone)]

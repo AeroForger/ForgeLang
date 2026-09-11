@@ -45,15 +45,33 @@ fn validate_name(name: &str) -> Result<(), &'static str> {
     if name.chars().any(|character| character.is_control()) {
         return Err("project name cannot contain control characters");
     }
+    if !name
+        .chars()
+        .all(|character| character.is_ascii_alphanumeric() || matches!(character, '_' | '-'))
+    {
+        return Err("project name may contain only letters, numbers, '_' and '-'");
+    }
     Ok(())
 }
 
 fn create_project(project_dir: &Path, name: &str) -> std::io::Result<()> {
     std::fs::create_dir(project_dir)?;
-    let source_path = project_dir.join(format!("{}.anvil", name));
-    if let Err(error) = std::fs::write(&source_path, CONSOLE_TEMPLATE) {
+    let source_dir = project_dir.join("src");
+    let project_file = project_dir.join(format!("{}.blower", name));
+    let result = (|| {
+        std::fs::create_dir(&source_dir)?;
+        std::fs::write(source_dir.join("Main.anvil"), CONSOLE_TEMPLATE)?;
+        let config = format!(
+            "Project\n{{\n    Name = \"{}\";\n}}\n\nFiles\n{{\n    location = \"src/*.anvil\";\n}}\n",
+            name
+        );
+        std::fs::write(&project_file, config)
+    })();
+    if result.is_err() {
+        let _ = std::fs::remove_file(&project_file);
+        let _ = std::fs::remove_file(source_dir.join("Main.anvil"));
+        let _ = std::fs::remove_dir(&source_dir);
         let _ = std::fs::remove_dir(project_dir);
-        return Err(error);
     }
-    Ok(())
+    result
 }

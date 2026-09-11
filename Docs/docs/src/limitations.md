@@ -1,6 +1,6 @@
 # Current Limitations
 
-Alpha 5 is an early development release.
+Alpha-6 is an early development release.
 
 The following features are not currently fully implemented in the backend:
 
@@ -8,8 +8,7 @@ The following features are not currently fully implemented in the backend:
 - Object instantiation code generation
 - `Switch` / `Deal` / `Base` pattern matching
 - `Do` / `Fail` / `Final` error handling
-- Functional `Use` / `Using` imports
-- Complete module system
+- Package and dependency module ecosystem
 - Complete lexical scope handling
 - Multicore ForgeLang program execution
 - Garbage collection

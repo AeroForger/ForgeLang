@@ -25,7 +25,7 @@ Example output:
 
 ```text
 Downloading source...
-Latest tag: v0.4.0
+Latest tag: alpha-6
 Installing Furnace...
 Furnace updated successfully.
 ```
@@ -43,11 +43,48 @@ On failure the command exits with a non-zero code and prints an error message.
 
 ```text
 Usage:
+    furnace build <project>.blower [--backend native|cranelift]
     furnace compile <file>.anvil <platform> [--backend native|cranelift]
-    furnace run <file>.anvil [--backend native|cranelift]
+    furnace run <file>.anvil|<project>.blower [--backend native|cranelift]
     furnace backend <native|cranelift>
     furnace new <APP_TYPE> -n <NAME>
     furnace update
     furnace -version
     furnace -help
 ```
+
+## Build
+
+`furnace build project.blower` loads a ForgeLang project, discovers the source
+files declared by its `Files.location` entries, and writes the named executable
+to the project's `build/` directory. Use `--backend native` or
+`--backend cranelift` to select a backend.
+
+`build` accepts only `.blower` targets. Compile an independent `.anvil` file
+with `furnace compile file.anvil linux`.
+
+## Persistent Backend Selection
+
+The existing backend command saves the default used by future commands:
+
+```fish
+furnace backend native
+furnace backend cranelift
+```
+
+The selected backend is automatically used by `furnace build`, `furnace
+compile`, and `furnace run`, including later Furnace processes. With no saved
+configuration, Cranelift remains the built-in default.
+
+On Unix, Furnace stores the setting in `$XDG_CONFIG_HOME/furnace/config`, or
+`~/.config/furnace/config` when `XDG_CONFIG_HOME` is unset. On Windows it uses
+`%APPDATA%\furnace\config`. The file contains, for example:
+
+```text
+backend = "native"
+```
+
+An existing `--backend native|cranelift` option overrides the saved preference
+for one `build`, `compile`, or `run` command. Resolution priority is the command
+override, saved preference, then built-in default. Malformed configuration is
+reported rather than silently ignored.

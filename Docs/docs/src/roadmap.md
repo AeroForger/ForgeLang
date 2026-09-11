@@ -1,6 +1,6 @@
-# Alpha 5 Roadmap
+# Alpha-6 Roadmap
 
-Alpha 5 continues development of the Rust-based Furnace compiler.
+Alpha-6 continues development of the Rust-based Furnace compiler.
 
 ## Short Term
 
@@ -36,20 +36,20 @@ Future versions are planned to support generic data types and generic function p
 
 ## Mid Term
 
-### Module System
+### Module Ecosystem
 
-ForgeLang will gain a working module system based around:
+ForgeLang now has local and `.blower` project imports based around:
 
 ```text
 Use
 Using
 ```
 
-The module system will interact with:
+The implemented import system applies `Open` and `Closed` visibility. Future
+module work can extend standard-library and package integration and define the
+role of:
 
 ```text
-Open
-Closed
 Showcase
 ```
 
@@ -63,7 +63,7 @@ Future work includes clearer diagnostics for control-flow paths that do not retu
 
 ### Multicore Runtime
 
-Alpha 5 uses Rayon for compiler-side parallel analysis.
+Alpha-6 uses Rayon for compiler-side parallel analysis.
 
 Future versions are planned to provide mechanisms for ForgeLang programs to execute work on multiple CPU cores.
 

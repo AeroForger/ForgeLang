@@ -135,7 +135,7 @@ fn statement_requires_typed_backend(statement: &Statement) -> bool {
         Statement::Return(value) => value.as_ref().is_some_and(expr_requires_typed_backend),
         Statement::Assignment(assignment) => expr_requires_typed_backend(&assignment.value),
         Statement::ExprStmt(expr) => expr_requires_typed_backend(expr),
-        Statement::Stop | Statement::Skip | Statement::Use(_) => false,
+        Statement::Stop | Statement::Skip | Statement::Use(_) | Statement::Using(_) => false,
     }
 }
 

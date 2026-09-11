@@ -11,7 +11,8 @@ LINE_COMMENT = _{ "//" ~ (!NEWLINE ~ ANY)* }
 program    = { SOI ~ statement* ~ EOI }
 
 statement  = {
-      use_stmt
+      using_stmt
+    | use_stmt
     | data_decl
     | function_decl
     | var_decl
@@ -29,9 +30,9 @@ statement  = {
     | expr_stmt
 }
 
-// --- Imports (parse-only for now) ---
-use_stmt        = { kw_use ~ qualified_name ~ ";"
-                  | kw_using ~ qualified_name ~ (":" ~ using_item) ~ ";" }
+// --- Imports ---
+use_stmt        = { kw_use ~ qualified_name ~ ";" }
+using_stmt      = { kw_using ~ qualified_name ~ ":" ~ using_item ~ ";" }
 qualified_name  = { ident ~ ("." ~ ident)* }
 using_item      = { ident ~ ("(" ~ ")")? }
 

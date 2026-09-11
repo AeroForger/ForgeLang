@@ -119,9 +119,12 @@ The direct native path currently has these limits:
 - integer, Boolean, and `Weld` function values
 - integer input only
 - no direct float, array, tuple, or list code generation
-- no direct `Data`, object, or import code generation
+- no direct `Data` or object code generation
 
-These limits describe the direct path. They do not mean that the parser cannot recognize the syntax. A construct can be parsed and checked before code generation rejects it or sends it to the other path.
+Imports are resolved before backend selection, so imported functions work through
+the direct path without backend-specific import instructions. The other limits
+describe the direct path. A construct can be parsed and checked before code
+generation rejects it or sends it to the other path.
 
 [← Previous](architecture.md)
 [Next →](code-generation.md)

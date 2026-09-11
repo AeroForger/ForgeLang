@@ -28,6 +28,10 @@ impl BackendKind {
 
 #[derive(Debug)]
 pub enum Command {
+    Build {
+        input: PathBuf,
+        backend: BackendKind,
+    },
     Compile {
         input: PathBuf,
         platform: Platform,
@@ -54,8 +58,9 @@ pub fn parse_args(args: &[String]) -> Result<Command, ExitCode> {
         eprintln!("error: no command specified");
         eprintln!();
         eprintln!("Usage:");
+        eprintln!("    Furnace build <project>.blower [--backend cranelift|native]");
         eprintln!("    Furnace compile <file>.anvil <platform> [--backend cranelift|native]");
-        eprintln!("    Furnace run <file>.anvil [--backend cranelift|native]");
+        eprintln!("    Furnace run <file>.anvil|<project>.blower [--backend cranelift|native]");
         eprintln!("    Furnace backend <native|cranelift>");
         eprintln!("    Furnace new <APP_TYPE> -n <NAME>");
         eprintln!("    Furnace update");
@@ -72,6 +77,20 @@ pub fn parse_args(args: &[String]) -> Result<Command, ExitCode> {
         "-version" | "--version" | "-v" | "version" => Ok(Command::Version),
         "-help" | "--help" | "-h" | "help" => Ok(Command::Help),
         "update" | "Update" => Ok(Command::Update),
+        "build" | "Build" => {
+            if args.len() < 2 {
+                eprintln!("error: 'build' requires a .blower project file");
+                eprintln!("usage: Furnace build <project>.blower [--backend cranelift|native]");
+                return Err(ExitCode::from(2));
+            }
+            let input_path = PathBuf::from(&args[1]);
+            validate_blower_extension(&input_path)?;
+            let backend = resolve_backend(parse_build_backend_flag(&args[2..])?)?;
+            Ok(Command::Build {
+                input: input_path,
+                backend,
+            })
+        }
         "compile" | "Compile" => {
             if args.len() < 3 {
                 eprintln!("error: 'compile' requires an input .anvil file and a target platform");
@@ -92,7 +111,7 @@ pub fn parse_args(args: &[String]) -> Result<Command, ExitCode> {
                 }
             };
 
-            let backend = parse_backend_flag(&args[3..])?;
+            let backend = resolve_backend(parse_backend_flag(&args[3..])?)?;
 
             Ok(Command::Compile {
                 input: input_path,
@@ -103,14 +122,16 @@ pub fn parse_args(args: &[String]) -> Result<Command, ExitCode> {
         "run" | "Run" => {
             if args.len() < 2 {
                 eprintln!("error: 'run' requires an input .anvil file");
-                eprintln!("usage: Furnace run <file>.anvil [--backend cranelift|native]");
+                eprintln!(
+                    "usage: Furnace run <file>.anvil|<project>.blower [--backend cranelift|native]"
+                );
                 return Err(ExitCode::from(2));
             }
 
             let input_path = PathBuf::from(&args[1]);
-            validate_anvil_extension(&input_path)?;
+            validate_run_extension(&input_path)?;
 
-            let backend = parse_backend_flag(&args[2..])?;
+            let backend = resolve_backend(parse_backend_flag(&args[2..])?)?;
 
             Ok(Command::Run {
                 input: input_path,
@@ -153,8 +174,9 @@ pub fn parse_args(args: &[String]) -> Result<Command, ExitCode> {
             eprintln!("error: unknown command '{}'", unknown);
             eprintln!();
             eprintln!("Usage:");
+            eprintln!("    Furnace build <project>.blower [--backend cranelift|native]");
             eprintln!("    Furnace compile <file>.anvil <platform> [--backend cranelift|native]");
-            eprintln!("    Furnace run <file>.anvil [--backend cranelift|native]");
+            eprintln!("    Furnace run <file>.anvil|<project>.blower [--backend cranelift|native]");
             eprintln!("    Furnace backend <native|cranelift>");
             eprintln!("    Furnace new <APP_TYPE> -n <NAME>");
             eprintln!("Available backends: native, cranelift");
@@ -165,12 +187,33 @@ pub fn parse_args(args: &[String]) -> Result<Command, ExitCode> {
     }
 }
 
-fn parse_backend_flag(remaining_args: &[String]) -> Result<BackendKind, ExitCode> {
-    let mut backend = if std::env::var("FURNACE_BACKEND").as_deref() == Ok("native") {
-        BackendKind::Native
-    } else {
-        BackendKind::Cranelift
-    };
+fn validate_blower_extension(path: &PathBuf) -> Result<(), ExitCode> {
+    match path.extension().and_then(|ext| ext.to_str()) {
+        Some("blower") => Ok(()),
+        _ => {
+            eprintln!("error: furnace build requires a .blower project file");
+            Err(ExitCode::from(2))
+        }
+    }
+}
+
+fn parse_build_backend_flag(remaining_args: &[String]) -> Result<Option<BackendKind>, ExitCode> {
+    if remaining_args.is_empty() {
+        return parse_backend_flag(remaining_args);
+    }
+    if remaining_args.len() != 2 || (remaining_args[0] != "--backend" && remaining_args[0] != "-b")
+    {
+        eprintln!(
+            "error: unsupported furnace build argument '{}'; expected --backend native|cranelift",
+            remaining_args[0]
+        );
+        return Err(ExitCode::from(2));
+    }
+    parse_backend_flag(remaining_args)
+}
+
+fn parse_backend_flag(remaining_args: &[String]) -> Result<Option<BackendKind>, ExitCode> {
+    let mut backend = None;
     let mut i = 0;
     while i < remaining_args.len() {
         if remaining_args[i] == "--backend" || remaining_args[i] == "-b" {
@@ -178,13 +221,20 @@ fn parse_backend_flag(remaining_args: &[String]) -> Result<BackendKind, ExitCode
                 eprintln!("error: missing argument for --backend");
                 return Err(ExitCode::from(2));
             }
-            backend = parse_backend_kind(&remaining_args[i + 1])?;
+            backend = Some(parse_backend_kind(&remaining_args[i + 1])?);
             i += 2;
         } else {
             i += 1;
         }
     }
     Ok(backend)
+}
+
+fn resolve_backend(explicit: Option<BackendKind>) -> Result<BackendKind, ExitCode> {
+    crate::config::resolve_backend(explicit).map_err(|message| {
+        eprintln!("error: {}", message);
+        ExitCode::from(1)
+    })
 }
 
 fn parse_backend_kind(value: &str) -> Result<BackendKind, ExitCode> {
@@ -203,6 +253,19 @@ fn validate_anvil_extension(path: &PathBuf) -> Result<(), ExitCode> {
         _ => {
             eprintln!(
                 "error: input file '{}' must have a .anvil extension",
+                path.display()
+            );
+            Err(ExitCode::from(2))
+        }
+    }
+}
+
+fn validate_run_extension(path: &PathBuf) -> Result<(), ExitCode> {
+    match path.extension().and_then(|ext| ext.to_str()) {
+        Some("anvil" | "blower") => Ok(()),
+        _ => {
+            eprintln!(
+                "error: run input '{}' must have an .anvil or .blower extension",
                 path.display()
             );
             Err(ExitCode::from(2))

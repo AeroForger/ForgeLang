@@ -30,7 +30,10 @@ Top-level declarations can include:
 * Data declarations
 * Import statements
 
-The exact behavior of some declarations depends on the current compiler implementation. In particular, `Data` declarations and import statements are currently parsed and represented in the AST, but the backend does not yet produce executable code for all of them. See [Current Limitations](../limitations.md) for details.
+The exact behavior of some declarations depends on the current compiler
+implementation. `Use` and `Using` imports are resolved before semantic analysis
+and work with either backend. `Data` and object code generation still has
+limitations; see [Current Limitations](../limitations.md) for details.
 
 ## Statement Terminators
 

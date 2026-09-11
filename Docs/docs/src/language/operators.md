@@ -1,6 +1,6 @@
 # Operators
 
-Alpha 5 supports arithmetic, comparison, bitwise, unary, and loop increment operators.
+Alpha-6 supports arithmetic, comparison, bitwise, unary, and loop increment operators.
 
 ## Arithmetic
 

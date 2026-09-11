@@ -55,6 +55,11 @@ The compiler works with the AST rather than passing raw source text between comp
 
 ## Semantic Analysis
 
+Before semantic analysis, project or standalone source loading builds a module
+table and import dependency graph. `Use` and `Using` are resolved into uniquely
+named declaration references, cycles and visibility errors are diagnosed, and
+the backends receive one already-resolved program without import statements.
+
 `src/semantic.rs` validates the AST before code generation.
 
 This stage handles language-level checks such as:

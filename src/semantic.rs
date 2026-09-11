@@ -615,13 +615,16 @@ fn validate_statement(
         }
         Statement::Use(import) => {
             let path = import.path.join(".");
-            let target = import
-                .item
-                .as_deref()
-                .map_or(path.clone(), |item| format!("{}: {}", path, item));
             return Err(ForgeError::parse(format!(
-                "imports are not implemented: {}",
-                target
+                "unresolved import reached semantic analysis: {}",
+                path
+            )));
+        }
+        Statement::Using(import) => {
+            return Err(ForgeError::parse(format!(
+                "unresolved import reached semantic analysis: {}: {}",
+                import.path.join("."),
+                import.symbol
             )));
         }
         Statement::Print(print) => validate_expr(&print.expr, scope, program, context)?,
@@ -648,13 +651,13 @@ fn validate_statement(
                 (ret_kind, None) if !ret_kind.is_void() => {
                     return Err(ForgeError::parse(format!(
                         "Function {} must return a value",
-                        function_name
+                        crate::imports::display_symbol_name(function_name)
                     )));
                 }
                 (ret_kind, Some(_)) if ret_kind.is_void() => {
                     return Err(ForgeError::parse(format!(
                         "Void function {} cannot return a value",
-                        function_name
+                        crate::imports::display_symbol_name(function_name)
                     )));
                 }
                 (ret_kind, Some(value)) => {
@@ -676,7 +679,7 @@ fn validate_statement(
                         if !types_compatible(&actual, &expected) {
                             return Err(ForgeError::parse(format!(
                                 "Return type mismatch in {}: expected {}, got {}",
-                                function_name,
+                                crate::imports::display_symbol_name(function_name),
                                 type_name(&expected),
                                 expr_type(value, scope, program).name()
                             )));
@@ -1052,7 +1055,7 @@ fn validate_expr(
             if function.params.len() != args.len() {
                 return Err(ForgeError::parse(format!(
                     "Function {} expects {} arguments, got {}",
-                    callee,
+                    crate::imports::display_symbol_name(callee),
                     function.params.len(),
                     args.len()
                 )));
@@ -1064,7 +1067,7 @@ fn validate_expr(
                     return Err(ForgeError::parse(format!(
                         "Argument {} of {}: expected {}, got {}",
                         index + 1,
-                        callee,
+                        crate::imports::display_symbol_name(callee),
                         type_name(&param.type_decl),
                         expr_type(arg, scope, program).name()
                     )));

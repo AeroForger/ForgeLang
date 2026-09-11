@@ -28,11 +28,13 @@ After installation, Cargo places `furnace` in its executable path, allowing you 
 For example:
 
 ```fish
+furnace build Project.blower
 furnace compile main.anvil linux
 furnace run main.anvil
 furnace backend native
 furnace backend cranelift
 furnace new console -n Project
+furnace update
 furnace -help
 furnace --help
 furnace -version
@@ -44,6 +46,17 @@ This means you can use `furnace` directly from any directory, provided Cargo's b
 Documentation will use `cargo build --release` instead of `cargo install --path .` 
 
 ## Compile a ForgeLang Program
+
+For a project, use its `.blower` configuration:
+
+```fish
+./target/debug/furnace build Project.blower
+```
+
+Project sources come from `Files.location` patterns relative to the project
+file. The executable is named by `Project.Name` and written to `build/`.
+
+For one standalone source, use:
 
 The current CLI command is:
 
@@ -98,9 +111,9 @@ This command:
 4. Forwards the program's standard output and standard error.
 5. Returns the child process exit code.
 
-## Check a Backend
+## Select the Default Backend
 
-Use the `backend` command to check either available backend:
+Use the `backend` command to persist the default backend:
 
 ```fish
 ./target/debug/furnace backend native
@@ -112,9 +125,17 @@ Available backends:
 - `native` writes a direct x86-64 ELF64 executable.
 - `cranelift` writes a native object file and links it with `cc`.
 
-Use `--backend` with `compile` or `run` to choose the path for that command:
+The selection is reused by `build`, `compile`, and `run` in later Furnace
+processes. If no preference has been saved, Cranelift remains the built-in
+default. Furnace stores the preference in the platform configuration directory:
+`$XDG_CONFIG_HOME/furnace/config` or `~/.config/furnace/config` on Unix, and
+`%APPDATA%\furnace\config` on Windows.
+
+Use `--backend` with `build`, `compile`, or `run` to override the saved backend
+for only that command:
 
 ```fish
+./target/debug/furnace build Project.blower --backend native
 ./target/debug/furnace compile main.anvil linux --backend native
 ./target/debug/furnace run main.anvil --backend cranelift
 ```
@@ -126,7 +147,7 @@ Furnace exposes its version through centralized compiler metadata.
 The current version is:
 
 ```rust
-pub const VERSION: &str = "Alpha 5";
+pub const VERSION: &str = "Alpha-6";
 ```
 
 Version information can be requested with:
@@ -144,7 +165,7 @@ Help can be requested with:
 Example version output:
 
 ```text
-Furnace Alpha 5
+Furnace Alpha-6
 ```
 
 Usage:
@@ -171,7 +192,11 @@ Create a console project with:
 ./target/debug/furnace new console -n Project
 ```
 
-The command creates `Project/Project.anvil` with this source:
+The command creates `Project/Project.blower` and `Project/src/Main.anvil`. The
+project file declares `Name = "Project"` and `location = "src/*.anvil"`, so it
+can immediately be built with `furnace build Project/Project.blower`.
+
+The generated source contains:
 
 ```forge
 Open Nunction Main()

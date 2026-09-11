@@ -5,18 +5,10 @@ use crate::args::BackendKind;
 use crate::platform::Platform;
 
 pub fn execute(input: &Path, platform: Platform, backend: BackendKind) -> ExitCode {
-    let source = match std::fs::read_to_string(input) {
-        Ok(s) => s,
-        Err(e) => {
-            eprintln!("error: cannot read '{}': {}", input.display(), e);
-            return ExitCode::from(1);
-        }
-    };
-
     println!("Compiling {}...", input.display());
 
-    let program = match furnace::parser::parse_program(&source) {
-        Ok(p) => p,
+    let program = match furnace::imports::load_standalone(input) {
+        Ok(program) => program,
         Err(e) => {
             eprintln!("{}", e);
             return ExitCode::from(1);
@@ -75,7 +67,7 @@ pub fn execute(input: &Path, platform: Platform, backend: BackendKind) -> ExitCo
             }
 
             println!("Build successful!");
-            println!("Backend: Native ELF64");
+            println!("Backend: {}", backend.name());
             println!("Output: {}", output_exe.display());
             ExitCode::SUCCESS
         }
@@ -110,6 +102,7 @@ pub fn execute(input: &Path, platform: Platform, backend: BackendKind) -> ExitCo
                     let _ = std::fs::remove_file(&obj_path);
                     let _ = std::fs::remove_file(&runtime_path);
                     println!("Build successful!");
+                    println!("Backend: {}", backend.name());
                     println!("Output: {}", output_exe.display());
                     ExitCode::SUCCESS
                 }

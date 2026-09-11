@@ -5,6 +5,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BIN="${FURNACE:-$ROOT/target/debug/furnace}"
 TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
+export FURNACE_CONFIG_DIR="$TMPDIR/furnace-config"
 
 fail() {
     echo "FAIL: $1" >&2
@@ -19,12 +20,13 @@ fi
 
 # version output
 actual="$($BIN -version 2>&1)"
-[ "$actual" = "Furnace Alpha 5" ] || fail "-version output mismatch: '$actual'"
+[ "$actual" = "Furnace Alpha-6" ] || fail "-version output mismatch: '$actual'"
 
 # help output
 help_actual="$($BIN -help 2>&1)"
-printf '%s\n' "$help_actual" | grep -q "Furnace Alpha 5" || fail "-help is missing banner"
+printf '%s\n' "$help_actual" | grep -q "Furnace Alpha-6" || fail "-help is missing banner"
 printf '%s\n' "$help_actual" | grep -q "Furnace compile <file>.anvil <platform>" || fail "-help is missing compile usage"
+printf '%s\n' "$help_actual" | grep -q "Furnace build <project>.blower" || fail "-help is missing build usage"
 printf '%s\n' "$help_actual" | grep -q "Furnace run <file>.anvil" || fail "-help is missing run usage"
 printf '%s\n' "$help_actual" | grep -q "Furnace backend <native|cranelift>" || fail "-help is missing backend usage"
 printf '%s\n' "$help_actual" | grep -q "Available backends:" || fail "-help is missing backend list"
@@ -34,9 +36,11 @@ printf '%s\n' "$help_actual" | grep -q "console" || fail "-help is missing conso
 
 # backend command
 native_backend_out="$($BIN backend native 2>&1)" || fail "native backend command failed"
-[ "$native_backend_out" = $'Backend: native\nOutput: direct x86-64 ELF64 executable' ] || fail "native backend output mismatch: '$native_backend_out'"
+[ "$native_backend_out" = "Default backend set to native" ] || fail "native backend output mismatch: '$native_backend_out'"
+[ "$(cat "$FURNACE_CONFIG_DIR/config")" = 'backend = "native"' ] || fail "native backend was not persisted"
 cranelift_backend_out="$($BIN backend cranelift 2>&1)" || fail "cranelift backend command failed"
-[ "$cranelift_backend_out" = $'Backend: cranelift\nOutput: native object file linked with cc' ] || fail "cranelift backend output mismatch: '$cranelift_backend_out'"
+[ "$cranelift_backend_out" = "Default backend set to cranelift" ] || fail "cranelift backend output mismatch: '$cranelift_backend_out'"
+[ "$(cat "$FURNACE_CONFIG_DIR/config")" = 'backend = "cranelift"' ] || fail "cranelift backend was not persisted"
 if $BIN backend unknown >/dev/null 2>&1; then
     fail "unknown backend should fail"
 fi
@@ -45,19 +49,20 @@ fi
 PROJECT_DIR="$TMPDIR/Project"
 new_out="$(cd "$TMPDIR" && "$BIN" new console -n Project 2>&1)" || fail "new console project failed"
 [ -d "$PROJECT_DIR" ] || fail "new did not create project directory"
-[ -f "$PROJECT_DIR/Project.anvil" ] || fail "new did not create project source"
+[ -f "$PROJECT_DIR/Project.blower" ] || fail "new did not create project file"
+[ -f "$PROJECT_DIR/src/Main.anvil" ] || fail "new did not create project source"
 expected_source=$'Open Nunction Main()\n{\n}\n'
-actual_source="$(cat "$PROJECT_DIR/Project.anvil")"$'\n'
+actual_source="$(cat "$PROJECT_DIR/src/Main.anvil")"$'\n'
 [ "$actual_source" = "$expected_source" ] || fail "new generated unexpected source"
 
-generated_compile_out="$(cd "$TMPDIR" && "$BIN" compile Project/Project.anvil linux 2>&1)" || fail "generated project did not compile"
+generated_compile_out="$(cd "$TMPDIR" && "$BIN" build Project/Project.blower 2>&1)" || fail "generated project did not build"
 printf '%s\n' "$generated_compile_out" | grep -q "Build successful!" || fail "generated project compile missing success"
-[ -x "$PROJECT_DIR/Project" ] || fail "generated project executable missing"
+[ -x "$PROJECT_DIR/build/Project" ] || fail "generated project executable missing"
 
 # different project name
 OTHER_DIR="$TMPDIR/AnotherProject"
 (cd "$TMPDIR" && "$BIN" new console -n AnotherProject >/dev/null 2>&1) || fail "new rejected a second valid name"
-[ -f "$OTHER_DIR/AnotherProject.anvil" ] || fail "new hardcoded the project name"
+[ -f "$OTHER_DIR/AnotherProject.blower" ] || fail "new hardcoded the project name"
 
 # existing directory must not be overwritten
 EXISTING_DIR="$TMPDIR/Existing"
@@ -67,7 +72,12 @@ if (cd "$TMPDIR" && "$BIN" new console -n Existing >/dev/null 2>&1); then
     fail "new overwrote an existing directory"
 fi
 [ -f "$EXISTING_DIR/marker.txt" ] || fail "new removed existing directory contents"
-[ ! -f "$EXISTING_DIR/Existing.anvil" ] || fail "new created a file in an existing directory"
+[ ! -f "$EXISTING_DIR/Existing.blower" ] || fail "new created a file in an existing directory"
+
+# build rejects non-project inputs
+if "$BIN" build "$PROJECT_DIR/src/Main.anvil" >/dev/null 2>&1; then
+    fail "build with non-blower file should fail"
+fi
 
 # invalid new usage
 if (cd "$TMPDIR" && "$BIN" new >/dev/null 2>&1); then

@@ -11,6 +11,7 @@
 - [Hello World](getting-started/hello-world.md)
 - [Program Structure](getting-started/program-structure.md)
 - [Compilation](getting-started/compilation.md)
+- [`.blower` Projects](getting-started/projects.md)
 
 # Language
 
@@ -63,5 +64,5 @@
 # Project Status
 
 - [Current Limitations](limitations.md)
-- [Alpha 5 Roadmap](roadmap.md)
+- [Alpha-6 Roadmap](roadmap.md)
 - [Implementation Notes](implementation-notes.md)

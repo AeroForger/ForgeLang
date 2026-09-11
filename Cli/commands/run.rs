@@ -5,18 +5,10 @@ use crate::args::BackendKind;
 use crate::platform::Platform;
 
 pub fn execute(input: &Path, backend: BackendKind) -> ExitCode {
-    let source = match std::fs::read_to_string(input) {
-        Ok(s) => s,
-        Err(e) => {
-            eprintln!("error: cannot read '{}': {}", input.display(), e);
-            return ExitCode::from(1);
-        }
-    };
-
-    let program = match furnace::parser::parse_program(&source) {
-        Ok(p) => p,
-        Err(e) => {
-            eprintln!("{}", e);
+    let program = match load_program(input) {
+        Ok(program) => program,
+        Err(error) => {
+            eprintln!("{}", error);
             return ExitCode::from(1);
         }
     };
@@ -140,4 +132,13 @@ pub fn execute(input: &Path, backend: BackendKind) -> ExitCode {
     } else {
         ExitCode::from(1)
     }
+}
+
+fn load_program(input: &Path) -> Result<furnace::ast::Program, String> {
+    if input.extension().and_then(|extension| extension.to_str()) == Some("blower") {
+        return furnace::project::Project::load(input)
+            .and_then(|project| project.resolved_program())
+            .map_err(|error| error.to_string());
+    }
+    furnace::imports::load_standalone(input).map_err(|error| error.to_string())
 }

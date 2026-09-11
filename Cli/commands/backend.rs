@@ -3,16 +3,10 @@ use std::process::ExitCode;
 use crate::args::BackendKind;
 
 pub fn execute(backend: BackendKind) -> ExitCode {
-    println!("Backend: {}", backend.name());
-
-    match backend {
-        BackendKind::Native => {
-            println!("Output: direct x86-64 ELF64 executable");
-        }
-        BackendKind::Cranelift => {
-            println!("Output: native object file linked with cc");
-        }
+    if let Err(message) = crate::config::save_backend(backend) {
+        eprintln!("error: {}", message);
+        return ExitCode::from(1);
     }
-
+    println!("Default backend set to {}", backend.name());
     ExitCode::SUCCESS
 }
