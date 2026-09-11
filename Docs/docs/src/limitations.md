@@ -8,7 +8,7 @@ The following features are not currently fully implemented in the backend:
 - Object instantiation code generation
 - `Switch` / `Deal` / `Base` pattern matching
 - `Do` / `Fail` / `Final` error handling
-- Package and dependency module ecosystem
+- Package and dependency management
 - Complete lexical scope handling
 - Multicore ForgeLang program execution
 - Garbage collection

@@ -108,7 +108,7 @@ Open Nunction Main()
 }
 ```
 
-This example is intentionally representative of the current Alpha-6 subset. Some advanced features are still planned or parser-only, so it is best thought of as a snapshot of what the compiler can already handle reliably in the present implementation.
+This example represents the current Alpha-6 subset. Some features are still planned or parser-only, so the example shows what the compiler currently handles.
 
 ---
 

@@ -2108,7 +2108,7 @@ The following features are not currently fully implemented in the backend:
 * Object instantiation code generation
 * `Switch` / `Deal` / `Base` pattern matching
 * `Do` / `Fail` / `Final` error handling
-* Package and dependency module ecosystem
+* Package and dependency management
 * Complete lexical scope handling
 * Multicore ForgeLang program execution
 * Garbage collection
@@ -2169,7 +2169,7 @@ Future versions are planned to support generic data types and generic function p
 
 ## Mid Term
 
-### Module Ecosystem
+### Module Packaging
 
 ForgeLang now has local and `.blower` project imports based around:
 
@@ -2211,7 +2211,7 @@ The exact syntax and safety rules are not final.
 
 The compiler's parallel analysis and a program's parallel execution are separate features.
 
-## Long-Term Ecosystem
+## Long-Term Plans
 
 ### Scrap
 
