@@ -1,11 +1,11 @@
 <p align="center">
-    <img src="assets/ForgeLangLogo128.png">
+    <img src="assets/SydrogenLogo128.png">
     <br>
-    <strong>ForgeLang, a statically typed systems programming language built in Rust.</strong>
+    <strong>Sydrogen, a statically typed systems programming language built in Rust.</strong>
     <br>
     Source files use the <code>.anvil</code> extension. The compiler is <code>Furnace</code>.
     <br><br>
-    <a href="https://aeroforger.github.io/ForgeLang/"> Read the ForgeLang Book</a>
+    <a href="https://aeroforger.github.io/Sydrogen/"> Read the Sydrogen Book</a>
     &nbsp;&nbsp;•&nbsp;&nbsp;
     <a href="https://aeroforger.github.io/3d-fl/"> View Interactive 3D Logo</a>
 </p>
@@ -13,9 +13,9 @@
 
 ---
 
-## What is ForgeLang?
+## What is Sydrogen?
 
-ForgeLang is a statically typed, C-style systems programming language designed for native execution and explicit control.
+Sydrogen is a statically typed, C-style systems programming language designed for native execution and explicit control.
 
 **Alpha-6** uses a compiler written in **Rust**. Furnace uses **pest** for parsing, a direct x86-64 code path for supported programs, and **Cranelift** for programs that need the typed path.
 
@@ -33,13 +33,13 @@ ForgeLang is a statically typed, C-style systems programming language designed f
 
 ## Native Code Generation
 
-Furnace has a direct native code path for a supported subset of ForgeLang. It writes x86-64 instructions and creates an ELF64 executable without first creating an object file or calling an external linker.
+Furnace has a direct native code path for a supported subset of Sydrogen. It writes x86-64 instructions and creates an ELF64 executable without first creating an object file or calling an external linker.
 
 The compiler chooses the path after parsing and semantic analysis:
 
 ```mermaid
 flowchart TD
-    A(ForgeLang source) --> B(Parser)
+    A(Sydrogen source) --> B(Parser)
     B --> C(AST)
     C --> D(Semantic analysis)
     D --> E(Direct native path)
@@ -133,7 +133,7 @@ Alpha-6 currently supports:
 
 ### Boolean Type
 
-ForgeLang provides a Boolean type with two values: `true` and `false`.
+Sydrogen provides a Boolean type with two values: `true` and `false`.
 
 The keywords `Bool` and `Boolean` refer to the same type and can be used interchangeably.
 
@@ -191,8 +191,8 @@ It currently checks things including:
 Clone the repository and build the compiler:
 
 ```fish
-git clone https://github.com/AeroForger/ForgeLang.git
-cd ForgeLang
+git clone https://github.com/AeroForger/Sydrogen.git
+cd Sydrogen
 cargo build --release
 ```
 
@@ -287,7 +287,7 @@ The overall pipeline runs in this order:
 
 ```mermaid
 flowchart LR
-    A(ForgeLang source) --> B(pest parser)
+    A(Sydrogen source) --> B(pest parser)
     B --> C(AST)
     C --> D(Module resolution)
     D --> E(Semantic analysis)
@@ -314,7 +314,7 @@ The following features are not yet fully implemented in the backend:
 
 Some language constructs are already parsed and checked by Furnace but are not yet converted into executable native code.
 
-For the complete language reference and current implementation details, see **[The ForgeLang Programming Language Book](https://aeroforger.github.io/ForgeLang/)**.
+For the complete language reference and current implementation details, see **[The Sydrogen Programming Language Book](https://aeroforger.github.io/Sydrogen/)**.
 
 ---
 
@@ -337,16 +337,16 @@ For the complete language reference and current implementation details, see **[T
 ### Long Term
 
 * **Scrap:** Optional garbage collector
-* **Ironwork:** ForgeLang package manager
-* **Self-hosting:** Rewrite Furnace in ForgeLang for the 2.0 generation
+* **Ironwork:** Sydrogen package manager
+* **Self-hosting:** Rewrite Furnace in Sydrogen for the 2.0 generation
 
 ---
 
 ## Documentation
 
-The complete ForgeLang language reference is available in **The ForgeLang Programming Language Book**.
+The complete Sydrogen language reference is available in **The Sydrogen Programming Language Book**.
 
-**[Read the book](https://aeroforger.github.io/ForgeLang/)**
+**[Read the book](https://aeroforger.github.io/Sydrogen/)**
 
 ---
 

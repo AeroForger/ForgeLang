@@ -14,7 +14,7 @@ The Cranelift path is:
 
 ```mermaid
 flowchart LR
-    A(ForgeLang source) --> B(pest)
+    A(Sydrogen source) --> B(pest)
     B --> C(AST)
     C --> D(Module resolution)
     D --> E(Semantic analysis)

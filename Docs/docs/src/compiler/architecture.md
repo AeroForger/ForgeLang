@@ -6,7 +6,7 @@ Furnace is divided into several stages.
 
 The parser uses pest, a PEG parser generator for Rust.
 
-It converts ForgeLang source into the AST.
+It converts Sydrogen source into the AST.
 
 The grammar uses explicit precedence rules rather than left-recursive expression rules.
 
@@ -80,9 +80,9 @@ The paths share the AST and semantic analysis. The compiler selects the path aft
 
 ### Function Calls
 
-The direct path writes each ForgeLang function as a separate block of machine code. Calls use the System V x86-64 argument registers, and return values use `RAX`.
+The direct path writes each Sydrogen function as a separate block of machine code. Calls use the System V x86-64 argument registers, and return values use `RAX`.
 
-The Cranelift path declares each ForgeLang function as an independent Cranelift function and emits calls from the caller.
+The Cranelift path declares each Sydrogen function as an independent Cranelift function and emits calls from the caller.
 
 ### Collection Layout
 

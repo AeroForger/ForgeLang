@@ -1,4 +1,4 @@
-//! ForgeLang project configuration and source discovery.
+//! Sydrogen project configuration and source discovery.
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -438,7 +438,7 @@ pub fn discover_sources(root: &Path, patterns: &[String]) -> ForgeResult<Vec<Pat
             glob_matches(&components, &relative.split('/').collect::<Vec<_>>())
         }) {
             return Err(ForgeError::parse(format!(
-                "no ForgeLang source files matched '{}'",
+                "no Sydrogen source files matched '{}'",
                 pattern
             )));
         }
@@ -757,7 +757,7 @@ mod tests {
         let error = discover_sources(temp.path(), &["src/*.anvil".into(), "tests/*.anvil".into()])
             .unwrap_err()
             .to_string();
-        assert!(error.contains("no ForgeLang source files matched 'tests/*.anvil'"));
+        assert!(error.contains("no Sydrogen source files matched 'tests/*.anvil'"));
     }
 
     #[test]
@@ -819,7 +819,7 @@ mod tests {
     fn project_load_includes_source_path_in_parse_diagnostics() {
         let temp = tempfile::tempdir().unwrap();
         fs::create_dir(temp.path().join("src")).unwrap();
-        fs::write(temp.path().join("src/Broken.anvil"), "not ForgeLang").unwrap();
+        fs::write(temp.path().join("src/Broken.anvil"), "not Sydrogen").unwrap();
         fs::write(
             temp.path().join("app.blower"),
             "Project { Name=\"App\"; } Files { location=\"src/*.anvil\"; }",
@@ -862,6 +862,6 @@ mod tests {
         assert!(discover_sources(temp.path(), &["src/*.anvil".into()])
             .unwrap_err()
             .to_string()
-            .contains("no ForgeLang source files matched"));
+            .contains("no Sydrogen source files matched"));
     }
 }

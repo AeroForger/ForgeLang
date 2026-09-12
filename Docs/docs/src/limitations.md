@@ -10,7 +10,7 @@ The following features are not currently fully implemented in the backend:
 - `Do` / `Fail` / `Final` error handling
 - Package and dependency management
 - Complete lexical scope handling
-- Multicore ForgeLang program execution
+- Multicore Sydrogen program execution
 - Garbage collection
 - Self-hosting Furnace
 - Complete systems-level standard library

@@ -1,6 +1,6 @@
 # For Loops
 
-ForgeLang supports C-style `For` loops.
+Sydrogen supports C-style `For` loops.
 
 Basic syntax:
 

@@ -1,8 +1,8 @@
 # Introduction
 
-**ForgeLang** is a statically typed systems programming language that compiles to native machine code.
+**Sydrogen** is a statically typed systems programming language that compiles to native machine code.
 
-ForgeLang source files use the `.anvil` extension. If you drop one on the floor, it will not make a sound.
+Sydrogen source files use the `.anvil` extension. If you drop one on the floor, it will not make a sound.
 
 The compiler is **Furnace**.
 
@@ -13,27 +13,27 @@ The compiler is **Furnace**.
 > **Code generation:** Direct x86-64 path or Cranelift
 > **Output:** ELF64 executable or native object code
 
-## What ForgeLang Is
+## What Sydrogen Is
 
-ForgeLang is a statically typed programming language whose compiled programs do not require a virtual machine or interpreter at runtime. Furnace either writes an ELF64 executable directly or uses the system linker for the Cranelift path.
+Sydrogen is a statically typed programming language whose compiled programs do not require a virtual machine or interpreter at runtime. Furnace either writes an ELF64 executable directly or uses the system linker for the Cranelift path.
 
 ## What Furnace Is
 
-Furnace is the name of the ForgeLang compiler. The current generation is written in Rust and uses [pest](https://pest.rs/) for parsing, a direct x86-64 code path and [Cranelift](https://cranelift.dev/) for code generation, [Rayon](https://github.com/rayon-rs/rayon) for parallel semantic analysis, and `cc` for the typed path's linking step.
+Furnace is the name of the Sydrogen compiler. The current generation is written in Rust and uses [pest](https://pest.rs/) for parsing, a direct x86-64 code path and [Cranelift](https://cranelift.dev/) for code generation, [Rayon](https://github.com/rayon-rs/rayon) for parallel semantic analysis, and `cc` for the typed path's linking step.
 
 ## Current Version
 
-This documentation describes **Alpha-6** of ForgeLang and the corresponding release of Furnace.
+This documentation describes **Alpha-6** of Sydrogen and the corresponding release of Furnace.
 
 ## Source Files
 
-ForgeLang source files use the `.anvil` extension. Furnace checks that input files use this extension before processing them.
+Sydrogen source files use the `.anvil` extension. Furnace checks that input files use this extension before processing them.
 
 ## Compiler Pipeline
 
 ```mermaid
 flowchart LR
-    A(ForgeLang source) --> B(pest)
+    A(Sydrogen source) --> B(pest)
     B --> C(AST)
     C --> D(Semantic analysis)
     D --> E(Direct native path or Cranelift path)
@@ -58,7 +58,7 @@ Alpha-6 uses:
 
 ## How to Read This Book
 
-If you are new to ForgeLang, start with [Hello World](getting-started/hello-world.md) and [Program Structure](getting-started/program-structure.md).
+If you are new to Sydrogen, start with [Hello World](getting-started/hello-world.md) and [Program Structure](getting-started/program-structure.md).
 
 The [Language](language/functions.md) section describes individual language features.
 

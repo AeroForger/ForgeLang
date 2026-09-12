@@ -13,7 +13,7 @@ Open Nunction Main()
     Print("Line 1\nLine 2");
     Int Z = 5;
     Print(\V"Tabbed:\t{Z}");
-    Print("100% ForgeLang");
+    Print("100% Sydrogen");
     Print(\V"Hello {John.name}!");
     Print("He said \"hi\"");
 }

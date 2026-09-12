@@ -221,7 +221,7 @@ fn build_reports_malformed_config_and_unmatched_sources() {
         .unwrap();
     assert!(!unmatched.status.success());
     assert!(String::from_utf8_lossy(&unmatched.stderr)
-        .contains("no ForgeLang source files matched 'src/*.anvil'"));
+        .contains("no Sydrogen source files matched 'src/*.anvil'"));
 }
 
 #[test]

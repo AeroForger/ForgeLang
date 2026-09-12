@@ -1,6 +1,6 @@
 # Imports
 
-ForgeLang provides `Use` and `Using` for importing modules and symbols. Imports
+Sydrogen provides `Use` and `Using` for importing modules and symbols. Imports
 are resolved before semantic analysis and work with both Native and Cranelift.
 
 ## `Use`

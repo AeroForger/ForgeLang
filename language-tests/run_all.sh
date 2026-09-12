@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Unified ForgeLang test runner.
+# Unified Sydrogen test runner.
 #
 # This command runs every repository test layer and keeps going after a
 # failure so that the output contains the result of every test.

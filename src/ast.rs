@@ -1,4 +1,4 @@
-// ForgeLang AST - Rust port of furnace/ast_nodes.py
+// Sydrogen AST - Rust port of furnace/ast_nodes.py
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Modifier {

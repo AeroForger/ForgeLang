@@ -1,12 +1,12 @@
 # Native Code Generation
 
-Furnace has a direct native code path for a supported subset of ForgeLang. This path writes x86-64 instructions and creates an ELF64 executable without first creating an object file or calling an external linker.
+Furnace has a direct native code path for a supported subset of Sydrogen. This path writes x86-64 instructions and creates an ELF64 executable without first creating an object file or calling an external linker.
 
 The compiler chooses the path after parsing and semantic analysis:
 
 ```mermaid
 flowchart TD
-    A(ForgeLang source) --> B(Parser)
+    A(Sydrogen source) --> B(Parser)
     B --> C(AST)
     C --> D(Semantic analysis)
     D --> E(Direct native path)
@@ -76,7 +76,7 @@ Function calls and jumps may refer to code that has not been placed yet. Furnace
 
 After all functions have been written, Furnace knows every function and block offset. It then patches:
 
-- calls to ForgeLang functions
+- calls to Sydrogen functions
 - jumps between basic blocks
 - calls to printing, input, and exponentiation helpers
 - pointers to embedded string data
@@ -99,7 +99,7 @@ The command-line compiler writes these bytes directly to the requested output fi
 
 ## 6. The Cranelift path
 
-The direct path is not used for every ForgeLang type. When `src/backend/mod.rs` finds a float, array, tuple, list, or another type that needs the typed path, it calls `src/codegen.rs` instead.
+The direct path is not used for every Sydrogen type. When `src/backend/mod.rs` finds a float, array, tuple, list, or another type that needs the typed path, it calls `src/codegen.rs` instead.
 
 That path:
 

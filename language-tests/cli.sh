@@ -138,7 +138,7 @@ Open Nunction Main()
 }
 EOF
 if $BIN compile "$BROKEN" linux >/dev/null 2>&1; then
-    fail "compile should fail for invalid ForgeLang code"
+    fail "compile should fail for invalid Sydrogen code"
 fi
 
 echo "CLI tests passed"

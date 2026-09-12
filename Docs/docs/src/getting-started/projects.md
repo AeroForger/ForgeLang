@@ -1,6 +1,6 @@
 # `.blower` Projects
 
-A `.blower` file is the ForgeLang project configuration format. It names the
+A `.blower` file is the Sydrogen project configuration format. It names the
 project output and declares exactly which `.anvil` files belong to the project.
 
 ```blower

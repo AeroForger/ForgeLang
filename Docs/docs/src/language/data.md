@@ -1,6 +1,6 @@
 # Data Declarations
 
-ForgeLang supports the `Data` keyword for declaring structured types.
+Sydrogen supports the `Data` keyword for declaring structured types.
 
 Example:
 

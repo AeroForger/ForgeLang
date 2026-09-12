@@ -1,4 +1,4 @@
-// ForgeLang Grammar v2 - pest PEG port
+// Sydrogen Grammar v2 - pest PEG port
 // PEG: NO left recursion. Precedence via nested rules.
 // High → low: primary > postfix > power > unary > mul > add
 //             > comparison > and > or > xor

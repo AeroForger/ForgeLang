@@ -1,6 +1,6 @@
 # Keywords Reference
 
-This page summarizes the keywords and reserved terms that appear in the current ForgeLang documentation.
+This page summarizes the keywords and reserved terms that appear in the current Sydrogen documentation.
 
 | Keyword | Meaning |
 | ------- | ------- |

@@ -1,6 +1,6 @@
 # Functions
 
-ForgeLang functions are declared with either:
+Sydrogen functions are declared with either:
 
 * `Nunction` for a function that does not return a value
 * A return type, such as `Int`, `Float`, `Weld`, `Bool`, `Ore`, or `Materials`, for a function that returns data

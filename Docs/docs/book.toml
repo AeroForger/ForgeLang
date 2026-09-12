@@ -1,9 +1,9 @@
 [book]
-title = "ForgeLang Alpha-6"
-authors = ["ForgeLang Contributors"]
+title = "Sydrogen Alpha-6"
+authors = ["Sydrogen Contributors"]
 language = "en"
 src = "src"
-description = "Official documentation for the ForgeLang Alpha-6 programming language and its Furnace compiler."
+description = "Official documentation for the Sydrogen Alpha-6 programming language and its Furnace compiler."
 
 [build]
 build-dir = "book"

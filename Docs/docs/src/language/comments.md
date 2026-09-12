@@ -1,6 +1,6 @@
 # Comments
 
-ForgeLang supports single-line comments using `//`.
+Sydrogen supports single-line comments using `//`.
 
 Example:
 

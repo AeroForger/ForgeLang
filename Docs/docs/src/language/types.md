@@ -22,7 +22,7 @@ The primary primitive types are:
 declarations use the concrete type directly, such as `Int Count = 0;` or
 `Float Ratio = 1.5;`.
 
-ForgeLang uses static type checking.
+Sydrogen uses static type checking.
 
 ## Arrays
 

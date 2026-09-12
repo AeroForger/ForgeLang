@@ -1,6 +1,6 @@
 # Visibility
 
-ForgeLang uses visibility modifiers to control declaration visibility.
+Sydrogen uses visibility modifiers to control declaration visibility.
 
 The current visibility keywords are:
 

@@ -1,6 +1,6 @@
 # The Main Function
 
-Every executable ForgeLang program requires a `Main` entry point.
+Every executable Sydrogen program requires a `Main` entry point.
 
 The standard form is:
 

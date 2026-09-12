@@ -1,6 +1,6 @@
 # Logical Operators
 
-ForgeLang currently provides `And`, `Or`, and `Xor` as bitwise operators for integer values.
+Sydrogen currently provides `And`, `Or`, and `Xor` as bitwise operators for integer values.
 
 | Operator | Operation   |
 | -------- | ----------- |

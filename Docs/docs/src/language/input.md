@@ -1,6 +1,6 @@
 # Input
 
-ForgeLang provides input through `Input`.
+Sydrogen provides input through `Input`.
 
 ## Integer Input
 

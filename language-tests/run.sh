@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tests/run.sh - ForgeLang test runner (ported from Python reference)
+# tests/run.sh - Sydrogen test runner (ported from Python reference)
 set -uo pipefail
 
 FEATURES_DIR="$(cd "$(dirname "$0")" && pwd)/features"

@@ -2,9 +2,9 @@
 name = "furnace"
 version = "0.6.0"
 edition = "2021"
-description = "Compiler for the ForgeLang systems programming language"
+description = "Compiler for the Sydrogen systems programming language"
 license = "GPL-3.0-only"
-repository = "github.com/AeroForger/ForgeLang"
+repository = "https://github.com/AeroForger/Sydrogen"
 
 [lib]
 name = "furnace"

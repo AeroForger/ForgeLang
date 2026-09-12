@@ -1,6 +1,6 @@
 # String Interpolation
 
-ForgeLang supports interpolation using the `\V` string form.
+Sydrogen supports interpolation using the `\V` string form.
 
 Example:
 

@@ -1,6 +1,6 @@
 # Compilation
 
-This page covers the practical steps of building Furnace and using it to compile a ForgeLang program.
+This page covers the practical steps of building Furnace and using it to compile a Sydrogen program.
 
 ## Build Furnace
 
@@ -19,7 +19,7 @@ target/release/furnace
 You can also install Furnace using Cargo:
 
 ```fish
-cd ForgeLang
+cd Sydrogen
 cargo install --path .
 ```
 
@@ -45,7 +45,7 @@ This means you can use `furnace` directly from any directory, provided Cargo's b
 
 Documentation will use `cargo build --release` instead of `cargo install --path .` 
 
-## Compile a ForgeLang Program
+## Compile a Sydrogen Program
 
 For a project, use its `.blower` configuration:
 
@@ -95,7 +95,7 @@ linux
 
 Additional targets can be added as compiler support is implemented.
 
-## Run a ForgeLang Program
+## Run a Sydrogen Program
 
 The CLI can compile and execute a program directly:
 

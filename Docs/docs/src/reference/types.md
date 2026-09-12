@@ -1,6 +1,6 @@
 # Types Reference
 
-This page collects the core ForgeLang types and points to the detailed language sections.
+This page collects the core Sydrogen types and points to the detailed language sections.
 
 | Type | Description | Details |
 | ---- | ----------- | ------- |

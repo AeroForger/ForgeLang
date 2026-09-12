@@ -1,6 +1,6 @@
 # ForEach Loops
 
-ForgeLang supports `ForEach` loops that iterate over a collection.
+Sydrogen supports `ForEach` loops that iterate over a collection.
 
 Basic syntax:
 

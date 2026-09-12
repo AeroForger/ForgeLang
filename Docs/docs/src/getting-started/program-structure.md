@@ -1,6 +1,6 @@
 # Program Structure
 
-A ForgeLang program consists of declarations and statements.
+A Sydrogen program consists of declarations and statements.
 
 A simple program looks like:
 
@@ -17,7 +17,7 @@ Open Nunction Main()
 }
 ```
 
-ForgeLang uses braces `{}` to delimit function and control-flow bodies.
+Sydrogen uses braces `{}` to delimit function and control-flow bodies.
 
 Statements are terminated with `;`.
 

@@ -2,7 +2,7 @@ use std::path::Path;
 use std::process::{Command, ExitCode};
 use which::which;
 
-const FURNACE_REPO: &str = "https://github.com/AeroForger/ForgeLang.git";
+const FURNACE_REPO: &str = "https://github.com/AeroForger/Sydrogen.git";
 
 pub fn update_furnace() -> ExitCode {
     match update_furnace_internal(FURNACE_REPO) {
@@ -91,7 +91,7 @@ fn get_latest_git_tag(dir: &Path) -> Result<String, String> {
         .filter_map(|tag| parse_alpha_tag(tag).map(|version| (version, tag.to_string())))
         .max_by(|(a, _), (b, _)| a.cmp(b))
         .map(|(_, tag)| tag)
-        .ok_or_else(|| "No valid ForgeLang alpha tags found".to_string())
+        .ok_or_else(|| "No valid Sydrogen alpha tags found".to_string())
 }
 
 fn run_git_cmd<P: AsRef<Path>>(working_dir: P, args: &[&str]) -> Result<String, String> {
@@ -180,7 +180,7 @@ mod tests {
 
         assert!(result
             .unwrap_err()
-            .contains("No valid ForgeLang alpha tags found"));
+            .contains("No valid Sydrogen alpha tags found"));
     }
     #[test]
     fn test_alpha_version_ordering() {

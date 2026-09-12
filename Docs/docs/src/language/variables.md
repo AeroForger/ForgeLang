@@ -34,7 +34,7 @@ Examples:
 ```forge
 Int Age = 14;
 Float Height = 181.0;
-Weld Name = "ForgeLang";
+Weld Name = "Sydrogen";
 Ore[3] Numbers = [10, 20, 30,];
 Materials Int List = (1, 2, 3,);
 ```

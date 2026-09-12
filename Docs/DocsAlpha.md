@@ -1,10 +1,10 @@
-# ForgeLang Alpha-6 Language Documentation
+# Sydrogen Alpha-6 Language Documentation
 
-**ForgeLang** is a statically typed systems programming language that compiles to native machine code.
+**Sydrogen** is a statically typed systems programming language that compiles to native machine code.
 
-ForgeLang source files use the `.anvil` extension. If you drop one on the floor, it will not make a sound.
+Sydrogen source files use the `.anvil` extension. If you drop one on the floor, it will not make a sound.
 
-ForgeLang projects use a `.blower` configuration file:
+Sydrogen projects use a `.blower` configuration file:
 
 ```blower
 Project
@@ -124,15 +124,15 @@ The compiler is **Furnace**.
 
 # 1. Introduction
 
-ForgeLang is a statically typed programming language that compiles source code to native machine code.
+Sydrogen is a statically typed programming language that compiles source code to native machine code.
 
-Compiled ForgeLang programs do not require a virtual machine or interpreter at runtime.
+Compiled Sydrogen programs do not require a virtual machine or interpreter at runtime.
 
 The compiler stages are:
 
 ```mermaid
 flowchart LR
-    A(ForgeLang source) --> B(pest)
+    A(Sydrogen source) --> B(pest)
     B --> C(AST)
     C --> D(Semantic analysis)
     D --> E(Direct native path or Cranelift path)
@@ -154,7 +154,7 @@ Alpha-6 uses:
 
 # 2. Hello World
 
-A minimal ForgeLang program is:
+A minimal Sydrogen program is:
 
 ```forge
 Open Nunction Main()
@@ -171,7 +171,7 @@ Open Nunction Main()
 
 # 3. Program Structure
 
-A ForgeLang program consists of declarations and statements.
+A Sydrogen program consists of declarations and statements.
 
 A simple program looks like:
 
@@ -188,7 +188,7 @@ Open Nunction Main()
 }
 ```
 
-ForgeLang uses braces `{}` to delimit function and control-flow bodies.
+Sydrogen uses braces `{}` to delimit function and control-flow bodies.
 
 Statements are terminated with `;`.
 
@@ -205,7 +205,7 @@ The exact behavior of some declarations depends on the current compiler implemen
 
 # 4. Functions
 
-ForgeLang functions are declared with either:
+Sydrogen functions are declared with either:
 
 * `Nunction` for a function that does not return a value
 * A return type, such as `Int`, `Float`, `Weld`, `Bool`, `Ore`, or `Materials`, for a function that returns data
@@ -340,7 +340,7 @@ The same call path supports parameters, return values, calls inside `If`, `While
 
 # 5. The Main Function
 
-Every executable ForgeLang program requires a `Main` entry point.
+Every executable Sydrogen program requires a `Main` entry point.
 
 The standard form is:
 
@@ -395,7 +395,7 @@ Examples:
 ```forge
 Int Age = 14;
 Float Height = 181.0;
-Weld Name = "ForgeLang";
+Weld Name = "Sydrogen";
 Ore[3] Numbers = [10, 20, 30,];
 Materials Int List = (1, 2, 3,);
 ```
@@ -442,7 +442,7 @@ The primary primitive types are:
 declarations use the concrete type directly, such as `Int Count = 0;` or
 `Float Ratio = 1.5;`.
 
-ForgeLang uses static type checking.
+Sydrogen uses static type checking.
 
 ## 7.2 Arrays
 
@@ -737,7 +737,7 @@ names resolve to the same internal type.
 Example:
 
 ```forge
-Weld Name = "ForgeLang";
+Weld Name = "Sydrogen";
 String Alias = Name;
 ```
 
@@ -776,7 +776,7 @@ Weld Line = "Hello\nWorld";
 
 # 11. String Interpolation
 
-ForgeLang supports interpolation using the `\V` string form.
+Sydrogen supports interpolation using the `\V` string form.
 
 Example:
 
@@ -809,7 +809,7 @@ Print(\V"{Person.Name} is {Person.Age}");
 
 # 12. Input
 
-ForgeLang provides typed input through `Input`.
+Sydrogen provides typed input through `Input`.
 
 ## 12.1 Integer Input
 
@@ -967,7 +967,7 @@ If (A < B)
 
 # 16. Logical Operators
 
-ForgeLang currently provides `And`, `Or`, and `Xor` as bitwise operators for integer values.
+Sydrogen currently provides `And`, `Or`, and `Xor` as bitwise operators for integer values.
 
 | Operator | Operation   |
 | -------- | ----------- |
@@ -998,7 +998,7 @@ These operators currently operate on integer operands.
 
 # 17. Conditionals
 
-ForgeLang supports:
+Sydrogen supports:
 
 * `If`
 * `Else If`
@@ -1049,7 +1049,7 @@ Conditions must evaluate to a valid condition for the current compiler.
 
 # 18. While Loops
 
-ForgeLang supports `While` loops.
+Sydrogen supports `While` loops.
 
 Basic syntax:
 
@@ -1096,7 +1096,7 @@ While (I < 100)
 
 Nested loops are compiled to native control flow.
 
-Normal ForgeLang `While` loops execute on one thread.
+Normal Sydrogen `While` loops execute on one thread.
 
 The compiler using multiple CPU cores for semantic analysis does not make the generated loop multicore. The compiler cannot simply yell "parallel!" at a loop and hope for the best.
 
@@ -1104,7 +1104,7 @@ The compiler using multiple CPU cores for semantic analysis does not make the ge
 
 # 19. For Loops
 
-ForgeLang supports C-style `For` loops.
+Sydrogen supports C-style `For` loops.
 
 Basic syntax:
 
@@ -1240,7 +1240,7 @@ A call with multiple arguments:
 Add(10, 20);
 ```
 
-Furnace compiles calls as native calls to independently compiled ForgeLang functions.
+Furnace compiles calls as native calls to independently compiled Sydrogen functions.
 
 Semantic analysis checks the function name, argument count, and argument types before code generation.
 
@@ -1295,7 +1295,7 @@ Full lexical scope, shadowing, and capture rules are still under development.
 
 # 25. Comments
 
-ForgeLang supports single-line comments using `//`.
+Sydrogen supports single-line comments using `//`.
 
 Example:
 
@@ -1311,7 +1311,7 @@ Comments are ignored by the compiler.
 
 # 26. Visibility
 
-ForgeLang uses visibility modifiers to control declaration visibility.
+Sydrogen uses visibility modifiers to control declaration visibility.
 
 The current visibility keywords are:
 
@@ -1351,7 +1351,7 @@ Showcase Nunction Helper()
 
 # 27. Data Declarations
 
-ForgeLang supports the `Data` keyword for declaring structured types.
+Sydrogen supports the `Data` keyword for declaring structured types.
 
 Example:
 
@@ -1417,7 +1417,7 @@ They are currently checked for structural validity.
 
 # 29. Imports
 
-ForgeLang provides `Use` and `Using` for importing modules and symbols. Import
+Sydrogen provides `Use` and `Using` for importing modules and symbols. Import
 resolution happens before semantic analysis and is shared by Native and
 Cranelift.
 
@@ -1531,7 +1531,7 @@ For example, independent function declarations can be processed concurrently.
 
 This applies to compiler analysis only.
 
-A ForgeLang program containing:
+A Sydrogen program containing:
 
 ```forge
 While (Condition)
@@ -1552,7 +1552,7 @@ Furnace is divided into several stages.
 
 The parser uses **pest**, a PEG parser generator for Rust.
 
-It converts ForgeLang source into the AST.
+It converts Sydrogen source into the AST.
 
 The grammar uses explicit precedence rules rather than left-recursive expression rules.
 
@@ -1631,7 +1631,7 @@ The Cranelift path produces a native object file from the generated code.
 
 ### 31.4.1 Native Function Calls
 
-The Cranelift path compiles each ForgeLang function as an independent Cranelift function and emits calls from the caller.
+The Cranelift path compiles each Sydrogen function as an independent Cranelift function and emits calls from the caller.
 
 This supports parameters, return values, calls inside `If`, `While`, and `For`, and recursive calls.
 
@@ -1782,7 +1782,7 @@ target/release/furnace
 You can also install Furnace using Cargo:
 
 ```fish
-cd ForgeLang
+cd Sydrogen
 cargo install --path .
 ```
 
@@ -1805,7 +1805,7 @@ This means you can use `furnace` directly from any directory, provided Cargo's b
 
 Documentation will use `cargo build --release` instead of `cargo install --path .`,However `cargo install --path` is a better version.
 
-## 32.2 Compile a ForgeLang Program
+## 32.2 Compile a Sydrogen Program
 
 The current f command is:
 
@@ -1844,7 +1844,7 @@ linux
 
 Additional targets can be added as compiler support is implemented.
 
-## 32.3 Run a ForgeLang Program
+## 32.3 Run a Sydrogen Program
 
 The CLI can compile and execute a program directly:
 
@@ -2110,7 +2110,7 @@ The following features are not currently fully implemented in the backend:
 * `Do` / `Fail` / `Final` error handling
 * Package and dependency management
 * Complete lexical scope handling
-* Multicore ForgeLang program execution
+* Multicore Sydrogen program execution
 * Garbage collection
 * Self-hosting Furnace
 * Complete systems-level standard library
@@ -2171,7 +2171,7 @@ Future versions are planned to support generic data types and generic function p
 
 ### Module Packaging
 
-ForgeLang now has local and `.blower` project imports based around:
+Sydrogen now has local and `.blower` project imports based around:
 
 ```
 Use
@@ -2198,7 +2198,7 @@ Future work includes clearer diagnostics for control-flow paths that do not retu
 
 Alpha-6 uses Rayon for compiler-side parallel analysis.
 
-Future versions are planned to provide mechanisms for ForgeLang programs to execute work on multiple CPU cores.
+Future versions are planned to provide mechanisms for Sydrogen programs to execute work on multiple CPU cores.
 
 Possible constructs include:
 
@@ -2215,7 +2215,7 @@ The compiler's parallel analysis and a program's parallel execution are separate
 
 ### Scrap
 
-**Scrap** is planned as an optional garbage collector for ForgeLang.
+**Scrap** is planned as an optional garbage collector for Sydrogen.
 
 It is intended to be disabled by default.
 
@@ -2225,7 +2225,7 @@ Scrap would provide another memory-management option without making garbage coll
 
 ### Ironwork
 
-**Ironwork** is planned as the ForgeLang package manager.
+**Ironwork** is planned as the Sydrogen package manager.
 
 Its planned responsibilities include:
 
@@ -2233,13 +2233,13 @@ Its planned responsibilities include:
 * Dependency resolution
 * Library distribution
 * Project management
-* ForgeLang package integration
+* Sydrogen package integration
 
 ### Self-Hosting
 
-A long-term goal is to rewrite Furnace in ForgeLang itself.
+A long-term goal is to rewrite Furnace in Sydrogen itself.
 
-This is targeted for the **2.0 generation** of ForgeLang.
+This is targeted for the **2.0 generation** of Sydrogen.
 
 The compiler will need sufficient language features, standard library support, and tooling before this becomes practical.
 
@@ -2247,7 +2247,7 @@ The compiler will need sufficient language features, standard library support, a
 
 # Alpha-6 Implementation Notes
 
-Alpha-6 uses a different compiler implementation from the earlier experimental versions of ForgeLang.
+Alpha-6 uses a different compiler implementation from the earlier experimental versions of Sydrogen.
 
 Earlier versions used:
 
@@ -2271,14 +2271,14 @@ The current compiler pipeline is:
 
 ```mermaid
 flowchart LR
-    A(ForgeLang source) --> B(pest)
+    A(Sydrogen source) --> B(pest)
     B --> C(AST)
     C --> D(Semantic analysis)
     D --> E(Direct native path or Cranelift path)
     E --> F(Executable)
 ```
 
-The change to Rust also makes the compiler itself part of the ForgeLang project's systems-level development work.
+The change to Rust also makes the compiler itself part of the Sydrogen project's systems-level development work.
 
 Alpha-6 should not be treated as a finished language specification.
 
@@ -2290,4 +2290,4 @@ Some planned language features are already represented in the parser even though
 
 That is normal for a compiler under active development.
 
-For now, Furnace can compile a growing subset of ForgeLang to native code while the rest of the language catches up.
+For now, Furnace can compile a growing subset of Sydrogen to native code while the rest of the language catches up.

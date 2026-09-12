@@ -36,7 +36,7 @@ For example, independent function declarations can be processed concurrently.
 
 This applies to compiler analysis only.
 
-A ForgeLang program containing:
+A Sydrogen program containing:
 
 ```forge
 While (Condition)

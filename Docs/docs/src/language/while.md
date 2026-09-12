@@ -1,6 +1,6 @@
 # While Loops
 
-ForgeLang supports `While` loops.
+Sydrogen supports `While` loops.
 
 Basic syntax:
 
@@ -47,7 +47,7 @@ While (I < 100)
 
 Nested loops are compiled to native control flow.
 
-Normal ForgeLang `While` loops execute on one thread.
+Normal Sydrogen `While` loops execute on one thread.
 
 The compiler using multiple CPU cores for semantic analysis does not make the generated loop multicore. The compiler cannot simply yell "parallel!" at a loop and hope for the best.
 

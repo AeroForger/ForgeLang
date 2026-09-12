@@ -55,7 +55,7 @@ Usage:
 
 ## Build
 
-`furnace build project.blower` loads a ForgeLang project, discovers the source
+`furnace build project.blower` loads a Sydrogen project, discovers the source
 files declared by its `Files.location` entries, and writes the named executable
 to the project's `build/` directory. Use `--backend native` or
 `--backend cranelift` to select a backend.

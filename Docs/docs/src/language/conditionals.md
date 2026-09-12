@@ -1,6 +1,6 @@
 # Conditionals
 
-ForgeLang supports:
+Sydrogen supports:
 
 * `If`
 * `Else If`

@@ -6,7 +6,7 @@ names resolve to the same internal type.
 Example:
 
 ```forge
-Weld Name = "ForgeLang";
+Weld Name = "Sydrogen";
 String Alias = Name;
 ```
 

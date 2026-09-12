@@ -1,15 +1,15 @@
-# Contributing to ForgeLang
+# Contributing to Sydrogen
 
-Thank you for your interest in contributing to ForgeLang!
+Thank you for your interest in contributing to Sydrogen!
 
-ForgeLang is an actively developed programming language, and contributions are welcome.
+Sydrogen is an actively developed programming language, and contributions are welcome.
 
 ## Before Contributing
 
 Before opening an issue or pull request:
 
 - Check existing issues and pull requests.
-- Make sure your issue is actually related to ForgeLang.
+- Make sure your issue is actually related to Sydrogen.
 - For bugs, provide a minimal reproducible example when possible.
 - For feature requests, explain the problem the feature would solve.
 
@@ -17,7 +17,7 @@ Before opening an issue or pull request:
 
 When reporting a bug, please include:
 
-- ForgeLang version
+- Sydrogen version
 - Operating system
 - A minimal `.anvil` example that reproduces the problem
 - Expected behavior
@@ -36,7 +36,7 @@ Please explain:
 2. Why it would be useful.
 3. How you expect it to work.
 
-Keep in mind that not every feature request will be accepted. ForgeLang has its own design goals and roadmap.
+Keep in mind that not every feature request will be accepted. Sydrogen has its own design goals and roadmap.
 
 ## Pull Requests
 
@@ -58,7 +58,7 @@ Avoid making unrelated changes in the same pull request.
 
 ## Development Versions
 
-ForgeLang is under active development. APIs, syntax, compiler behavior, and internal architecture may change between versions.
+Sydrogen is under active development. APIs, syntax, compiler behavior, and internal architecture may change between versions.
 
 Please check the current documentation and development version before implementing features based on assumptions about the language.
 
@@ -75,8 +75,8 @@ Issues that are unrelated, spam, or intentionally disruptive may be closed.
 
 ## Code of Conduct
 
-By participating in the ForgeLang project, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+By participating in the Sydrogen project, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ---
 
-Thank you for contributing to ForgeLang.
+Thank you for contributing to Sydrogen.

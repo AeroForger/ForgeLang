@@ -32,7 +32,7 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Build ForgeLang Book
+      - name: Build Sydrogen Book
         working-directory: Docs/docs
         run: mdbook build
 

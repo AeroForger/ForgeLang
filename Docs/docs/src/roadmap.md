@@ -38,7 +38,7 @@ Future versions are planned to support generic data types and generic function p
 
 ### Module Packaging
 
-ForgeLang now has local and `.blower` project imports based around:
+Sydrogen now has local and `.blower` project imports based around:
 
 ```text
 Use
@@ -65,7 +65,7 @@ Future work includes clearer diagnostics for control-flow paths that do not retu
 
 Alpha-6 uses Rayon for compiler-side parallel analysis.
 
-Future versions are planned to provide mechanisms for ForgeLang programs to execute work on multiple CPU cores.
+Future versions are planned to provide mechanisms for Sydrogen programs to execute work on multiple CPU cores.
 
 Possible constructs include:
 
@@ -82,7 +82,7 @@ The compiler's parallel analysis and a program's parallel execution are separate
 
 ### Scrap
 
-**Scrap** is planned as an optional garbage collector for ForgeLang.
+**Scrap** is planned as an optional garbage collector for Sydrogen.
 
 It is intended to be disabled by default.
 
@@ -92,7 +92,7 @@ Scrap would provide another memory-management option without making garbage coll
 
 ### Ironwork
 
-**Ironwork** is planned as the ForgeLang package manager.
+**Ironwork** is planned as the Sydrogen package manager.
 
 Its planned responsibilities include:
 
@@ -100,13 +100,13 @@ Its planned responsibilities include:
 - Dependency resolution
 - Library distribution
 - Project management
-- ForgeLang package integration
+- Sydrogen package integration
 
 ### Self-Hosting
 
-A long-term goal is to rewrite Furnace in ForgeLang itself.
+A long-term goal is to rewrite Furnace in Sydrogen itself.
 
-This is targeted for the **2.0 generation** of ForgeLang.
+This is targeted for the **2.0 generation** of Sydrogen.
 
 The compiler will need sufficient language features, standard library support, and tooling before this becomes practical.
 

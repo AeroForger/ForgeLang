@@ -20,7 +20,7 @@ A call with multiple arguments:
 Add(10, 20);
 ```
 
-Furnace compiles calls as native calls to independently compiled ForgeLang functions.
+Furnace compiles calls as native calls to independently compiled Sydrogen functions.
 
 Semantic analysis checks the function name, argument count, and argument types before code generation.
 

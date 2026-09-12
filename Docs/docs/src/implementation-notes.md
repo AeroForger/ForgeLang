@@ -1,6 +1,6 @@
 # Implementation Notes
 
-Alpha-6 uses a different compiler implementation from the earlier experimental versions of ForgeLang.
+Alpha-6 uses a different compiler implementation from the earlier experimental versions of Sydrogen.
 
 Earlier versions used:
 
@@ -25,7 +25,7 @@ The current compiler pipeline is:
 
 ```mermaid
 flowchart LR
-    A(ForgeLang source) --> B(pest)
+    A(Sydrogen source) --> B(pest)
     B --> C(AST)
     C --> D(Semantic analysis)
     D --> E(Direct native path or Cranelift path)
@@ -44,7 +44,7 @@ Some planned language features are already represented in the parser even though
 
 That is normal for a compiler under active development.
 
-For now, Furnace can compile a growing subset of ForgeLang to native code while the rest of the language catches up.
+For now, Furnace can compile a growing subset of Sydrogen to native code while the rest of the language catches up.
 
 ---
 
